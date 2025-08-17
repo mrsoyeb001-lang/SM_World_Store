@@ -181,6 +181,42 @@ export type Database = {
         }
         Relationships: []
       }
+      popups: {
+        Row: {
+          auto_hide_seconds: number | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          message: string
+          show_close_button: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          auto_hide_seconds?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          message: string
+          show_close_button?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          auto_hide_seconds?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          message?: string
+          show_close_button?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category_id: string | null
@@ -336,6 +372,33 @@ export type Database = {
           rating?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
