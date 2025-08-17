@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import ProductManagement from './ProductManagement';
+import OrderManagement from './OrderManagement';
+import PromoCodeManagement from './PromoCodeManagement';
 import { ShoppingBag, Users, DollarSign, Package, TrendingUp, Clock } from 'lucide-react';
 
 interface DashboardStats {
@@ -286,9 +288,10 @@ export default function EnhancedAdminDashboard() {
 
       {/* Management Tabs */}
       <Tabs defaultValue="products" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="products">পণ্য ব্যবস্থাপনা</TabsTrigger>
-          <TabsTrigger value="orders">অর্ডার ব্যবস্থাপনা</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="products">পণ্য</TabsTrigger>
+          <TabsTrigger value="orders">অর্ডার</TabsTrigger>
+          <TabsTrigger value="promo">প্রমো কোড</TabsTrigger>
           <TabsTrigger value="users">ব্যবহারকারী</TabsTrigger>
           <TabsTrigger value="settings">সেটিংস</TabsTrigger>
         </TabsList>
@@ -298,9 +301,11 @@ export default function EnhancedAdminDashboard() {
         </TabsContent>
         
         <TabsContent value="orders">
-          <div className="text-center py-8">
-            <p>অর্ডার ম্যানেজমেন্ট শীঘ্রই আসছে...</p>
-          </div>
+          <OrderManagement />
+        </TabsContent>
+        
+        <TabsContent value="promo">
+          <PromoCodeManagement />
         </TabsContent>
         
         <TabsContent value="users">

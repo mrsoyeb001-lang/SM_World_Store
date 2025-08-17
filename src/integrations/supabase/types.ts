@@ -148,6 +148,7 @@ export type Database = {
           shipping_cost: number | null
           status: string | null
           total_amount: number
+          tracking_code: string | null
           updated_at: string
           user_id: string
         }
@@ -162,6 +163,7 @@ export type Database = {
           shipping_cost?: number | null
           status?: string | null
           total_amount: number
+          tracking_code?: string | null
           updated_at?: string
           user_id: string
         }
@@ -176,6 +178,7 @@ export type Database = {
           shipping_cost?: number | null
           status?: string | null
           total_amount?: number
+          tracking_code?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -10,6 +10,15 @@ import { Eye, Package, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+interface ShippingAddress {
+  full_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  sender_number?: string;
+  transaction_id?: string;
+}
+
 interface Order {
   id: string;
   total_amount: number;
@@ -21,19 +30,12 @@ interface Order {
   notes: string | null;
   promo_code: string | null;
   tracking_code: string | null;
-  shipping_address: {
-    full_name: string;
-    phone: string;
-    address: string;
-    city: string;
-    sender_number?: string;
-    transaction_id?: string;
-  };
+  shipping_address: ShippingAddress;
   order_items: {
     id: string;
     quantity: number;
     price: number;
-    product: {
+    products: {
       name: string;
       images: string[];
     };
@@ -79,7 +81,18 @@ export default function OrderManagement() {
         variant: "destructive"
       });
     } else {
-      setOrders(data || []);
+      // Type cast the data properly
+      const typedOrders = (data || []).map(order => ({
+        ...order,
+        shipping_address: order.shipping_address as unknown as ShippingAddress,
+        order_items: order.order_items.map(item => ({
+          ...item,
+          products: item.products as unknown as { name: string; images: string[] }
+        })),
+        profiles: order.profiles as unknown as { full_name: string; phone: string }
+      })) as Order[];
+      
+      setOrders(typedOrders);
     }
     setLoading(false);
   };
@@ -229,14 +242,14 @@ export default function OrderManagement() {
                     <h4 className="font-medium">অর্ডার আইটেম</h4>
                     {order.order_items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3 text-sm">
-                        {item.product.images?.[0] && (
+                        {item.products.images?.[0] && (
                           <img 
-                            src={item.product.images[0]} 
-                            alt={item.product.name}
+                            src={item.products.images[0]} 
+                            alt={item.products.name}
                             className="w-10 h-10 object-cover rounded"
                           />
                         )}
-                        <span>{item.product.name} x {item.quantity}</span>
+                        <span>{item.products.name} x {item.quantity}</span>
                         <span className="ml-auto">৳{(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
