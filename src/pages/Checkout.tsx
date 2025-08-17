@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
 
 interface ShippingRate {
   id: string;
@@ -48,7 +47,6 @@ export default function Checkout() {
     address: '',
     city: '',
     paymentMethod: 'cash_on_delivery',
-    paymentDetails: undefined as any,
     notes: ''
   });
 
@@ -272,10 +270,20 @@ export default function Checkout() {
                 </Select>
               </div>
 
-            <PaymentMethodSelector 
-              value={formData.paymentMethod}
-              onChange={(value, details) => setFormData({...formData, paymentMethod: value, paymentDetails: details})}
-            />
+              <div>
+                <Label htmlFor="paymentMethod">পেমেন্ট মেথড</Label>
+                <Select 
+                  value={formData.paymentMethod} 
+                  onValueChange={(value) => setFormData({...formData, paymentMethod: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash_on_delivery">ক্যাশ অন ডেলিভারি</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
               <div>
                 <Label htmlFor="notes">অতিরিক্ত নোট</Label>
