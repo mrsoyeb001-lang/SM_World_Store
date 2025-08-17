@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, ShoppingCart, Heart } from 'lucide-react';
+import { Star, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 
 interface Product {
   id: string;
@@ -33,29 +34,26 @@ export function ProductCard({ product }: ProductCardProps) {
     addToCart(product.id);
   };
 
-  const handleAddToWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Add wishlist functionality
-  };
-
   return (
     <Card className="group relative overflow-hidden card-hover">
       <Link to={`/product/${product.id}`}>
         {/* Product Image */}
-        <div className="aspect-square overflow-hidden">
+        <div className="aspect-square overflow-hidden relative">
           <img
             src={product.images[0] || '/placeholder.svg'}
             alt={product.name}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
+          <div className="absolute top-2 right-2">
+            <FavoriteButton productId={product.id} />
+          </div>
           {discountPercentage > 0 && (
             <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground">
               -{discountPercentage}%
             </Badge>
           )}
           {product.stock_quantity <= 0 && (
-            <Badge className="absolute top-2 right-2 bg-muted text-muted-foreground">
+            <Badge className="absolute bottom-2 left-2 bg-muted text-muted-foreground">
               স্টক শেষ
             </Badge>
           )}
@@ -106,13 +104,6 @@ export function ProductCard({ product }: ProductCardProps) {
             >
               <ShoppingCart className="h-4 w-4 mr-1" />
               কার্টে যোগ করুন
-            </Button>
-            <Button
-              onClick={handleAddToWishlist}
-              variant="outline"
-              size="sm"
-            >
-              <Heart className="h-4 w-4" />
             </Button>
           </div>
         </div>

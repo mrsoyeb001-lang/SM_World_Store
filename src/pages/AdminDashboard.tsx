@@ -16,6 +16,7 @@ import {
   Plus
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import EnhancedAdminDashboard from '@/components/admin/EnhancedAdminDashboard';
 
 interface DashboardStats {
   totalProducts: number;
@@ -55,7 +56,7 @@ interface Product {
 export default function AdminDashboard() {
   return (
     <ProtectedRoute requireAdmin>
-      <AdminDashboardContent />
+      <EnhancedAdminDashboard />
     </ProtectedRoute>
   );
 }
