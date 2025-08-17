@@ -39,14 +39,10 @@ export default function Auth() {
         description: "সফলভাবে লগইন হয়েছে"
       });
       
-      // Check if admin and redirect accordingly
+      // Wait for profile to load and redirect accordingly
       setTimeout(() => {
-        if (loginData.email === 'mrsoyeb001@gmail.com') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
-      }, 1000);
+        navigate(isAdmin ? '/admin' : '/dashboard');
+      }, 1500);
     }
     
     setLoading(false);
@@ -128,13 +124,6 @@ export default function Auth() {
                   {loading ? 'অপেক্ষা করুন...' : 'লগইন'}
                 </Button>
               </form>
-              
-              {/* Demo Admin Login */}
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground mb-2">অ্যাডমিন লগইন:</p>
-                <p className="text-xs">ইমেইল: mrsoyeb001@gmail.com</p>
-                <p className="text-xs">পাসওয়ার্ড: Mdsoyeb@27</p>
-              </div>
             </TabsContent>
             
             <TabsContent value="signup">
