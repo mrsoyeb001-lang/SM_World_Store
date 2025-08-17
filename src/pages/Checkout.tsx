@@ -47,7 +47,9 @@ export default function Checkout() {
     address: '',
     city: '',
     paymentMethod: 'cash_on_delivery',
-    notes: ''
+    notes: '',
+    senderNumber: '',
+    transactionId: ''
   });
 
   useEffect(() => {
@@ -148,7 +150,9 @@ export default function Checkout() {
             full_name: formData.fullName,
             phone: formData.phone,
             address: formData.address,
-            city: formData.city
+            city: formData.city,
+            sender_number: formData.senderNumber,
+            transaction_id: formData.transactionId
           },
           payment_method: formData.paymentMethod,
           notes: formData.notes,
@@ -281,9 +285,64 @@ export default function Checkout() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cash_on_delivery">ক্যাশ অন ডেলিভারি</SelectItem>
+                    <SelectItem value="bkash">বিকাশ</SelectItem>
+                    <SelectItem value="rocket">রকেট</SelectItem>
+                    <SelectItem value="nagad">নগদ</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Payment Instructions */}
+              {formData.paymentMethod !== 'cash_on_delivery' && (
+                <Card className="p-4 bg-blue-50 border-blue-200">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-blue-800">
+                      {formData.paymentMethod === 'bkash' && 'বিকাশ পেমেন্ট'}
+                      {formData.paymentMethod === 'rocket' && 'রকেট পেমেন্ট'}
+                      {formData.paymentMethod === 'nagad' && 'নগদ পেমেন্ট'}
+                    </h3>
+                    
+                    <div className="bg-white p-3 rounded border">
+                      <p className="text-sm mb-2">পেমেন্ট করতে নিচের নম্বরে টাকা পাঠান:</p>
+                      <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
+                        <span className="font-mono text-lg">
+                          {formData.paymentMethod === 'bkash' && '01XXXXXXXXX'}
+                          {formData.paymentMethod === 'rocket' && '01XXXXXXXXX'}
+                          {formData.paymentMethod === 'nagad' && '01XXXXXXXXX'}
+                        </span>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigator.clipboard.writeText('01XXXXXXXXX')}
+                        >
+                          কপি করুন
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>যে নম্বর থেকে টাকা পাঠিয়েছেন *</Label>
+                      <Input 
+                        placeholder="01XXXXXXXXX"
+                        value={formData.senderNumber || ''}
+                        onChange={(e) => setFormData({...formData, senderNumber: e.target.value})}
+                        required={formData.paymentMethod !== 'cash_on_delivery'}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>ট্রানজেকশন আইডি *</Label>
+                      <Input 
+                        placeholder="ট্রানজেকশন আইডি লিখুন"
+                        value={formData.transactionId || ''}
+                        onChange={(e) => setFormData({...formData, transactionId: e.target.value})}
+                        required={formData.paymentMethod !== 'cash_on_delivery'}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               <div>
                 <Label htmlFor="notes">অতিরিক্ত নোট</Label>
