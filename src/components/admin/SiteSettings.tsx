@@ -129,10 +129,12 @@ export default function SiteSettings() {
         key: 'site_settings',
         value: settings as any,
         description: 'Site configuration settings'
-      })
-      .eq('key', 'site_settings');
+      }, {
+        onConflict: 'key'
+      });
 
     if (error) {
+      console.error('Settings save error:', error);
       toast({
         title: "সেটিংস সংরক্ষণ ব্যর্থ",
         description: error.message,

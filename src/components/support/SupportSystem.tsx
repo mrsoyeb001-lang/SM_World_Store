@@ -66,7 +66,7 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [isAdmin]);
 
   const fetchMessages = async () => {
     setLoading(true);
@@ -78,14 +78,26 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
         return;
       }
 
-      let filterClause = '';
-      if (!isAdmin) {
-        filterClause = `?user_id=eq.${user.id}&`;
-      } else {
-        filterClause = '?';
+      // If admin, check admin status first
+      if (isAdmin) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (!profile?.is_admin) {
+          toast({
+            title: "অ্যাক্সেস নিষেধ",
+            description: "সাপোর্ট ব্যবস্থাপনার জন্য এডমিন অনুমতি প্রয়োজন।",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
       }
 
-      const response = await fetch(`https://regnbhyxkfpeojnhltkj.supabase.co/rest/v1/support_messages${filterClause}select=*,profiles(full_name,phone,email)&order=created_at.desc`, {
+      const response = await fetch(`https://regnbhyxkfpeojnhltkj.supabase.co/rest/v1/support_messages?${isAdmin ? '' : `user_id=eq.${user.id}&`}select=*,profiles(full_name,phone,email)&order=created_at.desc`, {
         headers: {
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZ25iaHl4a2ZwZW9qbmhsdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NjQ2NDcsImV4cCI6MjA3MTA0MDY0N30.3Eh2JoWCA0QtbzBFo5oNtoDvFJ4Xiq0rs6BnHXT-VFM',
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
@@ -97,9 +109,11 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
         const data = await response.json();
         setMessages(data || []);
       } else {
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
         toast({
           title: "মেসেজ লোড ব্যর্থ",
-          description: "মেসেজ লোড করতে সমস্যা হয়েছে।",
+          description: "সাপোর্ট মেসেজ লোড করতে সমস্যা হয়েছে। দয়া করে পুনরায় চেষ্টা করুন।",
           variant: "destructive"
         });
       }
@@ -107,7 +121,7 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
       console.error('Error fetching messages:', error);
       toast({
         title: "মেসেজ লোড ব্যর্থ", 
-        description: "দয়া করে পুনরায় চেষ্টা করুন।",
+        description: "নেটওয়ার্ক সমস্যা। দয়া করে ইন্টারনেট সংযোগ চেক করুন।",
         variant: "destructive"
       });
     }
