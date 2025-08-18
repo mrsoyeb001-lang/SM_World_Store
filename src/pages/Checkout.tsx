@@ -322,18 +322,18 @@ export default function Checkout() {
                       <p className="text-sm mb-2">পেমেন্ট করতে নিচের নম্বরে টাকা পাঠান:</p>
                       <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
                         <span className="font-mono text-lg">
-                          {formData.paymentMethod === 'bkash' && (paymentSettings?.bkashNumber || '01XXXXXXXXX')}
-                          {formData.paymentMethod === 'rocket' && (paymentSettings?.rocketNumber || '01XXXXXXXXX')}
-                          {formData.paymentMethod === 'nagad' && (paymentSettings?.nagadNumber || '01XXXXXXXXX')}
+                          {formData.paymentMethod === 'bkash' && (paymentSettings?.payment_methods?.bkash?.number || '01XXXXXXXXX')}
+                          {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01XXXXXXXXX')}
+                          {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01XXXXXXXXX')}
                         </span>
                         <Button 
                           type="button" 
                           variant="outline" 
                           size="sm"
                           onClick={() => {
-                            const number = formData.paymentMethod === 'bkash' ? paymentSettings?.bkashNumber :
-                                         formData.paymentMethod === 'rocket' ? paymentSettings?.rocketNumber :
-                                         paymentSettings?.nagadNumber;
+                            const number = formData.paymentMethod === 'bkash' ? paymentSettings?.payment_methods?.bkash?.number :
+                                         formData.paymentMethod === 'rocket' ? paymentSettings?.payment_methods?.rocket?.number :
+                                         paymentSettings?.payment_methods?.nagad?.number;
                             navigator.clipboard.writeText(number || '01XXXXXXXXX');
                           }}
                         >

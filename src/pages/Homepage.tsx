@@ -3,8 +3,10 @@ import { ProductGrid } from '@/components/product/ProductGrid';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight, Star, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Homepage() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -84,7 +86,7 @@ export default function Homepage() {
             <div className="lg:col-span-3">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold">সর্বশেষ পণ্যসমূহ</h2>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => navigate('/products')}>
                   সব দেখুন
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

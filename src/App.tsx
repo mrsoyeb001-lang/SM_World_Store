@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import Homepage from "./pages/Homepage";
 import Auth from "./pages/Auth";
 import ProductDetails from "./pages/ProductDetails";
@@ -16,6 +17,8 @@ import Category from "./pages/Category";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Favorites from "./pages/Favorites";
+import Search from "./pages/Search";
+import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,21 +32,26 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <div className="min-h-screen bg-background">
+              <div className="min-h-screen bg-background flex flex-col">
                 <Navbar />
-                <Routes>
-                  <Route path="/" element={<Homepage />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/product/:id" element={<ProductDetails />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/category/:categoryId" element={<Category />} />
-                  <Route path="/dashboard" element={<UserDashboard />} />
-                  <Route path="/favorites" element={<Favorites />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <main className="flex-1">
+                  <Routes>
+                    <Route path="/" element={<Homepage />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/product/:id" element={<ProductDetails />} />
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/category/:categoryId" element={<Category />} />
+                    <Route path="/dashboard" element={<UserDashboard />} />
+                    <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/search" element={<Search />} />
+                    <Route path="/products" element={<Products />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <Footer />
               </div>
             </BrowserRouter>
           </CartProvider>
