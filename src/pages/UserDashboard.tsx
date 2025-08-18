@@ -15,11 +15,17 @@ import {
   Mail,
   Calendar,
   Eye,
-  MessageCircle
+  MessageCircle,
+  UserPlus,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+  Clock
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { OrderDetailsDialog } from '@/components/ui/order-details-dialog';
 import AffiliateSystem from '@/components/affiliate/AffiliateSystem';
+import { AffiliateApplicationForm } from '@/components/affiliate/AffiliateApplicationForm';
 import SupportSystem from '@/components/support/SupportSystem';
 import { ProfileEditor } from '@/components/profile/ProfileEditor';
 
@@ -51,6 +57,7 @@ function DashboardContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [affiliateApplication, setAffiliateApplication] = useState<any>(null);
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalSpent: 0,
@@ -59,7 +66,22 @@ function DashboardContent() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+    if (user) {
+      checkAffiliateApplication();
+    }
+  }, [user]);
+
+  const checkAffiliateApplication = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('affiliate_applications')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    setAffiliateApplication(data);
+  };
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -108,10 +130,42 @@ function DashboardContent() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">আপনার ড্যাশবোর্ড</h1>
-        <p className="text-muted-foreground">
-          স্বাগতম, {profile?.full_name || 'ব্যবহারকারী'}!
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">ড্যাশবোর্ড</h1>
+            <p className="text-muted-foreground">
+              স্বাগতম, {profile?.full_name || 'ব্যবহারকারী'}!
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {profile?.is_affiliate ? (
+              <Badge variant="default" className="flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                অ্যাফিলিয়েট
+              </Badge>
+            ) : !affiliateApplication ? (
+              <AffiliateApplicationForm 
+                onApplicationSubmitted={() => {
+                  checkAffiliateApplication();
+                }}
+              />
+            ) : (
+              <Badge 
+                variant={
+                  affiliateApplication.status === 'approved' ? 'default' :
+                  affiliateApplication.status === 'rejected' ? 'destructive' : 'secondary'
+                }
+                className="flex items-center gap-1"
+              >
+                {affiliateApplication.status === 'approved' ? <CheckCircle className="w-3 h-3" /> :
+                 affiliateApplication.status === 'rejected' ? <XCircle className="w-3 h-3" /> :
+                 <Clock className="w-3 h-3" />}
+                {affiliateApplication.status === 'approved' ? 'অনুমোদিত' :
+                 affiliateApplication.status === 'rejected' ? 'প্রত্যাখ্যাত' : 'অপেক্ষমান'}
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -241,6 +295,44 @@ function DashboardContent() {
         </TabsContent>
 
         <TabsContent value="profile" className="space-y-4">
+          {/* User ID Display */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                ব্যবহারকারী তথ্য
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">ব্যবহারকারী আইডি</p>
+                  <p className="font-mono text-sm">{user?.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">নাম</p>
+                  <p className="font-medium">{profile?.full_name || 'নাম নেই'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">ইমেইল</p>
+                  <p className="font-medium">{profile?.email || 'ইমেইল নেই'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">ফোন</p>
+                  <p className="font-medium">{profile?.phone || 'ফোন নাম্বার নেই'}</p>
+                </div>
+                {(profile?.address || profile?.city) && (
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-muted-foreground">ঠিকানা</p>
+                    <p className="font-medium">
+                      {profile?.address ? `${profile.address}${profile.city ? `, ${profile.city}` : ''}` : 'ঠিকানা নেই'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
           <ProfileEditor />
         </TabsContent>
       </Tabs>

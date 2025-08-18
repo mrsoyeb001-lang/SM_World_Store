@@ -48,7 +48,7 @@ export function Footer() {
       .maybeSingle();
     
     if (data?.value) {
-      setSettings(data.value as SiteSettings);
+      setSettings(data.value as unknown as SiteSettings);
     }
   };
 

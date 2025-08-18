@@ -54,6 +54,16 @@ interface SiteSettings {
     description: string;
     footer_text: string;
   };
+  social: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    youtube?: string;
+  };
+  affiliate_system: {
+    enabled: boolean;
+    commission_rate: number;
+  };
 }
 
 const defaultSettings: SiteSettings = {
@@ -92,6 +102,16 @@ const defaultSettings: SiteSettings = {
     name: "Badhon's World",
     description: 'আপনার পছন্দের পণ্যের দোকান',
     footer_text: '© 2024 Badhon\'s World. সকল অধিকার সংরক্ষিত।'
+  },
+  social: {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    youtube: ''
+  },
+  affiliate_system: {
+    enabled: true,
+    commission_rate: 0.05
   }
 };
 
@@ -187,6 +207,26 @@ export default function SiteSettings() {
       ...prev,
       site: {
         ...prev.site,
+        [field]: value
+      }
+    }));
+  };
+
+  const updateSocial = (field: string, value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      social: {
+        ...prev.social,
+        [field]: value
+      }
+    }));
+  };
+
+  const updateAffiliateSystem = (field: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      affiliate_system: {
+        ...prev.affiliate_system,
         [field]: value
       }
     }));
@@ -472,6 +512,96 @@ export default function SiteSettings() {
               value={settings.site.footer_text}
               onChange={(e) => updateSite('footer_text', e.target.value)}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Affiliate System Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            অ্যাফিলিয়েট সিস্টেম
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={settings.affiliate_system.enabled}
+              onChange={(e) => updateAffiliateSystem('enabled', e.target.checked)}
+              className="w-4 h-4"
+            />
+            <Label className="text-lg font-medium">অ্যাফিলিয়েট সিস্টেম সক্রিয় করুন</Label>
+          </div>
+          
+          {settings.affiliate_system.enabled && (
+            <div>
+              <Label htmlFor="commission-rate">কমিশনের হার (%)</Label>
+              <Input
+                id="commission-rate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={(settings.affiliate_system.commission_rate * 100).toFixed(2)}
+                onChange={(e) => updateAffiliateSystem('commission_rate', parseFloat(e.target.value) / 100 || 0.05)}
+                placeholder="5.00"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                বর্তমানে {(settings.affiliate_system.commission_rate * 100).toFixed(2)}% কমিশন হার
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Social Media Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5" />
+            সোশ্যাল মিডিয়া লিংক
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="facebook">ফেসবুক পেজ</Label>
+              <Input
+                id="facebook"
+                value={settings.social.facebook || ''}
+                onChange={(e) => updateSocial('facebook', e.target.value)}
+                placeholder="https://facebook.com/yourpage"
+              />
+            </div>
+            <div>
+              <Label htmlFor="instagram">ইনস্টাগ্রাম</Label>
+              <Input
+                id="instagram"
+                value={settings.social.instagram || ''}
+                onChange={(e) => updateSocial('instagram', e.target.value)}
+                placeholder="https://instagram.com/youraccount"
+              />
+            </div>
+            <div>
+              <Label htmlFor="twitter">টুইটার</Label>
+              <Input
+                id="twitter"
+                value={settings.social.twitter || ''}
+                onChange={(e) => updateSocial('twitter', e.target.value)}
+                placeholder="https://twitter.com/youraccount"
+              />
+            </div>
+            <div>
+              <Label htmlFor="youtube">ইউটিউব</Label>
+              <Input
+                id="youtube"
+                value={settings.social.youtube || ''}
+                onChange={(e) => updateSocial('youtube', e.target.value)}
+                placeholder="https://youtube.com/@yourchannel"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
