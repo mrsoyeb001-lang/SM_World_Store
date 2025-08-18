@@ -17,6 +17,7 @@ import {
   Eye
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { OrderDetailsDialog } from '@/components/ui/order-details-dialog';
 
 interface Order {
   id: string;
@@ -45,6 +46,7 @@ function DashboardContent() {
   const { profile, user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalSpent: 0,
@@ -208,7 +210,11 @@ function DashboardContent() {
                         )}
                       </div>
 
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedOrder(order)}
+                      >
                         <Eye className="mr-2 h-4 w-4" />
                         বিস্তারিত দেখুন
                       </Button>
@@ -265,6 +271,12 @@ function DashboardContent() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <OrderDetailsDialog 
+        open={selectedOrder !== null}
+        onOpenChange={(open) => !open && setSelectedOrder(null)}
+        order={selectedOrder}
+      />
     </div>
   );
 }

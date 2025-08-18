@@ -8,6 +8,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import ProductManagement from './ProductManagement';
 import OrderManagement from './OrderManagement';
 import PromoCodeManagement from './PromoCodeManagement';
+import UserManagement from './UserManagement';
+import SiteSettings from './SiteSettings';
 import { ShoppingBag, Users, DollarSign, Package, TrendingUp, Clock } from 'lucide-react';
 
 interface DashboardStats {
@@ -309,15 +311,11 @@ export default function EnhancedAdminDashboard() {
         </TabsContent>
         
         <TabsContent value="users">
-          <div className="text-center py-8">
-            <p>ব্যবহারকারী ম্যানেজমেন্ট শীঘ্রই আসছে...</p>
-          </div>
+          <UserManagement />
         </TabsContent>
         
         <TabsContent value="settings">
-          <div className="text-center py-8">
-            <p>সেটিংস শীঘ্রই আসছে...</p>
-          </div>
+          <SiteSettings />
         </TabsContent>
       </Tabs>
     </div>

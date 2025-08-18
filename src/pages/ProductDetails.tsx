@@ -69,14 +69,30 @@ export default function ProductDetails() {
     for (let i = 0; i < quantity; i++) {
       await addToCart(product.id);
     }
+    
+    toast({
+      title: "কার্টে যোগ হয়েছে! 🛒",
+      description: `${product.name} (${quantity}টি) কার্টে যোগ করা হয়েছে।`,
+      duration: 3000,
+    });
   };
 
   const handleBuyNow = async () => {
     if (!product) return;
     
     await handleAddToCart();
-    // Navigate to checkout would go here
-    window.location.href = '/checkout';
+    
+    // Show confirmation
+    toast({
+      title: "অর্ডার সফল! 🎉", 
+      description: `${product.name} কার্টে যোগ করা হয়েছে। চেকআউট পেজে যাচ্ছেন...`,
+      duration: 3000,
+    });
+    
+    // Navigate to checkout
+    setTimeout(() => {
+      window.location.href = '/checkout';
+    }, 1000);
   };
 
   if (loading) {

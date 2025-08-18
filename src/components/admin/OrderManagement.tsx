@@ -64,12 +64,12 @@ export default function OrderManagement() {
       .from('orders')
       .select(`
         *,
-        profiles:user_id (full_name, phone),
+        profiles!orders_user_id_fkey (full_name, phone),
         order_items (
           id,
           quantity,
           price,
-          products:product_id (name, images)
+          products (name, images)
         )
       `)
       .order('created_at', { ascending: false });
