@@ -79,7 +79,7 @@ export default function OrderManagement() {
         .from('profiles')
         .select('is_admin')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       if (profileError || !profile?.is_admin) {
         toast({
@@ -95,7 +95,6 @@ export default function OrderManagement() {
         .from('orders')
         .select(`
           *,
-          profiles (full_name, phone, email),
           order_items (
             id,
             quantity,
@@ -122,7 +121,10 @@ export default function OrderManagement() {
             ...item,
             products: item.products as unknown as { name: string; images: string[] }
           })),
-          profiles: order.profiles as unknown as { full_name: string; phone: string }
+          profiles: {
+            full_name: (order.shipping_address as any)?.full_name || '',
+            phone: (order.shipping_address as any)?.phone || ''
+          }
         })) as Order[];
         
         setOrders(typedOrders);
