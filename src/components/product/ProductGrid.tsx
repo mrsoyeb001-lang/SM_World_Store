@@ -20,13 +20,18 @@ interface ProductGridProps {
   limit?: number;
 }
 
-export function ProductGrid({ categoryId, searchQuery, limit }: ProductGridProps) {
+export function ProductGrid({ categoryId, searchQuery, limit, products: propProducts }: ProductGridProps & { products?: Product[] }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProducts();
-  }, [categoryId, searchQuery]);
+    if (!propProducts) {
+      fetchProducts();
+    } else {
+      setProducts(propProducts);
+      setLoading(false);
+    }
+  }, [categoryId, searchQuery, propProducts]);
 
   const fetchProducts = async () => {
     setLoading(true);

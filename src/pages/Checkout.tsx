@@ -40,6 +40,7 @@ export default function Checkout() {
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromoCode, setAppliedPromoCode] = useState<PromoCode | null>(null);
   const [discount, setDiscount] = useState(0);
+  const [paymentSettings, setPaymentSettings] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -64,6 +65,7 @@ export default function Checkout() {
     }
 
     fetchShippingRates();
+    fetchPaymentSettings();
   }, [user, items, navigate]);
 
   const fetchShippingRates = async () => {
@@ -74,6 +76,18 @@ export default function Checkout() {
     
     if (data) {
       setShippingRates(data);
+    }
+  };
+
+  const fetchPaymentSettings = async () => {
+    const { data } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'site_settings')
+      .maybeSingle();
+    
+    if (data?.value) {
+      setPaymentSettings(data.value);
     }
   };
 
@@ -308,15 +322,20 @@ export default function Checkout() {
                       <p className="text-sm mb-2">পেমেন্ট করতে নিচের নম্বরে টাকা পাঠান:</p>
                       <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
                         <span className="font-mono text-lg">
-                          {formData.paymentMethod === 'bkash' && '01XXXXXXXXX'}
-                          {formData.paymentMethod === 'rocket' && '01XXXXXXXXX'}
-                          {formData.paymentMethod === 'nagad' && '01XXXXXXXXX'}
+                          {formData.paymentMethod === 'bkash' && (paymentSettings?.bkashNumber || '01XXXXXXXXX')}
+                          {formData.paymentMethod === 'rocket' && (paymentSettings?.rocketNumber || '01XXXXXXXXX')}
+                          {formData.paymentMethod === 'nagad' && (paymentSettings?.nagadNumber || '01XXXXXXXXX')}
                         </span>
                         <Button 
                           type="button" 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigator.clipboard.writeText('01XXXXXXXXX')}
+                          onClick={() => {
+                            const number = formData.paymentMethod === 'bkash' ? paymentSettings?.bkashNumber :
+                                         formData.paymentMethod === 'rocket' ? paymentSettings?.rocketNumber :
+                                         paymentSettings?.nagadNumber;
+                            navigator.clipboard.writeText(number || '01XXXXXXXXX');
+                          }}
                         >
                           কপি করুন
                         </Button>

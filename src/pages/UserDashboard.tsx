@@ -21,6 +21,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { OrderDetailsDialog } from '@/components/ui/order-details-dialog';
 import AffiliateSystem from '@/components/affiliate/AffiliateSystem';
 import SupportSystem from '@/components/support/SupportSystem';
+import { ProfileEditor } from '@/components/profile/ProfileEditor';
 
 interface Order {
   id: string;
@@ -149,7 +150,7 @@ function DashboardContent() {
       <Tabs defaultValue="orders" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="orders">আমার অর্ডার</TabsTrigger>
-          <TabsTrigger value="affiliate">রেফারেল</TabsTrigger>
+          <TabsTrigger value="affiliate">{profile?.is_affiliate ? 'এফিলিয়েট' : 'রেফারেল'}</TabsTrigger>
           <TabsTrigger value="support">সাপোর্ট</TabsTrigger>
           <TabsTrigger value="profile">প্রোফাইল</TabsTrigger>
         </TabsList>
@@ -240,48 +241,7 @@ function DashboardContent() {
         </TabsContent>
 
         <TabsContent value="profile" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>প্রোফাইল তথ্য</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{profile?.full_name || 'নাম যোগ করুন'}</p>
-                  <p className="text-sm text-muted-foreground">পূর্ণ নাম</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{user?.email}</p>
-                  <p className="text-sm text-muted-foreground">ইমেইল</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{profile?.phone || 'ফোন নম্বর যোগ করুন'}</p>
-                  <p className="text-sm text-muted-foreground">ফোন</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{profile?.address || 'ঠিকানা যোগ করুন'}</p>
-                  <p className="text-sm text-muted-foreground">ঠিকানা</p>
-                </div>
-              </div>
-
-              <Button variant="outline" className="mt-4">
-                প্রোফাইল সম্পাদনা করুন
-              </Button>
-            </CardContent>
-          </Card>
+          <ProfileEditor />
         </TabsContent>
       </Tabs>
 

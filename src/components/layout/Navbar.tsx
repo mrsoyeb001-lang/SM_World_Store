@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
+import { AffiliateApplicationForm } from '@/components/affiliate/AffiliateApplicationForm';
 
 export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,7 +94,12 @@ export function Navbar() {
               <Heart className="h-5 w-5" />
             </Button>
 
-            {/* User Menu */}
+          {/* Affiliate Application Button */}
+          {user && !profile?.is_affiliate && (
+            <AffiliateApplicationForm />
+          )}
+
+          {/* User Menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -8,7 +8,12 @@ interface Profile {
   phone: string | null;
   address: string | null;
   city: string | null;
+  email: string | null;
   is_admin: boolean;
+  is_affiliate: boolean;
+  referral_code: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface AuthContextType {

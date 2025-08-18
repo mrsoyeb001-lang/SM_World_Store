@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_applications: {
+        Row: {
+          address: string
+          admin_notes: string | null
+          bank_account: string | null
+          created_at: string
+          full_name: string
+          id: string
+          mobile_banking: string | null
+          nid_number: string
+          phone: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          admin_notes?: string | null
+          bank_account?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          mobile_banking?: string | null
+          nid_number: string
+          phone: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          admin_notes?: string | null
+          bank_account?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          mobile_banking?: string | null
+          nid_number?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       affiliate_earnings: {
         Row: {
           commission_amount: number
@@ -318,6 +363,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_admin: boolean | null
+          is_affiliate: boolean | null
           phone: string | null
           referral_code: string | null
           updated_at: string
@@ -330,6 +376,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_admin?: boolean | null
+          is_affiliate?: boolean | null
           phone?: string | null
           referral_code?: string | null
           updated_at?: string
@@ -342,6 +389,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          is_affiliate?: boolean | null
           phone?: string | null
           referral_code?: string | null
           updated_at?: string
