@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_earnings: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          order_id: string
+          referral_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          order_id: string
+          referral_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          referral_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cart: {
         Row: {
           created_at: string
@@ -281,30 +314,36 @@ export type Database = {
           address: string | null
           city: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           is_admin: boolean | null
           phone: string | null
+          referral_code: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean | null
           phone?: string | null
+          referral_code?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
           phone?: string | null
+          referral_code?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -345,6 +384,33 @@ export type Database = {
           max_uses?: number | null
           min_order_amount?: number | null
           used_count?: number | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -434,6 +500,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_referral_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_current_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
