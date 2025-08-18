@@ -14,11 +14,13 @@ import {
   Phone,
   Mail,
   Calendar,
-  Eye
+  Eye,
+  MessageCircle
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { OrderDetailsDialog } from '@/components/ui/order-details-dialog';
 import AffiliateSystem from '@/components/affiliate/AffiliateSystem';
+import SupportSystem from '@/components/support/SupportSystem';
 
 interface Order {
   id: string;
@@ -145,9 +147,10 @@ function DashboardContent() {
       </div>
 
       <Tabs defaultValue="orders" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="orders">আমার অর্ডার</TabsTrigger>
           <TabsTrigger value="affiliate">রেফারেল</TabsTrigger>
+          <TabsTrigger value="support">সাপোর্ট</TabsTrigger>
           <TabsTrigger value="profile">প্রোফাইল</TabsTrigger>
         </TabsList>
 
@@ -230,6 +233,10 @@ function DashboardContent() {
 
         <TabsContent value="affiliate" className="space-y-4">
           <AffiliateSystem />
+        </TabsContent>
+
+        <TabsContent value="support" className="space-y-4">
+          <SupportSystem isAdmin={false} />
         </TabsContent>
 
         <TabsContent value="profile" className="space-y-4">

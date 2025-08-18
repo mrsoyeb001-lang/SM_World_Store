@@ -10,7 +10,8 @@ import OrderManagement from './OrderManagement';
 import PromoCodeManagement from './PromoCodeManagement';
 import UserManagement from './UserManagement';
 import SiteSettings from './SiteSettings';
-import { ShoppingBag, Users, DollarSign, Package, TrendingUp, Clock } from 'lucide-react';
+import SupportSystem from '@/components/support/SupportSystem';
+import { ShoppingBag, Users, DollarSign, Package, TrendingUp, Clock, MessageCircle } from 'lucide-react';
 
 interface DashboardStats {
   totalProducts: number;
@@ -290,11 +291,12 @@ export default function EnhancedAdminDashboard() {
 
       {/* Management Tabs */}
       <Tabs defaultValue="products" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="products">পণ্য</TabsTrigger>
           <TabsTrigger value="orders">অর্ডার</TabsTrigger>
           <TabsTrigger value="promo">প্রমো কোড</TabsTrigger>
           <TabsTrigger value="users">ব্যবহারকারী</TabsTrigger>
+          <TabsTrigger value="support">সাপোর্ট</TabsTrigger>
           <TabsTrigger value="settings">সেটিংস</TabsTrigger>
         </TabsList>
         
@@ -312,6 +314,10 @@ export default function EnhancedAdminDashboard() {
         
         <TabsContent value="users">
           <UserManagement />
+        </TabsContent>
+        
+        <TabsContent value="support">
+          <SupportSystem isAdmin={true} />
         </TabsContent>
         
         <TabsContent value="settings">

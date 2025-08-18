@@ -78,31 +78,38 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
         return;
       }
 
-      let query = supabase
-        .from('support_messages')
-        .select(`
-          *,
-          profiles (full_name, phone, email)
-        `)
-        .order('created_at', { ascending: false });
-
+      let filterClause = '';
       if (!isAdmin) {
-        query = query.eq('user_id', user.id);
+        filterClause = `?user_id=eq.${user.id}&`;
+      } else {
+        filterClause = '?';
       }
 
-      const { data, error } = await query;
+      const response = await fetch(`https://regnbhyxkfpeojnhltkj.supabase.co/rest/v1/support_messages${filterClause}select=*,profiles(full_name,phone,email)&order=created_at.desc`, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZ25iaHl4a2ZwZW9qbmhsdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NjQ2NDcsImV4cCI6MjA3MTA0MDY0N30.3Eh2JoWCA0QtbzBFo5oNtoDvFJ4Xiq0rs6BnHXT-VFM',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (error) {
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data || []);
+      } else {
         toast({
           title: "মেসেজ লোড ব্যর্থ",
-          description: error.message,
+          description: "মেসেজ লোড করতে সমস্যা হয়েছে।",
           variant: "destructive"
         });
-      } else {
-        setMessages(data || []);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+      toast({
+        title: "মেসেজ লোড ব্যর্থ", 
+        description: "দয়া করে পুনরায় চেষ্টা করুন।",
+        variant: "destructive"
+      });
     }
     setLoading(false);
   };
@@ -123,9 +130,14 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
     const autoDeleteAt = new Date();
     autoDeleteAt.setHours(autoDeleteAt.getHours() + formData.auto_delete_hours);
 
-    const { error } = await supabase
-      .from('support_messages')
-      .insert({
+    const response = await fetch(`https://regnbhyxkfpeojnhltkj.supabase.co/rest/v1/support_messages`, {
+      method: 'POST',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZ25iaHl4a2ZwZW9qbmhsdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NjQ2NDcsImV4cCI6MjA3MTA0MDY0N30.3Eh2JoWCA0QtbzBFo5oNtoDvFJ4Xiq0rs6BnHXT-VFM',
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         user_id: user.id,
         subject: formData.subject,
         message: formData.message,
@@ -133,15 +145,10 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
         contact_info: formData.contact_info,
         priority: formData.priority,
         auto_delete_at: autoDeleteAt.toISOString()
-      });
+      })
+    });
 
-    if (error) {
-      toast({
-        title: "মেসেজ পাঠানো ব্যর্থ",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
+    if (response.ok) {
       toast({
         title: "মেসেজ পাঠানো হয়েছে",
         description: "আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।"
@@ -154,6 +161,13 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
         priority: 'medium',
         auto_delete_hours: 24
       });
+      fetchMessages();
+    } else {
+      toast({
+        title: "মেসেজ পাঠানো ব্যর্থ",
+        description: "দয়া করে পুনরায় চেষ্টা করুন।",
+        variant: "destructive"
+      });
     }
   };
 
@@ -163,23 +177,22 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
-      .from('support_messages')
-      .update({
+    const response = await fetch(`https://regnbhyxkfpeojnhltkj.supabase.co/rest/v1/support_messages?id=eq.${messageId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZ25iaHl4a2ZwZW9qbmhsdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NjQ2NDcsImV4cCI6MjA3MTA0MDY0N30.3Eh2JoWCA0QtbzBFo5oNtoDvFJ4Xiq0rs6BnHXT-VFM',
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         admin_id: user.id,
         admin_response: adminResponse,
         status: 'in_progress',
         updated_at: new Date().toISOString()
       })
-      .eq('id', messageId);
+    });
 
-    if (error) {
-      toast({
-        title: "রিপ্লাই ব্যর্থ",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
+    if (response.ok) {
       toast({
         title: "রিপ্লাই পাঠানো হয়েছে",
         description: "গ্রাহকের সাথে যোগাযোগ করুন।"
@@ -187,43 +200,58 @@ export default function SupportSystem({ isAdmin = false }: SupportSystemProps) {
       setAdminResponse('');
       setIsDialogOpen(false);
       fetchMessages();
+    } else {
+      toast({
+        title: "রিপ্লাই ব্যর্থ",
+        description: "দয়া করে পুনরায় চেষ্টা করুন।",
+        variant: "destructive"
+      });
     }
   };
 
   const updateMessageStatus = async (messageId: string, status: string) => {
-    const { error } = await supabase
-      .from('support_messages')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', messageId);
+    const response = await fetch(`https://regnbhyxkfpeojnhltkj.supabase.co/rest/v1/support_messages?id=eq.${messageId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZ25iaHl4a2ZwZW9qbmhsdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NjQ2NDcsImV4cCI6MjA3MTA0MDY0N30.3Eh2JoWCA0QtbzBFo5oNtoDvFJ4Xiq0rs6BnHXT-VFM',
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status, updated_at: new Date().toISOString() })
+    });
 
-    if (error) {
+    if (response.ok) {
+      fetchMessages();
+    } else {
       toast({
         title: "স্ট্যাটাস আপডেট ব্যর্থ",
-        description: error.message,
+        description: "দয়া করে পুনরায় চেষ্টা করুন।",
         variant: "destructive"
       });
-    } else {
-      fetchMessages();
     }
   };
 
   const deleteMessage = async (messageId: string) => {
-    const { error } = await supabase
-      .from('support_messages')
-      .delete()
-      .eq('id', messageId);
+    const response = await fetch(`https://regnbhyxkfpeojnhltkj.supabase.co/rest/v1/support_messages?id=eq.${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZ25iaHl4a2ZwZW9qbmhsdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NjQ2NDcsImV4cCI6MjA3MTA0MDY0N30.3Eh2JoWCA0QtbzBFo5oNtoDvFJ4Xiq0rs6BnHXT-VFM',
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    if (error) {
-      toast({
-        title: "মেসেজ মুছা ব্যর্থ",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
+    if (response.ok) {
       toast({
         title: "মেসেজ মুছে ফেলা হয়েছে"
       });
       fetchMessages();
+    } else {
+      toast({
+        title: "মেসেজ মুছা ব্যর্থ",
+        description: "দয়া করে পুনরায় চেষ্টা করুন।",
+        variant: "destructive"
+      });
     }
   };
 
