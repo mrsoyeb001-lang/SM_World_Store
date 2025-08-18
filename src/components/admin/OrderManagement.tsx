@@ -64,7 +64,7 @@ export default function OrderManagement() {
       .from('orders')
       .select(`
         *,
-        profiles!orders_user_id_fkey (full_name, phone),
+        profiles (full_name, phone),
         order_items (
           id,
           quantity,

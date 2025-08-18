@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Edit, Trash2, Plus, Upload } from 'lucide-react';
+import { Edit, Trash2, Plus, Upload, X, Link } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -37,7 +37,8 @@ export default function ProductManagement() {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [imageFiles, setImageFiles] = useState<FileList | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [imageUrl, setImageUrl] = useState('');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -88,30 +89,95 @@ export default function ProductManagement() {
     }
   };
 
-  const handleFileUpload = async (files: FileList): Promise<string[]> => {
-    const uploadedUrls: string[] = [];
-    
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `product-${Date.now()}-${i}.${fileExt}`;
-      
-      const { data, error } = await supabase.storage
-        .from('products')
-        .upload(fileName, file);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-      if (error) {
-        throw error;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(fileName);
-
-      uploadedUrls.push(publicUrl);
+    // Check if adding new files would exceed the limit
+    if (images.length + files.length > 5) {
+      toast({
+        title: "সর্বোচ্চ সীমা অতিক্রম",
+        description: "সর্বোচ্চ ৫টি ইমেজ যোগ করা যাবে।",
+        variant: "destructive"
+      });
+      return;
     }
     
-    return uploadedUrls;
+    const newImages = [...images];
+    
+    for (const file of Array.from(files)) {
+      if (newImages.length >= 5) break;
+      
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `product-${Date.now()}-${Math.random()}.${fileExt}`;
+        
+        const { data, error } = await supabase.storage
+          .from('products')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(fileName);
+
+        newImages.push(publicUrl);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: "ছবি আপলোড ব্যর্থ",
+          description: "ছবি আপলোড করতে সমস্যা হয়েছে।",
+          variant: "destructive"
+        });
+      }
+    }
+    
+    setImages(newImages);
+    // Clear the input
+    e.target.value = '';
+  };
+
+  const addImageUrl = () => {
+    if (!imageUrl.trim()) {
+      toast({
+        title: "URL প্রয়োজন",
+        description: "অনুগ্রহ করে ইমেজ URL দিন।",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (images.length >= 5) {
+      toast({
+        title: "সর্বোচ্চ সীমা অতিক্রম",
+        description: "সর্বোচ্চ ৫টি ইমেজ যোগ করা যাবে।",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Simple URL validation
+    try {
+      new URL(imageUrl);
+      setImages([...images, imageUrl]);
+      setImageUrl('');
+      
+      toast({
+        title: "ইমেজ যোগ হয়েছে",
+        description: "ইমেজ URL সফলভাবে যোগ করা হয়েছে।"
+      });
+    } catch {
+      toast({
+        title: "অবৈধ URL",
+        description: "অনুগ্রহ করে বৈধ ইমেজ URL দিন।",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,16 +185,10 @@ export default function ProductManagement() {
     setLoading(true);
 
     try {
-      let imageUrls: string[] = [];
-      
-      if (imageFiles && imageFiles.length > 0) {
-        imageUrls = await handleFileUpload(imageFiles);
-      }
-
       const productData = {
         ...formData,
         sale_price: formData.sale_price > 0 ? formData.sale_price : null,
-        images: editingProduct ? [...(editingProduct.images || []), ...imageUrls] : imageUrls
+        images: images
       };
 
       if (editingProduct) {
@@ -181,6 +241,7 @@ export default function ProductManagement() {
       stock_quantity: product.stock_quantity || 0,
       is_active: product.is_active
     });
+    setImages(product.images || []);
     setIsDialogOpen(true);
   };
 
@@ -218,7 +279,8 @@ export default function ProductManagement() {
       is_active: true
     });
     setEditingProduct(null);
-    setImageFiles(null);
+    setImages([]);
+    setImageUrl('');
   };
 
   return (
@@ -315,22 +377,100 @@ export default function ProductManagement() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="images">পণ্যের ছবি</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="images"
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => setImageFiles(e.target.files)}
-                    className="flex-1"
-                  />
-                  <Upload className="w-4 h-4" />
+              {/* Image Management Section */}
+              <div className="space-y-4">
+                <Label>পণ্যের ছবি (সর্বোচ্চ ৫টি)</Label>
+                
+                {/* File Upload */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <div className="text-center">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <div className="flex items-center justify-center">
+                      <Input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        disabled={images.length >= 5}
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className={`cursor-pointer bg-primary text-primary-foreground px-4 py-2 rounded ${
+                          images.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        ফাইল নির্বাচন করুন
+                      </label>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      একাধিক ছবি নির্বাচন করুন (PNG, JPG, WEBP)
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  একাধিক ছবি নির্বাচন করতে পারেন
-                </p>
+
+                {/* Image URL Input */}
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                        <Link className="h-4 w-4" />
+                      </span>
+                      <Input
+                        placeholder="অথবা ইমেজ URL যোগ করুন..."
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        disabled={images.length >= 5}
+                        className="rounded-l-none"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={addImageUrl}
+                    disabled={!imageUrl.trim() || images.length >= 5}
+                    variant="outline"
+                  >
+                    যোগ করুন
+                  </Button>
+                </div>
+
+                {/* Image Preview */}
+                {images.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium">পূর্বরূপ ({images.length}/৫)</Label>
+                    <div className="grid grid-cols-5 gap-2 mt-2">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={image}
+                            alt={`পণ্যের ছবি ${index + 1}`}
+                            className="w-full h-16 object-cover rounded border"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder.svg';
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removeImage(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {images.length >= 5 && (
+                  <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                    সর্বোচ্চ সীমা পৌঁছেছে। আরও ছবি যোগ করতে প্রথমে কিছু ছবি মুছে ফেলুন।
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -389,17 +529,20 @@ export default function ProductManagement() {
                   
                   {product.images && product.images.length > 0 && (
                     <div className="flex gap-2 mt-2">
-                      {product.images.slice(0, 3).map((image, index) => (
+                      {product.images.slice(0, 4).map((image, index) => (
                         <img
                           key={index}
                           src={image}
                           alt={`${product.name} ${index + 1}`}
-                          className="w-12 h-12 object-cover rounded"
+                          className="w-12 h-12 object-cover rounded border"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder.svg';
+                          }}
                         />
                       ))}
-                      {product.images.length > 3 && (
-                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs">
-                          +{product.images.length - 3}
+                      {product.images.length > 4 && (
+                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs border">
+                          +{product.images.length - 4}
                         </div>
                       )}
                     </div>
