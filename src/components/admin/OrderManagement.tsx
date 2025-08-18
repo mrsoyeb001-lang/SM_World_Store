@@ -61,10 +61,27 @@ export default function OrderManagement() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      // Check if user is admin first
-      const { data: adminCheck, error: adminError } = await supabase.rpc('is_current_user_admin');
+      // Get current user info
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (adminError || !adminCheck) {
+      if (!user) {
+        toast({
+          title: "লগইন প্রয়োজন",
+          description: "অর্ডার দেখার জন্য লগইন করুন।",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Check if user is admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError || !profile?.is_admin) {
         toast({
           title: "অ্যাক্সেস নিষেধ",
           description: "অর্ডার দেখার জন্য এডমিন অনুমতি প্রয়োজন।",
@@ -89,12 +106,14 @@ export default function OrderManagement() {
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('Order fetch error:', error);
         toast({
           title: "অর্ডার লোড করতে ব্যর্থ",
-          description: error.message,
+          description: `Database Error: ${error.message}`,
           variant: "destructive"
         });
       } else {
+        console.log('Orders fetched successfully:', data);
         // Type cast the data properly
         const typedOrders = (data || []).map(order => ({
           ...order,
@@ -112,7 +131,7 @@ export default function OrderManagement() {
       console.error('Error fetching orders:', error);
       toast({
         title: "অর্ডার লোড করতে সমস্যা",
-        description: "দয়া করে পুনরায় চেষ্টা করুন।",
+        description: "দয়া করে পুনরায় চেষ্টা করুন। যদি সমস্যা থাকে তাহলে পেজ রিফ্রেশ করুন।",
         variant: "destructive"
       });
     }
