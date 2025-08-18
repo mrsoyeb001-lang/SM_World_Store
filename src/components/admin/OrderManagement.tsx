@@ -60,39 +60,61 @@ export default function OrderManagement() {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        profiles (full_name, phone),
-        order_items (
-          id,
-          quantity,
-          price,
-          products (name, images)
-        )
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      // Check if user is admin first
+      const { data: adminCheck, error: adminError } = await supabase.rpc('is_current_user_admin');
+      
+      if (adminError || !adminCheck) {
+        toast({
+          title: "অ্যাক্সেস নিষেধ",
+          description: "অর্ডার দেখার জন্য এডমিন অনুমতি প্রয়োজন।",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          profiles (full_name, phone, email),
+          order_items (
+            id,
+            quantity,
+            price,
+            products (name, images)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "অর্ডার লোড করতে ব্যর্থ",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        // Type cast the data properly
+        const typedOrders = (data || []).map(order => ({
+          ...order,
+          shipping_address: order.shipping_address as unknown as ShippingAddress,
+          order_items: order.order_items.map(item => ({
+            ...item,
+            products: item.products as unknown as { name: string; images: string[] }
+          })),
+          profiles: order.profiles as unknown as { full_name: string; phone: string }
+        })) as Order[];
+        
+        setOrders(typedOrders);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
       toast({
-        title: "অর্ডার লোড করতে ব্যর্থ",
-        description: error.message,
+        title: "অর্ডার লোড করতে সমস্যা",
+        description: "দয়া করে পুনরায় চেষ্টা করুন।",
         variant: "destructive"
       });
-    } else {
-      // Type cast the data properly
-      const typedOrders = (data || []).map(order => ({
-        ...order,
-        shipping_address: order.shipping_address as unknown as ShippingAddress,
-        order_items: order.order_items.map(item => ({
-          ...item,
-          products: item.products as unknown as { name: string; images: string[] }
-        })),
-        profiles: order.profiles as unknown as { full_name: string; phone: string }
-      })) as Order[];
-      
-      setOrders(typedOrders);
     }
     setLoading(false);
   };

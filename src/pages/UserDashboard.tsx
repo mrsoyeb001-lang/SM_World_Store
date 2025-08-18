@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { OrderDetailsDialog } from '@/components/ui/order-details-dialog';
+import AffiliateSystem from '@/components/affiliate/AffiliateSystem';
 
 interface Order {
   id: string;
@@ -144,8 +145,9 @@ function DashboardContent() {
       </div>
 
       <Tabs defaultValue="orders" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="orders">আমার অর্ডার</TabsTrigger>
+          <TabsTrigger value="affiliate">রেফারেল</TabsTrigger>
           <TabsTrigger value="profile">প্রোফাইল</TabsTrigger>
         </TabsList>
 
@@ -224,6 +226,10 @@ function DashboardContent() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="affiliate" className="space-y-4">
+          <AffiliateSystem />
         </TabsContent>
 
         <TabsContent value="profile" className="space-y-4">

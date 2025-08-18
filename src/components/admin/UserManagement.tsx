@@ -10,8 +10,10 @@ interface Profile {
   id: string;
   full_name: string;
   phone: string;
+  email: string;
   address: string;
   city: string;
+  referral_code: string;
   is_admin: boolean;
   created_at: string;
   _count?: {
@@ -37,7 +39,7 @@ export default function UserManagement() {
       .order('created_at', { ascending: false });
 
     if (searchQuery) {
-      query = query.or(`full_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
+      query = query.or(`full_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
     }
 
     const { data, error } = await query;
@@ -134,23 +136,38 @@ export default function UserManagement() {
                       )}
                     </div>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      {user.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          {user.phone}
-                        </div>
-                      )}
-                      {user.address && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {user.city ? `${user.address}, ${user.city}` : user.address}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        যোগদান: {new Date(user.created_at).toLocaleDateString('bn-BD')}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        {user.email && (
+                          <div className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {user.email}
+                          </div>
+                        )}
+                        {user.phone && (
+                          <div className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {user.phone}
+                          </div>
+                        )}
                       </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        {user.address && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {user.city ? `${user.address}, ${user.city}` : user.address}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          যোগদান: {new Date(user.created_at).toLocaleDateString('bn-BD')}
+                        </div>
+                      </div>
+                      {user.referral_code && (
+                        <div className="text-xs text-muted-foreground font-mono">
+                          রেফারেল কোড: {user.referral_code}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -160,8 +177,8 @@ export default function UserManagement() {
                     <div className="text-sm font-medium">
                       {user._count?.orders || 0} টি অর্ডার
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      #{user.id.slice(-8)}
+                    <div className="text-xs text-muted-foreground font-mono">
+                      ID: {user.id.slice(0, 8)}...
                     </div>
                   </div>
                   
