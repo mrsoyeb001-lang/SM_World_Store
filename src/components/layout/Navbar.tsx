@@ -11,23 +11,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  ShoppingCart,
-  User,
-  Search,
+import { 
+  ShoppingCart, 
+  User, 
+  Search, 
   Menu,
   Heart,
   LogOut,
   Settings,
-  Package,
+  Package
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { AffiliateApplicationForm } from '@/components/affiliate/AffiliateApplicationForm';
-
-// 🔹 তোমার লোগো এখানে ইমপোর্ট করো (Step–0 অনুযায়ী রাখলে কাজ করবে)
-import logo from '@/assets/logo.png';
 
 export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,69 +46,45 @@ export function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 z-50 w-full border-b text-white bg-gradient-to-r from-pink-600 to-fuchsia-600">
-      <div className="container mx-auto px-3">
-        <div className="flex h-14 items-center justify-between">
-          {/* Left: Menu + Logo + Name */}
-          <div className="flex items-center gap-2">
-            {/* Mobile Drawer */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white md:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72">
-                <div className="mt-6 flex flex-col space-y-2">
-                  <Link to="/" className="p-2 rounded-md hover:bg-accent">হোম</Link>
-                  <Link to="/products" className="p-2 rounded-md hover:bg-accent">সব পণ্য</Link>
-                  <Link to="/categories" className="p-2 rounded-md hover:bg-accent">ক্যাটাগরি</Link>
-                  <Link to="/favorites" className="p-2 rounded-md hover:bg-accent">পছন্দের তালিকা</Link>
-                  <Link to="/cart" className="p-2 rounded-md hover:bg-accent">কার্ট</Link>
-                </div>
-              </SheetContent>
-            </Sheet>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">B</span>
+            </div>
+            <span className="text-xl font-bold text-gradient">Badhon's World</span>
+          </Link>
 
-            {/* Logo + Brand */}
-            <Link to="/" className="flex items-center gap-2">
-              <img
-                src={logo}
-                alt="SM WORLD STORE"
-                className="h-8 w-8 rounded-md bg-white p-1"
-              />
-              <span className="text-lg font-extrabold leading-none">SM WORLD STORE</span>
-            </Link>
-          </div>
-
-          {/* Search - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
+          {/* Search Bar - Desktop */}
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-70" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="পণ্য খুঁজুন..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-white text-black"
+                className="pl-10"
               />
             </div>
           </form>
 
           {/* Right side buttons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center space-x-2">
             {/* Cart */}
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-white"
+              className="relative"
               onClick={() => navigate('/cart')}
-              aria-label="কার্ট"
             >
               <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-[10px] flex items-center justify-center"
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
                 >
                   {itemCount}
                 </Badge>
@@ -122,26 +95,32 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-white"
+              className="relative"
               onClick={() => navigate('/favorites')}
-              aria-label="পছন্দের তালিকা"
             >
               <Heart className="h-5 w-5" />
               {favorites.length > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-[10px] flex items-center justify-center"
+                <Badge 
+                  variant="secondary" 
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
                 >
                   {favorites.length}
                 </Badge>
               )}
             </Button>
-            
+
+            {/* Affiliate Application Button ✅ শুধু Desktop এ দেখাবে */}
+            {user && !profile?.is_affiliate && (
+              <div className="hidden md:block">
+                <AffiliateApplicationForm />
+              </div>
+            )}
+
             {/* User Menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-white">
+                  <Button variant="ghost" size="icon">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -174,26 +153,51 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => navigate('/auth')} variant="outline" className="bg-white text-pink-600">
+              <Button onClick={() => navigate('/auth')} variant="outline">
                 লগইন
               </Button>
             )}
+
+            {/* Mobile Menu */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80">
+                <div className="flex flex-col space-y-4 mt-8">
+                  {/* Mobile Search */}
+                  <form onSubmit={handleSearch}>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="পণ্য খুঁজুন..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </form>
+
+                  {/* Mobile Navigation */}
+                  <div className="flex flex-col space-y-2">
+                    <Link to="/" className="text-lg font-medium p-2 hover:bg-accent rounded-md">
+                      হোম
+                    </Link>
+                    <Link to="/products" className="text-lg font-medium p-2 hover:bg-accent rounded-md">
+                      সব পণ্য
+                    </Link>
+                    <Link to="/categories" className="text-lg font-medium p-2 hover:bg-accent rounded-md">
+                      ক্যাটাগরি
+                    </Link>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="md:hidden pb-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-70" />
-            <Input
-              type="search"
-              placeholder="পণ্য খুঁজুন..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white text-black"
-            />
-          </div>
-        </form>
       </div>
     </header>
   );
