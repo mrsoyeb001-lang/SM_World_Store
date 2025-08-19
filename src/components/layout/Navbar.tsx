@@ -23,14 +23,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
-import { useWishlist } from '@/hooks/useWishlist';   // ✅ নতুন যোগ করা হলো
 import { AffiliateApplicationForm } from '@/components/affiliate/AffiliateApplicationForm';
 
 export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut, isAdmin, profile } = useAuth();
   const { itemCount } = useCart();
-  const { wishlistCount } = useWishlist();   // ✅ wishlist এর কাউন্ট নিচ্ছি
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -91,22 +89,9 @@ export function Navbar() {
               )}
             </Button>
 
-            {/* Wishlist ✅ আপডেট করা হলো */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => navigate('/favorites')}
-            >
+            {/* Wishlist */}
+            <Button variant="ghost" size="icon">
               <Heart className="h-5 w-5" />
-              {wishlistCount > 0 && (
-                <Badge 
-                  variant="secondary" 
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-                >
-                  {wishlistCount}
-                </Badge>
-              )}
             </Button>
 
           {/* Affiliate Application Button */}
