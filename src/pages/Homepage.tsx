@@ -31,18 +31,22 @@ export default function Homepage() {
       {/* Stats Section */}
       <section className="py-8 bg-secondary/20">
         <div className="container mx-auto px-4">
-          <div className="flex flex-row md:grid md:grid-cols-4 gap-4 overflow-x-auto no-scrollbar">
-            <Card className="p-6 text-center min-w-[150px] flex-shrink-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="p-6 text-center">
               <div className="text-2xl font-bold text-primary mb-2">১০০০+</div>
-              <div className="text-sm text-muted-foreground">সন্তুষ্ট গ্রাহক</div>
+              <div className="text-sm text-muted-foreground">
+                সন্তুষ্ট গ্রাহক
+              </div>
             </Card>
 
-            <Card className="p-6 text-center min-w-[150px] flex-shrink-0">
+            <Card className="p-6 text-center">
               <div className="text-2xl font-bold text-primary mb-2">৫০০+</div>
-              <div className="text-sm text-muted-foreground">পণ্যের সংগ্রহ</div>
+              <div className="text-sm text-muted-foreground">
+                পণ্যের সংগ্রহ
+              </div>
             </Card>
 
-            <Card className="p-6 text-center min-w-[150px] flex-shrink-0">
+            <Card className="p-6 text-center">
               <div className="flex items-center justify-center mb-2">
                 <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
                 <span className="text-2xl font-bold text-primary ml-1">৪.৮</span>
@@ -50,7 +54,7 @@ export default function Homepage() {
               <div className="text-sm text-muted-foreground">গড় রেটিং</div>
             </Card>
 
-            <Card className="p-6 text-center min-w-[150px] flex-shrink-0">
+            <Card className="p-6 text-center">
               <div className="text-2xl font-bold text-primary mb-2">২৪/৭</div>
               <div className="text-sm text-muted-foreground">সাপোর্ট</div>
             </Card>
@@ -73,12 +77,9 @@ export default function Homepage() {
                   <h3 className="text-lg font-semibold">জনপ্রিয় পণ্য</h3>
                 </div>
 
-                <div className="flex flex-row md:flex-col gap-4 overflow-x-auto no-scrollbar">
+                <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="flex items-center space-x-3 min-w-[120px] md:min-w-0 flex-shrink-0"
-                    >
+                    <div key={i} className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-muted rounded" />
                       <div>
                         <p className="text-sm font-medium">পণ্যের নাম {i}</p>
@@ -116,8 +117,8 @@ export default function Homepage() {
             কেন আমাদের বেছে নিবেন?
           </h2>
 
-          <div className="flex flex-row md:grid md:grid-cols-3 gap-8 overflow-x-auto no-scrollbar">
-            <Card className="p-8 text-center card-hover min-w-[220px] flex-shrink-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-8 text-center card-hover">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Star className="h-8 w-8 text-primary" />
               </div>
@@ -127,7 +128,7 @@ export default function Homepage() {
               </p>
             </Card>
 
-            <Card className="p-8 text-center card-hover min-w-[220px] flex-shrink-0">
+            <Card className="p-8 text-center card-hover">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="h-8 w-8 text-primary" />
               </div>
@@ -137,7 +138,7 @@ export default function Homepage() {
               </p>
             </Card>
 
-            <Card className="p-8 text-center card-hover min-w-[220px] flex-shrink-0">
+            <Card className="p-8 text-center card-hover">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ArrowRight className="h-8 w-8 text-primary" />
               </div>
