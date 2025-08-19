@@ -31,22 +31,18 @@ export default function Homepage() {
       {/* Stats Section */}
       <section className="py-8 bg-secondary/20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="p-6 text-center">
+          <div className="flex gap-4 overflow-x-auto md:grid md:grid-cols-4 md:gap-4">
+            <Card className="p-6 text-center min-w-[150px]">
               <div className="text-2xl font-bold text-primary mb-2">১০০০+</div>
-              <div className="text-sm text-muted-foreground">
-                সন্তুষ্ট গ্রাহক
-              </div>
+              <div className="text-sm text-muted-foreground">সন্তুষ্ট গ্রাহক</div>
             </Card>
 
-            <Card className="p-6 text-center">
+            <Card className="p-6 text-center min-w-[150px]">
               <div className="text-2xl font-bold text-primary mb-2">৫০০+</div>
-              <div className="text-sm text-muted-foreground">
-                পণ্যের সংগ্রহ
-              </div>
+              <div className="text-sm text-muted-foreground">পণ্যের সংগ্রহ</div>
             </Card>
 
-            <Card className="p-6 text-center">
+            <Card className="p-6 text-center min-w-[150px]">
               <div className="flex items-center justify-center mb-2">
                 <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
                 <span className="text-2xl font-bold text-primary ml-1">৪.৮</span>
@@ -54,7 +50,7 @@ export default function Homepage() {
               <div className="text-sm text-muted-foreground">গড় রেটিং</div>
             </Card>
 
-            <Card className="p-6 text-center">
+            <Card className="p-6 text-center min-w-[150px]">
               <div className="text-2xl font-bold text-primary mb-2">২৪/৭</div>
               <div className="text-sm text-muted-foreground">সাপোর্ট</div>
             </Card>
@@ -70,21 +66,22 @@ export default function Homepage() {
             <div className="lg:col-span-1">
               <CategorySidebar />
 
-              {/* Trending Products (শুধু ডেস্কটপে দেখাবে) */}
-              <Card className="p-6 mt-6 hidden md:block">
+              {/* Trending Products */}
+              <Card className="p-6 mt-6">
                 <div className="flex items-center mb-4">
                   <TrendingUp className="h-5 w-5 text-primary mr-2" />
                   <h3 className="text-lg font-semibold">জনপ্রিয় পণ্য</h3>
                 </div>
 
-                <div className="space-y-4">
+                <div className="flex gap-4 overflow-x-auto">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-muted rounded" />
-                      <div>
-                        <p className="text-sm font-medium">পণ্যের নাম {i}</p>
-                        <p className="text-sm text-primary font-bold">৳৯৯৯</p>
-                      </div>
+                    <div
+                      key={i}
+                      className="min-w-[120px] flex-shrink-0 bg-muted p-3 rounded"
+                    >
+                      <div className="w-full h-20 bg-gray-300 rounded mb-2" />
+                      <p className="text-sm font-medium">পণ্যের নাম {i}</p>
+                      <p className="text-sm text-primary font-bold">৳৯৯৯</p>
                     </div>
                   ))}
                 </div>
@@ -104,17 +101,8 @@ export default function Homepage() {
                 </Button>
               </div>
 
-              {/* ডেস্কটপে আগের মতোই */}
-              <div className="hidden md:block">
-                <ProductGrid limit={12} />
-              </div>
-
-              {/* মোবাইলে প্রতি লাইনে ২টা প্রোডাক্ট */}
-              <div className="block md:hidden">
-                <div className="grid grid-cols-2 gap-3">
-                  <ProductGrid limit={6} />
-                </div>
-              </div>
+              {/* মোবাইলে ২টা প্রোডাক্ট প্রতি লাইনে */}
+              <ProductGrid limit={12} className="grid grid-cols-2 md:grid-cols-4 gap-4" />
             </div>
           </div>
         </div>
@@ -127,8 +115,8 @@ export default function Homepage() {
             কেন আমাদের বেছে নিবেন?
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 text-center card-hover">
+          <div className="flex gap-6 overflow-x-auto md:grid md:grid-cols-3 md:gap-8">
+            <Card className="p-8 text-center card-hover min-w-[250px]">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Star className="h-8 w-8 text-primary" />
               </div>
@@ -138,7 +126,7 @@ export default function Homepage() {
               </p>
             </Card>
 
-            <Card className="p-8 text-center card-hover">
+            <Card className="p-8 text-center card-hover min-w-[250px]">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="h-8 w-8 text-primary" />
               </div>
@@ -148,7 +136,7 @@ export default function Homepage() {
               </p>
             </Card>
 
-            <Card className="p-8 text-center card-hover">
+            <Card className="p-8 text-center card-hover min-w-[250px]">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ArrowRight className="h-8 w-8 text-primary" />
               </div>
