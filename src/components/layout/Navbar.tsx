@@ -23,14 +23,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
-import { useWishlist } from '@/hooks/useWishlist';   // ✅ নতুন যোগ করা হলো
+import { useFavorites } from '@/hooks/useFavorites';   // ✅ আসল হুক ব্যবহার করা হলো
 import { AffiliateApplicationForm } from '@/components/affiliate/AffiliateApplicationForm';
 
 export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut, isAdmin, profile } = useAuth();
   const { itemCount } = useCart();
-  const { wishlistCount } = useWishlist();   // ✅ wishlist এর কাউন্ট নিচ্ছি
+  const { favorites } = useFavorites();   // ✅ এখন favorites context থেকে আসছে
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -91,7 +91,7 @@ export function Navbar() {
               )}
             </Button>
 
-            {/* Wishlist ✅ আপডেট করা হলো */}
+            {/* Wishlist ✅ আপডেট */}
             <Button
               variant="ghost"
               size="icon"
@@ -99,22 +99,22 @@ export function Navbar() {
               onClick={() => navigate('/favorites')}
             >
               <Heart className="h-5 w-5" />
-              {wishlistCount > 0 && (
+              {favorites.length > 0 && (
                 <Badge 
                   variant="secondary" 
                   className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
                 >
-                  {wishlistCount}
+                  {favorites.length}
                 </Badge>
               )}
             </Button>
 
-          {/* Affiliate Application Button */}
-          {user && !profile?.is_affiliate && (
-            <AffiliateApplicationForm />
-          )}
+            {/* Affiliate Application Button */}
+            {user && !profile?.is_affiliate && (
+              <AffiliateApplicationForm />
+            )}
 
-          {/* User Menu */}
+            {/* User Menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
