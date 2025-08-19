@@ -25,7 +25,8 @@ import {
   PhoneCall,
   ExternalLink,
 } from "lucide-react";
-import { SiTiktok, SiWhatsapp, SiMessenger } from "react-icons/si";
+
+import { FaWhatsapp, FaTiktok } from "react-icons/fa";
 
 interface SiteSettings {
   contact: {
@@ -73,8 +74,9 @@ export function Footer() {
   const brand = settings?.site?.name || "SM World Store";
 
   return (
-    <footer className="bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#0f172a] text-gray-300 transition-colors duration-700">
-      <div className="container mx-auto px-4 py-12">
+    <footer className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-800 text-gray-300 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('/patterns/mesh.svg')] opacity-5 animate-pulse"></div>
+      <div className="container mx-auto px-4 py-12 relative z-10">
         {/* Top Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand / About */}
@@ -88,135 +90,76 @@ export function Footer() {
               {settings?.site?.description ||
                 "আপনার পছন্দের পণ্য সেরা দামে—বিশ্বস্ত ও দ্রুত ডেলিভারিতে।"}
             </p>
-
-            {/* Socials */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              {settings?.social?.facebook && (
-                <a
-                  href={settings.social.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-full bg-white/10 hover:bg-blue-600 transition transform hover:scale-110"
-                  aria-label="Facebook"
-                >
-                  <Facebook className="w-4 h-4 text-white" />
-                </a>
-              )}
-              {settings?.social?.instagram && (
-                <a
-                  href={settings.social.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-full bg-white/10 hover:bg-pink-500 transition transform hover:scale-110"
-                  aria-label="Instagram"
-                >
-                  <Instagram className="w-4 h-4 text-white" />
-                </a>
-              )}
-              {settings?.social?.twitter && (
-                <a
-                  href={settings.social.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-full bg-white/10 hover:bg-sky-500 transition transform hover:scale-110"
-                  aria-label="Twitter"
-                >
-                  <Twitter className="w-4 h-4 text-white" />
-                </a>
-              )}
-              {settings?.social?.youtube && (
-                <a
-                  href={settings.social.youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-full bg-white/10 hover:bg-red-600 transition transform hover:scale-110"
-                  aria-label="YouTube"
-                >
-                  <Youtube className="w-4 h-4 text-white" />
-                </a>
-              )}
-              {settings?.social?.tiktok && (
-                <a
-                  href={settings.social.tiktok}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-full bg-white/10 hover:bg-black transition transform hover:scale-110"
-                  aria-label="TikTok"
-                >
-                  <SiTiktok className="w-4 h-4 text-white" />
-                </a>
-              )}
-            </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links with icons */}
           <nav aria-label="Quick links">
             <h4 className="font-semibold text-white mb-4">দ্রুত লিংক</h4>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link to="/" className="group inline-flex items-center gap-2 hover:underline">
-                  <Home className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <Home className="w-4 h-4 group-hover:text-indigo-400" />
                   হোম
                 </Link>
               </li>
               <li>
                 <Link to="/products" className="group inline-flex items-center gap-2 hover:underline">
-                  <ShoppingBag className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <ShoppingBag className="w-4 h-4 group-hover:text-indigo-400" />
                   সকল পণ্য
                 </Link>
               </li>
               <li>
                 <Link to="/favorites" className="group inline-flex items-center gap-2 hover:underline">
-                  <Heart className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <Heart className="w-4 h-4 group-hover:text-indigo-400" />
                   পছন্দের তালিকা
                 </Link>
               </li>
               <li>
                 <Link to="/dashboard" className="group inline-flex items-center gap-2 hover:underline">
-                  <LayoutDashboard className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <LayoutDashboard className="w-4 h-4 group-hover:text-indigo-400" />
                   ড্যাশবোর্ড
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="group inline-flex items-center gap-2 hover:underline">
-                  <Info className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <Info className="w-4 h-4 group-hover:text-indigo-400" />
                   আমাদের সম্পর্কে
                 </Link>
               </li>
             </ul>
           </nav>
 
-          {/* Customer Service */}
+          {/* Customer Service with icons */}
           <nav aria-label="Customer service">
             <h4 className="font-semibold text-white mb-4">কাস্টমার সার্ভিস</h4>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link to="/support" className="group inline-flex items-center gap-2 hover:underline">
-                  <HelpCircle className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <HelpCircle className="w-4 h-4 group-hover:text-indigo-400" />
                   সাপোর্ট / হেল্প সেন্টার
                 </Link>
               </li>
               <li>
                 <Link to="/return-policy" className="group inline-flex items-center gap-2 hover:underline">
-                  <RotateCcw className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <RotateCcw className="w-4 h-4 group-hover:text-indigo-400" />
                   রিটার্ন পলিসি
                 </Link>
               </li>
               <li>
                 <Link to="/shipping" className="group inline-flex items-center gap-2 hover:underline">
-                  <Truck className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <Truck className="w-4 h-4 group-hover:text-indigo-400" />
                   শিপিং তথ্য
                 </Link>
               </li>
               <li>
                 <Link to="/faq" className="group inline-flex items-center gap-2 hover:underline">
-                  <FileText className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <FileText className="w-4 h-4 group-hover:text-indigo-400" />
                   FAQ
                 </Link>
               </li>
               <li>
                 <Link to="/warranty" className="group inline-flex items-center gap-2 hover:underline">
-                  <ShieldCheck className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <ShieldCheck className="w-4 h-4 group-hover:text-indigo-400" />
                   ওয়ারেন্টি ও গ্যারান্টি
                 </Link>
               </li>
@@ -229,108 +172,86 @@ export function Footer() {
             <div className="space-y-3 text-sm">
               {settings?.contact?.phone && (
                 <a href={`tel:${settings.contact.phone}`} className="group flex items-center gap-2 hover:underline">
-                  <Phone className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <Phone className="w-4 h-4 group-hover:text-indigo-400" />
                   <span>{settings.contact.phone}</span>
                 </a>
               )}
               {settings?.contact?.email && (
                 <a href={`mailto:${settings.contact.email}`} className="group flex items-center gap-2 hover:underline">
-                  <Mail className="w-4 h-4 opacity-80 group-hover:opacity-100" />
+                  <Mail className="w-4 h-4 group-hover:text-indigo-400" />
                   <span>{settings.contact.email}</span>
                 </a>
               )}
               {settings?.contact?.website && (
-                <a
-                  href={settings.contact.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-2 hover:underline"
-                >
-                  <Globe className="w-4 h-4 opacity-80 group-hover:opacity-100" />
-                  <span className="inline-flex items-center gap-1">
-                    {settings.contact.website}
-                    <ExternalLink className="w-3 h-3 opacity-70" />
-                  </span>
+                <a href={settings.contact.website} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-2 hover:underline">
+                  <Globe className="w-4 h-4 group-hover:text-indigo-400" />
+                  {settings.contact.website}
                 </a>
               )}
               {settings?.contact?.address && (
                 <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 mt-0.5 opacity-80" />
+                  <MapPin className="w-4 h-4 mt-0.5 group-hover:text-indigo-400" />
                   <span>{settings.contact.address}</span>
                 </div>
-              )}
-              {settings?.contact?.whatsapp && (
-                <a
-                  href={`https://wa.me/${settings.contact.whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 hover:underline"
-                >
-                  <SiWhatsapp className="w-4 h-4 opacity-80 group-hover:opacity-100" />
-                  WhatsApp
-                </a>
-              )}
-              {settings?.contact?.messenger && (
-                <a
-                  href={settings.contact.messenger}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 hover:underline"
-                >
-                  <SiMessenger className="w-4 h-4 opacity-80 group-hover:opacity-100" />
-                  Messenger
-                </a>
               )}
             </div>
           </section>
         </div>
 
-        {/* Payment Methods */}
-        <div className="mt-12 border-t border-white/10 pt-8">
-          <h4 className="font-semibold text-white mb-4">Payment Methods</h4>
-          <div className="flex items-center gap-3 flex-wrap">
-            {[
-              { src: "/payments/bkash.png", alt: "bKash" },
-              { src: "/payments/nagad.png", alt: "Nagad" },
-              { src: "/payments/rocket.png", alt: "Rocket" },
-            ].map((p) => (
-              <div
-                key={p.alt}
-                className="p-2 bg-white rounded-md shadow-sm ring-1 ring-black/5"
-                title={p.alt}
-              >
-                <img src={p.src} alt={p.alt} className="h-8 w-auto object-contain" />
-              </div>
-            ))}
-          </div>
+        {/* Socials Row */}
+        <div className="mt-10 flex justify-center gap-4 flex-wrap">
+          {settings?.social?.facebook && (
+            <a href={settings.social.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-blue-600 transition">
+              <Facebook className="w-5 h-5 text-white" />
+            </a>
+          )}
+          {settings?.social?.instagram && (
+            <a href={settings.social.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-pink-500 transition">
+              <Instagram className="w-5 h-5 text-white" />
+            </a>
+          )}
+          {settings?.social?.twitter && (
+            <a href={settings.social.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-sky-500 transition">
+              <Twitter className="w-5 h-5 text-white" />
+            </a>
+          )}
+          {settings?.social?.youtube && (
+            <a href={settings.social.youtube} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-red-600 transition">
+              <Youtube className="w-5 h-5 text-white" />
+            </a>
+          )}
+          {settings?.contact?.whatsapp && (
+            <a href={`https://wa.me/${settings.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-green-500 transition">
+              <FaWhatsapp className="w-5 h-5 text-white" />
+            </a>
+          )}
+          {settings?.social?.tiktok && (
+            <a href={settings.social.tiktok} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-black transition">
+              <FaTiktok className="w-5 h-5 text-white" />
+            </a>
+          )}
         </div>
 
-        {/* Bottom Bar */}
+        {/* Bottom bar */}
         <div className="border-t border-white/10 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm opacity-70 text-center md:text-left">
-            {settings?.site?.footer_text ||
-              `© ${currentYear} ${brand}. সকল অধিকার সংরক্ষিত।`}
+            {settings?.site?.footer_text || `© ${currentYear} ${brand}. সকল অধিকার সংরক্ষিত।`}
           </p>
-          <div className="flex flex-wrap justify-center md:justify-end gap-5 text-sm">
+          <div className="flex flex-wrap justify-center gap-5 text-sm">
             <Link to="/privacy" className="inline-flex items-center gap-1 hover:underline">
-              <Lock className="w-4 h-4" />
-              প্রাইভেসি পলিসি
+              <Lock className="w-4 h-4" /> প্রাইভেসি পলিসি
             </Link>
             <Link to="/terms" className="inline-flex items-center gap-1 hover:underline">
-              <FileText className="w-4 h-4" />
-              নিয়ম ও শর্তাবলী
+              <FileText className="w-4 h-4" /> নিয়ম ও শর্তাবলী
             </Link>
             <Link to="/refund-policy" className="inline-flex items-center gap-1 hover:underline">
-              <RotateCcw className="w-4 h-4" />
-              রিফান্ড পলিসি
+              <RotateCcw className="w-4 h-4" /> রিফান্ড পলিসি
             </Link>
             <Link to="/seller-policy" className="inline-flex items-center gap-1 hover:underline">
-              <ShieldCheck className="w-4 h-4" />
-              সেলার পলিসি
+              <ShieldCheck className="w-4 h-4" /> সেলার পলিসি
             </Link>
             <Link to="/cookie-policy" className="inline-flex items-center gap-1 hover:underline">
-              <Info className="w-4 h-4" />
-              কুকি পলিসি
+              <Info className="w-4 h-4" /> কুকি পলিসি
             </Link>
           </div>
         </div>
