@@ -95,8 +95,8 @@ export default function Homepage() {
                 </Button>
               </div>
 
-              {/* ✅ Mobile: 2 Columns | Desktop: 3 Columns */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {/* ✅ Mobile: 2 Columns | Desktop: 4 Columns */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <ProductGrid limit={12} />
               </div>
             </div>
