@@ -136,14 +136,7 @@ export function Navbar() {
                 </Badge>
               )}
             </Button>
-
-            {/* Affiliate CTA (যদি অ্যাফিলিয়েট না হয়) */}
-            {user && !profile?.is_affiliate && (
-              <div className="hidden sm:block">
-                <AffiliateApplicationForm />
-              </div>
-            )}
-
+            
             {/* User Menu */}
             {user ? (
               <DropdownMenu>
