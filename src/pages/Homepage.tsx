@@ -73,6 +73,7 @@ export default function Homepage() {
                   <h3 className="text-lg font-semibold">জনপ্রিয় পণ্য</h3>
                 </div>
 
+                {/* মোবাইলে এক লাইনে ৩টা প্রোডাক্ট */}
                 <div className="flex gap-4 overflow-x-auto">
                   {[1, 2, 3].map((i) => (
                     <div
@@ -101,8 +102,11 @@ export default function Homepage() {
                 </Button>
               </div>
 
-              {/* মোবাইলে ২টা প্রোডাক্ট প্রতি লাইনে */}
-              <ProductGrid limit={12} className="grid grid-cols-2 md:grid-cols-4 gap-4" />
+              {/* মোবাইলে ২টা, ডেস্কটপে ৪টা */}
+              <ProductGrid
+                limit={12}
+                className="grid grid-cols-2 md:grid-cols-4 gap-4"
+              />
             </div>
           </div>
         </div>
