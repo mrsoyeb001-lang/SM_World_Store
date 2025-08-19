@@ -49,12 +49,14 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
+          {/* Logo with name */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">B</span>
-            </div>
-            <span className="text-xl font-bold text-gradient">Badhon's World</span>
+            <img 
+              src="/logo.png"  // <-- public ফোল্ডারে logo.png রাখবে
+              alt="SM World Store Logo" 
+              className="w-10 h-10 object-contain"
+            />
+            <span className="text-xl font-bold text-gradient">SM World Store</span>
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -109,7 +111,7 @@ export function Navbar() {
               )}
             </Button>
 
-            {/* Affiliate Application Button ✅ শুধু Desktop এ দেখাবে */}
+            {/* Affiliate Application Button (Desktop Only) */}
             {user && !profile?.is_affiliate && (
               <div className="hidden md:block">
                 <AffiliateApplicationForm />
