@@ -69,7 +69,28 @@ export default function Homepage() {
             {/* Sidebar */}
             <div className="lg:col-span-1">
               <CategorySidebar />
-              
+
+              {/* Trending Products */}
+              <Card className="p-6 mt-6">
+                <div className="flex items-center mb-4">
+                  <TrendingUp className="h-5 w-5 text-primary mr-2" />
+                  <h3 className="text-lg font-semibold">জনপ্রিয় পণ্য</h3>
+                </div>
+
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-muted rounded" />
+                      <div>
+                        <p className="text-sm font-medium">পণ্যের নাম {i}</p>
+                        <p className="text-sm text-primary font-bold">৳৯৯৯</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+
             {/* Product Grid */}
             <div className="lg:col-span-3">
               <div className="flex items-center justify-between mb-8">
