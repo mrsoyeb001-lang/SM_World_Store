@@ -10,40 +10,52 @@ export default function Homepage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="hero-gradient text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              স্বাগতম Badhon's World এ
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
-              সেরা মানের পণ্য, সাশ্রয়ী দাম
-            </p>
-            <Button size="lg" variant="secondary" className="shadow-glow">
-              কেনাকাটা শুরু করুন
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+      {/* ================= Hero Section ================= */}
+      <section 
+        className="relative text-white py-32 md:py-40 bg-fixed bg-center bg-cover" 
+        style={{ backgroundImage: "url('https://source.unsplash.com/1600x900/?shopping,store')" }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/80"></div>
+
+        <div className="container relative z-10 mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-wide drop-shadow-lg">
+            স্বাগতম <span className="text-primary">SM World Store</span> এ
+          </h1>
+          <p className="text-lg md:text-2xl mb-10 opacity-90 max-w-2xl mx-auto leading-relaxed">
+            সেরা মানের পণ্য, আধুনিক ডিজাইন এবং সাশ্রয়ী মূল্যে — আপনার নির্ভরযোগ্য অনলাইন স্টোর
+          </p>
+          <Button 
+            size="lg" 
+            variant="secondary" 
+            className="shadow-glow px-8 py-6 text-lg rounded-2xl transition-transform transform hover:scale-105"
+            onClick={() => navigate('/products')}
+          >
+            কেনাকাটা শুরু করুন
+            <ArrowRight className="ml-2 h-6 w-6" />
+          </Button>
+        </div>
+
+        {/* Scroll Down Indicator */}
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+          <div className="animate-bounce text-white/70">
+            <ArrowRight className="rotate-90 h-8 w-8" />
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* ================= Stats Section ================= */}
       <section className="py-8 bg-secondary/20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="p-6 text-center">
               <div className="text-2xl font-bold text-primary mb-2">১০০০+</div>
-              <div className="text-sm text-muted-foreground">
-                সন্তুষ্ট গ্রাহক
-              </div>
+              <div className="text-sm text-muted-foreground">সন্তুষ্ট গ্রাহক</div>
             </Card>
 
             <Card className="p-6 text-center">
               <div className="text-2xl font-bold text-primary mb-2">৫০০+</div>
-              <div className="text-sm text-muted-foreground">
-                পণ্যের সংগ্রহ
-              </div>
+              <div className="text-sm text-muted-foreground">পণ্যের সংগ্রহ</div>
             </Card>
 
             <Card className="p-6 text-center">
@@ -62,7 +74,7 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* Main Content */}
+      {/* ================= Main Content ================= */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -110,7 +122,7 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* ================= Features Section ================= */}
       <section className="py-16 bg-secondary/20">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
