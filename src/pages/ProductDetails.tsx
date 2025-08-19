@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { toast } from '@/hooks/use-toast';
+import { useSession } from '@supabase/auth-helpers-react';
+import ReactMarkdown from "react-markdown";
 
 interface Product {
   id: string;
@@ -38,6 +39,7 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const { addToCart } = useCart();
+  const session = useSession();
 
   useEffect(() => {
     if (id) {
@@ -79,20 +81,59 @@ export default function ProductDetails() {
 
   const handleBuyNow = async () => {
     if (!product) return;
+
+    // লগইন চেক
+    if (!session) {
+      toast({
+        title: "লগইন প্রয়োজন ⚠️",
+        description: "এখনই কিনতে হলে প্রথমে লগইন করুন।",
+        duration: 3000,
+      });
+      window.location.href = '/login';
+      return;
+    }
     
     await handleAddToCart();
     
-    // Show confirmation
     toast({
       title: "অর্ডার সফল! 🎉", 
       description: `${product.name} কার্টে যোগ করা হয়েছে। চেকআউট পেজে যাচ্ছেন...`,
       duration: 3000,
     });
     
-    // Navigate to checkout
     setTimeout(() => {
       window.location.href = '/checkout';
     }, 1000);
+  };
+
+  const handleWishlist = async () => {
+    if (!product) return;
+
+    if (!session) {
+      toast({
+        title: "লগইন প্রয়োজন ❤️",
+        description: "উইশলিস্টে যোগ করতে হলে লগইন করুন।",
+      });
+      window.location.href = '/login';
+      return;
+    }
+
+    const { error } = await supabase
+      .from("wishlist")
+      .insert({ user_id: session.user.id, product_id: product.id });
+
+    if (error) {
+      toast({
+        title: "ত্রুটি!",
+        description: "উইশলিস্টে যোগ করা যায়নি।",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "যোগ হয়েছে ❤️",
+        description: `${product.name} উইশলিস্টে যোগ হয়েছে।`,
+      });
+    }
   };
 
   if (loading) {
@@ -285,7 +326,7 @@ export default function ProductDetails() {
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   কার্টে যোগ করুন
                 </Button>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" onClick={handleWishlist}>
                   <Heart className="h-4 w-4" />
                 </Button>
               </div>
@@ -297,9 +338,9 @@ export default function ProductDetails() {
           {/* Product Description */}
           <div>
             <h3 className="text-lg font-semibold mb-3">বিবরণ</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              {product.description}
-            </p>
+            <div className="prose prose-sm text-muted-foreground leading-relaxed">
+              <ReactMarkdown>{product.description}</ReactMarkdown>
+            </div>
           </div>
         </div>
       </div>
