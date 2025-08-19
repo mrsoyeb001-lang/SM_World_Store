@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -36,8 +37,8 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
   const { addToCart } = useCart();
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -46,7 +47,9 @@ export default function ProductDetails() {
     }
   }, [id]);
 
+  // 🔹 Product fetch
   const fetchProduct = async () => {
+    if (!id) return;
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -54,61 +57,62 @@ export default function ProductDetails() {
       .eq('is_active', true)
       .single();
 
-    if (!error) setProduct(data);
+    if (!error && data) setProduct(data);
     setLoading(false);
   };
 
-  // ✅ চেক করবো প্রোডাক্ট ফেভারিট করা আছে কিনা
+  // 🔹 Check if product is already in favorites
   const checkFavorite = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
     const { data } = await supabase
       .from('favorites')
-      .select('*')
-      .eq('user_id', user.id)
+      .select('id')
       .eq('product_id', id)
       .single();
-
-    setIsFavorite(!!data);
+    if (data) setIsFavorite(true);
   };
 
-  // ✅ ফেভারিট টগল
-  const toggleFavorite = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({ title: "দয়া করে লগইন করুন", description: "ফেভারিট করতে লগইন থাকা প্রয়োজন" });
-      return;
-    }
-
-    if (isFavorite) {
-      await supabase.from('favorites').delete()
-        .eq('user_id', user.id)
-        .eq('product_id', id);
-      setIsFavorite(false);
-      toast({ title: "ফেভারিট থেকে সরানো হয়েছে" });
-    } else {
-      await supabase.from('favorites').insert([{ user_id: user.id, product_id: id }]);
-      setIsFavorite(true);
-      toast({ title: "ফেভারিটে যোগ হয়েছে ❤️" });
-    }
-  };
-
+  // 🔹 Add to Cart
   const handleAddToCart = async () => {
     if (!product) return;
-    for (let i = 0; i < quantity; i++) await addToCart(product.id);
-
+    for (let i = 0; i < quantity; i++) {
+      await addToCart(product.id);
+    }
     toast({
-      title: "কার্টে যোগ হয়েছে! 🛒",
+      title: "কার্টে যোগ হয়েছে 🛒",
       description: `${product.name} (${quantity}টি) কার্টে যোগ করা হয়েছে।`,
       duration: 3000,
     });
   };
 
+  // 🔹 Buy Now
   const handleBuyNow = async () => {
     if (!product) return;
     await handleAddToCart();
-    setTimeout(() => { window.location.href = '/checkout'; }, 500);
+    toast({
+      title: "অর্ডার সফল 🎉", 
+      description: `${product.name} কার্টে যোগ করা হয়েছে। চেকআউট পেজে যাচ্ছেন...`,
+      duration: 3000,
+    });
+    setTimeout(() => {
+      window.location.href = '/checkout';
+    }, 1000);
+  };
+
+  // 🔹 Handle Favorite Toggle
+  const handleToggleFavorite = async () => {
+    if (!product) return;
+
+    if (isFavorite) {
+      // remove
+      await supabase.from('favorites').delete().eq('product_id', product.id);
+      setIsFavorite(false);
+      toast({ title: "ফেভারিট থেকে রিমুভ ❌" });
+    } else {
+      // add
+      await supabase.from('favorites').insert([{ product_id: product.id }]);
+      setIsFavorite(true);
+      toast({ title: "ফেভারিটে যোগ হয়েছে ❤️" });
+    }
   };
 
   if (loading) return <div className="p-10 text-center">লোড হচ্ছে...</div>;
@@ -122,12 +126,11 @@ export default function ProductDetails() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Back Button */}
+      {/* Breadcrumb */}
       <div className="mb-6">
         <Button variant="ghost" asChild>
           <Link to="/">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            পেছনে যান
+            <ArrowLeft className="mr-2 h-4 w-4" /> পেছনে যান
           </Link>
         </Button>
       </div>
@@ -152,7 +155,7 @@ export default function ProductDetails() {
                     selectedImage === index ? 'ring-2 ring-primary' : ''
                   }`}
                 >
-                  <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={image} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -161,92 +164,68 @@ export default function ProductDetails() {
 
         {/* Product Info */}
         <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+          <h1 className="text-3xl font-bold">{product.name}</h1>
 
-            {/* Rating */}
-            <div className="flex items-center gap-2 mb-4">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`h-4 w-4 ${
-                    star <= product.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                  }`}
-                />
-              ))}
-              <span className="text-sm text-muted-foreground">
-                ({product.review_count} রিভিউ)
-              </span>
-            </div>
+          {/* Rating */}
+          <div className="flex items-center gap-2 mb-4">
+            {[1,2,3,4,5].map(star => (
+              <Star key={star} className={`h-4 w-4 ${
+                star <= product.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+              }`} />
+            ))}
+            <span className="text-sm text-muted-foreground">
+              ({product.review_count} রিভিউ)
+            </span>
+          </div>
 
-            {/* Price */}
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-3xl font-bold text-primary">৳{currentPrice}</span>
-              {product.sale_price && (
-                <>
-                  <span className="text-xl text-muted-foreground line-through">৳{product.price}</span>
-                  <Badge variant="destructive">-{discountPercentage}%</Badge>
-                </>
-              )}
-            </div>
-
-            {/* Stock */}
-            {product.stock_quantity > 0 ? (
-              <Badge variant="outline" className="text-green-600 border-green-600">
-                স্টকে আছে ({product.stock_quantity} টি)
-              </Badge>
-            ) : (
-              <Badge variant="destructive">স্টক শেষ</Badge>
+          {/* Price */}
+          <div className="flex items-center gap-4">
+            <span className="text-3xl font-bold text-primary">৳{currentPrice}</span>
+            {product.sale_price && (
+              <>
+                <span className="text-xl text-muted-foreground line-through">৳{product.price}</span>
+                <Badge variant="destructive">-{discountPercentage}%</Badge>
+              </>
             )}
           </div>
 
-          <Separator />
-
-          {/* Quantity */}
+          {/* Stock */}
           <div>
-            <label className="text-sm font-medium mb-2 block">পরিমাণ</label>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
-                <Minus className="h-4 w-4" />
-              </Button>
-              <Input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-20 text-center"
-                min="1"
-                max={product.stock_quantity}
-              />
-              <Button variant="outline" size="sm" onClick={() => setQuantity(quantity + 1)}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+            {product.stock_quantity > 0 
+              ? <Badge variant="outline" className="text-green-600 border-green-600">স্টকে আছে ({product.stock_quantity} টি)</Badge>
+              : <Badge variant="destructive">স্টক শেষ</Badge>}
           </div>
 
-          {/* Action Buttons */}
+          <Separator />
+
+          {/* Quantity + Actions */}
           <div className="space-y-3">
-            <Button onClick={handleBuyNow} disabled={product.stock_quantity <= 0} className="w-full btn-gradient" size="lg">
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setQuantity(Math.max(1, quantity-1))} size="sm" variant="outline"><Minus /></Button>
+              <Input type="number" value={quantity} onChange={e => setQuantity(Math.max(1,parseInt(e.target.value)||1))} className="w-20 text-center"/>
+              <Button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity+1))} size="sm" variant="outline"><Plus /></Button>
+            </div>
+
+            <Button onClick={handleBuyNow} disabled={product.stock_quantity<=0} className="w-full btn-gradient" size="lg">
               এখনই কিনুন
             </Button>
+
             <div className="flex gap-3">
-              <Button onClick={handleAddToCart} disabled={product.stock_quantity <= 0} variant="outline" className="flex-1">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                কার্টে যোগ করুন
+              <Button onClick={handleAddToCart} disabled={product.stock_quantity<=0} variant="outline" className="flex-1">
+                <ShoppingCart className="mr-2 h-4 w-4" /> কার্টে যোগ করুন
               </Button>
-              <Button onClick={toggleFavorite} variant={isFavorite ? "destructive" : "outline"} size="icon">
-                <Heart className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+              <Button onClick={handleToggleFavorite} variant={isFavorite ? "default":"outline"} size="icon">
+                <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500':''}`} />
               </Button>
             </div>
           </div>
 
           <Separator />
 
-          {/* ✅ Professional Description */}
-          <div className="bg-muted/30 p-4 rounded-xl shadow-sm">
-            <h3 className="text-lg font-semibold mb-3">📖 বিবরণ</h3>
-            <div className="prose prose-sm sm:prose lg:prose-lg max-w-none leading-relaxed text-muted-foreground">
-              {product.description}
-            </div>
+          {/* Stylish Responsive Description */}
+          <div className="prose prose-sm sm:prose lg:prose-lg max-w-none text-muted-foreground leading-relaxed">
+            <h3 className="text-lg font-semibold mb-2">📖 বিস্তারিত বিবরণ</h3>
+            <div dangerouslySetInnerHTML={{ __html: product.description.replace(/\n/g, "<br/>") }} />
           </div>
         </div>
       </div>
@@ -254,7 +233,7 @@ export default function ProductDetails() {
       {/* Recommended */}
       <section>
         <h2 className="text-2xl font-bold mb-6">আরো দেখুন</h2>
-        <ProductGrid categoryId={product.category_id} limit={4} />
+        <ProductGrid categoryId={product.category_id} limit={4}/>
       </section>
     </div>
   );
