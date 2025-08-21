@@ -1,131 +1,94 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Mail, Phone, MessageCircle, HelpCircle, HeadphonesIcon } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { FaEnvelope, FaPhone, FaComments, FaWhatsapp, FaTelegram, FaFacebook, FaRobot } from "react-icons/fa";
-
-// Dummy AI Widget Component (floating button)
-const AIChatWidget = () => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="fixed bottom-5 right-5 z-50">
-      {open && (
-        <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-xl border p-4">
-          <h3 className="font-bold text-lg mb-2">🤖 AI Assistant</h3>
-          <div className="h-40 overflow-y-auto border rounded p-2 mb-2 text-sm">
-            <p><b>User:</b> Hi, I need help.</p>
-            <p><b>AI:</b> Sure! How can I assist you today?</p>
-          </div>
-          <input
-            type="text"
-            placeholder="Type your message..."
-            className="w-full border rounded p-2 text-sm"
-          />
-          <Button className="mt-2 w-full">Send</Button>
-        </div>
-      )}
-      <Button
-        className="rounded-full w-14 h-14 flex items-center justify-center shadow-lg bg-blue-600 hover:bg-blue-700"
-        onClick={() => setOpen(!open)}
-      >
-        <FaRobot size={22} className="text-white" />
-      </Button>
-    </div>
-  );
-};
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Support() {
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-6">Support & Help Center</h1>
-        <p className="text-center text-gray-600 mb-10">
-          Need help? Choose an option below or connect with our AI Assistant for instant support.
+    <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {/* Hero Section */}
+      <div className="text-center space-y-4">
+        <HeadphonesIcon className="w-16 h-16 mx-auto text-blue-500" />
+        <h1 className="text-4xl font-bold">সাপোর্ট / হেল্প সেন্টার</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          আমাদের কাস্টমার সার্ভিস টিম ২৪/৭ আপনার পাশে আছে। কোনো সমস্যা বা প্রশ্ন থাকলে এখান থেকে যোগাযোগ করুন।
         </p>
+      </div>
 
-        {/* Contact Options */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <FaEnvelope size={32} className="mx-auto text-blue-500 mb-3" />
-              <h3 className="font-semibold text-lg">Email Support</h3>
-              <p className="text-gray-600 mb-3">Get help via email from our support team.</p>
-              <Button asChild>
-                <a href="mailto:support@example.com">Send Email</a>
-              </Button>
-            </CardContent>
-          </Card>
+      {/* Contact Options */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <Card className="hover:shadow-lg transition">
+          <CardContent className="p-6 text-center space-y-2">
+            <Mail className="w-10 h-10 mx-auto text-purple-500" />
+            <h2 className="text-xl font-semibold">ইমেইল সাপোর্ট</h2>
+            <p className="text-muted-foreground">support@yourshop.com</p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-6 text-center">
-              <FaPhone size={32} className="mx-auto text-green-500 mb-3" />
-              <h3 className="font-semibold text-lg">Call Us</h3>
-              <p className="text-gray-600 mb-3">Talk directly with our support agents.</p>
-              <Button asChild>
-                <a href="tel:+123456789">+1 234 567 89</a>
-              </Button>
-            </CardContent>
-          </Card>
+        <Card className="hover:shadow-lg transition">
+          <CardContent className="p-6 text-center space-y-2">
+            <Phone className="w-10 h-10 mx-auto text-green-500" />
+            <h2 className="text-xl font-semibold">ফোন সাপোর্ট</h2>
+            <p className="text-muted-foreground">+880 1234 567 890</p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-6 text-center">
-              <FaComments size={32} className="mx-auto text-purple-500 mb-3" />
-              <h3 className="font-semibold text-lg">Live Chat</h3>
-              <p className="text-gray-600 mb-3">Chat with our team in real-time.</p>
-              <Button asChild>
-                <a href="/live-chat">Start Chat</a>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="hover:shadow-lg transition">
+          <CardContent className="p-6 text-center space-y-2">
+            <MessageCircle className="w-10 h-10 mx-auto text-blue-500" />
+            <h2 className="text-xl font-semibold">লাইভ চ্যাট</h2>
+            <p className="text-muted-foreground">চ্যাটে এজেন্টের সাথে কথা বলুন</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Social & Instant Messaging */}
-        <h2 className="text-2xl font-bold mb-4">Connect with us</h2>
-        <div className="flex gap-4 mb-12">
-          <Button variant="outline" asChild>
-            <a href="https://wa.me/123456789" target="_blank">
-              <FaWhatsapp className="mr-2 text-green-500" /> WhatsApp
-            </a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href="https://t.me/example" target="_blank">
-              <FaTelegram className="mr-2 text-sky-500" /> Telegram
-            </a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href="https://facebook.com/example" target="_blank">
-              <FaFacebook className="mr-2 text-blue-600" /> Facebook
-            </a>
-          </Button>
-        </div>
-
-        {/* FAQ Section */}
-        <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
-        <Accordion type="single" collapsible className="w-full">
+      {/* Help Topics */}
+      <div>
+        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <HelpCircle className="w-6 h-6 text-blue-500" /> হেল্প টপিক্স
+        </h2>
+        <Accordion type="single" collapsible className="w-full space-y-2">
           <AccordionItem value="item-1">
-            <AccordionTrigger>How can I reset my password?</AccordionTrigger>
+            <AccordionTrigger>অর্ডার কিভাবে করতে হয়?</AccordionTrigger>
             <AccordionContent>
-              Go to the login page, click "Forgot Password", and follow the instructions in your email.
+              আমাদের ওয়েবসাইট থেকে প্রোডাক্ট সিলেক্ট করে কার্টে যুক্ত করুন। তারপর Checkout এ গিয়ে পেমেন্ট ও ঠিকানা দিন।
             </AccordionContent>
           </AccordionItem>
+
           <AccordionItem value="item-2">
-            <AccordionTrigger>Where can I track my order?</AccordionTrigger>
+            <AccordionTrigger>আমি কিভাবে অর্ডার ট্র্যাক করবো?</AccordionTrigger>
             <AccordionContent>
-              You can track your order in the "My Orders" section of your account dashboard.
+              আপনার Dashboard → My Orders এ গিয়ে অর্ডারের স্ট্যাটাস ট্র্যাক করতে পারবেন।
             </AccordionContent>
           </AccordionItem>
+
           <AccordionItem value="item-3">
-            <AccordionTrigger>Do you offer refunds?</AccordionTrigger>
+            <AccordionTrigger>অর্ডার বাতিল করা যাবে কি?</AccordionTrigger>
             <AccordionContent>
-              Yes, we offer a 7-day money-back guarantee. Please read our refund policy for details.
+              হ্যাঁ, পেমেন্ট করার আগে বা প্রসেসিং এ থাকলে আপনি অর্ডার বাতিল করতে পারবেন।
             </AccordionContent>
           </AccordionItem>
         </Accordion>
       </div>
 
-      {/* Floating AI Widget */}
-      <AIChatWidget />
+      {/* Mini FAQ */}
+      <div>
+        <h2 className="text-2xl font-bold mb-6">সাধারণ প্রশ্নোত্তর</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-lg mb-2">ডেলিভারি কতদিনে হয়?</h3>
+              <p className="text-muted-foreground">ঢাকার ভিতরে ২-৩ দিন, ঢাকার বাইরে ৩-৫ দিন।</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-lg mb-2">রিটার্ন পলিসি কেমন?</h3>
+              <p className="text-muted-foreground">৭ দিনের মধ্যে পণ্য ফেরত দেওয়া যাবে, শর্ত প্রযোজ্য।</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
