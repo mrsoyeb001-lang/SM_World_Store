@@ -190,7 +190,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/ShippingInfoPage" className="group inline-flex items-center gap-2 hover:underline">
+                <Link to="/shipping-info" className="group inline-flex items-center gap-2 hover:underline">
                   <Truck className="w-4 h-4 opacity-80 group-hover:opacity-100" />
                   শিপিং তথ্য
                 </Link>
