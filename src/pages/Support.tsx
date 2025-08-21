@@ -151,7 +151,7 @@ export default function SupportPage() {
           className="flex flex-col items-center mb-10"
         >
           <img
-            src={logo}
+            src="/logo.png"
             alt="SM World Store"
             className="w-20 h-20 mb-3 drop-shadow-xl"
           />
