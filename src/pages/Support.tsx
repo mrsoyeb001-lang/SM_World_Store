@@ -1,20 +1,6 @@
 // src/pages/SupportPage.tsx
-import { useEffect, useRef, useState } from "react";
-import {
-  MessageCircle,
-  Send,
-  Bot,
-  User,
-  Phone,
-  Mail,
-  Loader2,
-} from "lucide-react";
-import {
-  FaWhatsapp,
-  FaTelegram,
-  FaFacebook,
-  FaTiktok,
-} from "react-icons/fa";
+import { FaPhone, FaEnvelope, FaWhatsapp, FaTelegram, FaFacebook } from "react-icons/fa";
+import { FaTiktok } from "react-icons/fa6";
 
 import logo from "@/assets/logo.png";
 
