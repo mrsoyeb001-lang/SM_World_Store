@@ -282,6 +282,7 @@ export function Footer() {
               { src: "/payments/bkash.png", alt: "bKash" },
               { src: "/payments/nagad.png", alt: "Nagad" },
               { src: "/payments/rocket.png", alt: "Rocket" },
+              { src: "/payments/cashon.png", alt: "Rocket" },
             ].map((p) => (
               <div
                 key={p.alt}
