@@ -8,6 +8,8 @@ import { CartProvider } from "@/hooks/useCart";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+
+// Pages
 import Homepage from "./pages/Homepage";
 import Auth from "./pages/Auth";
 import ProductDetails from "./pages/ProductDetails";
@@ -20,7 +22,7 @@ import Favorites from "./pages/Favorites";
 import Search from "./pages/Search";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
-import FAQ from "./pages/FAQ";
+import FAQ from "./pages/FAQ";   // ✅ নতুন করে ইমপোর্ট করা হলো
 
 const queryClient = new QueryClient();
 
@@ -48,8 +50,9 @@ const App = () => (
                     <Route path="/search" element={<Search />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/faq" element={<FAQ />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="/faq" element={<FAQ />} />   {/* ✅ FAQ Route যোগ হলো */}
+                    
+                    {/* সব কাস্টম রুট এই লাইনের উপরে লিখুন */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
