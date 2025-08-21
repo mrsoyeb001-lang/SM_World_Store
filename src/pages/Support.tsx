@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+// ==============================
+// Types
+// ==============================
 type ChatMessage = {
   id: string;
   role: "user" | "assistant" | "system";
@@ -17,6 +20,9 @@ type ChatMessage = {
   ts: number;
 };
 
+// ==============================
+// Quick Suggestions
+// ==============================
 const QUICK_SUGGESTIONS = [
   "অর্ডার কিভাবে করবো?",
   "ডেলিভারি কতদিনে হবে?",
@@ -33,6 +39,9 @@ const QUICK_SUGGESTIONS = [
   "টেলিগ্রাম গ্রুপের লিংক দিন",
 ];
 
+// ==============================
+// External Contact Links
+// ==============================
 const HANDOFF_LINKS = {
   tel: "tel:+8801624712851",
   mail: "mailto:smworldstoreofficial@gmail.com",
@@ -42,53 +51,57 @@ const HANDOFF_LINKS = {
   tiktok: "https://www.tiktok.com/@smworldstore",
 };
 
-// Rule Based Answer
+// ==============================
+// Rule Based Answer System
+// ==============================
 function ruleBasedAnswer(q: string): string {
   const s = q.toLowerCase();
 
-  if (/অর্ডার|order/.test(s)) {
+  if (/অর্ডার|order/.test(s))
     return `✅ অর্ডার করতে প্রোডাক্টে যান → “Add to Cart” → “Checkout”।`;
-  }
-  if (/ট্র্যাক|track/.test(s)) {
+
+  if (/ট্র্যাক|track/.test(s))
     return `📦 Dashboard → “My Orders” এ গিয়ে অর্ডার ট্র্যাক করতে পারবেন।`;
-  }
-  if (/পেমেন্ট|payment|bkash|নগদ|rocket/.test(s)) {
+
+  if (/পেমেন্ট|payment|bkash|নগদ|rocket/.test(s))
     return `💳 বিকাশ/নগদ/রকেট, কার্ড পেমেন্ট এবং ক্যাশ অন ডেলিভারি সাপোর্ট করি।`;
-  }
-  if (/ডেলিভারি|shipping/.test(s)) {
+
+  if (/ডেলিভারি|shipping/.test(s))
     return `🚚 ঢাকার ভেতরে ২৪–৪৮ ঘণ্টা, ঢাকার বাইরে ৩–৫ কর্মদিবস লাগে।`;
-  }
-  if (/রিটার্ন|return/.test(s)) {
+
+  if (/রিটার্ন|return/.test(s))
     return `↩️ ৭ দিনের মধ্যে শর্তসাপেক্ষে রিটার্ন/এক্সচেঞ্জ করা যায়।`;
-  }
-  if (/ওয়ারেন্টি|গ্যারান্টি|warranty/.test(s)) {
+
+  if (/ওয়ারেন্টি|গ্যারান্টি|warranty/.test(s))
     return `🛡️ ক্যাটেগরিভেদে ৬ মাস থেকে ১ বছরের ওয়ারেন্টি থাকে।`;
-  }
-  if (/ফেসবুক|facebook/.test(s)) {
+
+  if (/ফেসবুক|facebook/.test(s))
     return `📘 Facebook Page: ${HANDOFF_LINKS.facebook}`;
-  }
-  if (/টিকটক|tiktok/.test(s)) {
+
+  if (/টিকটক|tiktok/.test(s))
     return `🎵 TikTok: ${HANDOFF_LINKS.tiktok}`;
-  }
-  if (/whatsapp|ওয়াটসঅ্যাপ/.test(s)) {
+
+  if (/whatsapp|ওয়াটসঅ্যাপ/.test(s))
     return `🟢 WhatsApp: ${HANDOFF_LINKS.whatsapp}`;
-  }
-  if (/টেলিগ্রাম|telegram/.test(s)) {
+
+  if (/টেলিগ্রাম|telegram/.test(s))
     return `📨 Telegram Group: ${HANDOFF_LINKS.telegram}`;
-  }
-  if (/কাস্টমার কেয়ার|customer care|phone/.test(s)) {
+
+  if (/কাস্টমার কেয়ার|customer care|phone/.test(s))
     return `📞 কাস্টমার কেয়ার: ${HANDOFF_LINKS.tel}`;
-  }
-  if (/mail|ইমেইল|gmail/.test(s)) {
+
+  if (/mail|ইমেইল|gmail/.test(s))
     return `📧 ইমেইল: ${HANDOFF_LINKS.mail}`;
-  }
-  if (/অ্যাফিলিয়েট|affiliate/.test(s)) {
+
+  if (/অ্যাফিলিয়েট|affiliate/.test(s))
     return `🤝 আমাদের অ্যাফিলিয়েট প্রোগ্রামে যোগ দিন এবং ইনকাম শুরু করুন।`;
-  }
 
   return "🤔 বুঝতে পারিনি, একটু বিস্তারিত বলবেন? চাইলে WhatsApp, Telegram, Facebook এ যোগাযোগ করতে পারেন।";
 }
 
+// ==============================
+// Main Component
+// ==============================
 export default function SupportPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -104,12 +117,14 @@ export default function SupportPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Auto scroll to bottom on new message
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
+  // Handle Send Message
   const sendMessage = (text?: string) => {
     const content = (text ?? input).trim();
     if (!content) return;
@@ -120,6 +135,7 @@ export default function SupportPage() {
       content,
       ts: Date.now(),
     };
+
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setLoading(true);
@@ -137,6 +153,9 @@ export default function SupportPage() {
     }, 800);
   };
 
+  // ==============================
+  // Render
+  // ==============================
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-200 via-blue-100 to-pink-100 py-10 px-4">
       <div className="max-w-6xl mx-auto">
@@ -217,6 +236,9 @@ export default function SupportPage() {
             </motion.a>
           ))}
         </div>
+
+        {/* Chatbox */}
+        <div className="rounded-2xl shadow-xl overflow-hidden bg-white">
           {/* Chat Header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
             <Bot className="w-6 h-6" />
@@ -259,6 +281,7 @@ export default function SupportPage() {
                 )}
               </motion.div>
             ))}
+
             {loading && (
               <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -303,7 +326,7 @@ export default function SupportPage() {
               পাঠান
             </button>
           </form>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
