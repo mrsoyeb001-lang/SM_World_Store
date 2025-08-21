@@ -67,11 +67,11 @@ export default function Homepage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 hidden lg:block">
               <CategorySidebar />
 
               {/* Trending Products - Hidden on mobile */}
-              <Card className="p-6 mt-6 hidden md:block">
+              <Card className="p-6 mt-6 hidden lg:block">
                 <div className="flex items-center mb-4">
                   <TrendingUp className="h-5 w-5 text-primary mr-2" />
                   <h3 className="text-lg font-semibold">জনপ্রিয় পণ্য</h3>
@@ -104,16 +104,9 @@ export default function Homepage() {
                 </Button>
               </div>
 
-              {/* Modified ProductGrid with 2 columns on mobile */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {/* This is a simplified version - you might need to adjust based on your actual ProductGrid implementation */}
-                {Array.from({ length: 12 }).map((_, index) => (
-                  <div key={index} className="bg-card border rounded-lg p-4">
-                    <div className="aspect-square bg-muted mb-4 rounded"></div>
-                    <h3 className="font-medium text-sm mb-2">পণ্য {index + 1}</h3>
-                    <p className="text-primary font-bold">৳{(index + 1) * 500}</p>
-                  </div>
-                ))}
+              {/* Modified ProductGrid for mobile responsiveness */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <ProductGrid limit={12} />
               </div>
             </div>
           </div>
@@ -121,7 +114,7 @@ export default function Homepage() {
       </section>
 
       {/* Features Section - Hidden on mobile */}
-      <section className="py-16 bg-secondary/20 hidden md:block">
+      <section className="py-16 bg-secondary/20 hidden lg:block">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
             কেন আমাদের বেছে নিবেন?
