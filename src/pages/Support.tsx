@@ -11,8 +11,6 @@ import {
 import { SiWhatsapp, SiTelegram, SiFacebook, SiTiktok } from "react-icons/si";
 import { motion } from "framer-motion";
 
-import logo from "@/public/logo.png";
-
 type ChatMessage = {
   id: string;
   role: "user" | "assistant" | "system";
