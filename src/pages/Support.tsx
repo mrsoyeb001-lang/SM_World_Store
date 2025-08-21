@@ -1,44 +1,88 @@
-import { Mail, Phone, MessageCircle, HelpCircle, HeadphonesIcon } from "lucide-react";
+import { Mail, Phone, MessageCircle, HeadphonesIcon } from "lucide-react";
+import { FaWhatsapp, FaTelegramPlane, FaFacebookF } from "react-icons/fa";
+import { HelpCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Support() {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+    <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <HeadphonesIcon className="w-16 h-16 mx-auto text-blue-500" />
         <h1 className="text-4xl font-bold">সাপোর্ট / হেল্প সেন্টার</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          আমাদের কাস্টমার সার্ভিস টিম ২৪/৭ আপনার পাশে আছে। কোনো সমস্যা বা প্রশ্ন থাকলে এখান থেকে যোগাযোগ করুন।
+          আমাদের কাস্টমার সার্ভিস টিম ২৪/৭ আপনার পাশে আছে। নিচের মাধ্যমগুলো থেকে আপনার সুবিধামতো আমাদের সাথে যুক্ত হোন।
         </p>
       </div>
 
       {/* Contact Options */}
       <div className="grid md:grid-cols-3 gap-6">
-        <Card className="hover:shadow-lg transition">
-          <CardContent className="p-6 text-center space-y-2">
-            <Mail className="w-10 h-10 mx-auto text-purple-500" />
-            <h2 className="text-xl font-semibold">ইমেইল সাপোর্ট</h2>
-            <p className="text-muted-foreground">support@yourshop.com</p>
-          </CardContent>
-        </Card>
+        {/* Email */}
+        <a href="mailto:smworldstoreofficial@gmail.com">
+          <Card className="hover:shadow-xl transition hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-2">
+              <Mail className="w-10 h-10 mx-auto text-purple-500" />
+              <h2 className="text-xl font-semibold">ইমেইল সাপোর্ট</h2>
+              <p className="text-muted-foreground">smworldstoreofficial@gmail.com</p>
+            </CardContent>
+          </Card>
+        </a>
 
-        <Card className="hover:shadow-lg transition">
-          <CardContent className="p-6 text-center space-y-2">
-            <Phone className="w-10 h-10 mx-auto text-green-500" />
-            <h2 className="text-xl font-semibold">ফোন সাপোর্ট</h2>
-            <p className="text-muted-foreground">+880 1234 567 890</p>
-          </CardContent>
-        </Card>
+        {/* Phone */}
+        <a href="tel:+880162712851">
+          <Card className="hover:shadow-xl transition hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-2">
+              <Phone className="w-10 h-10 mx-auto text-green-500" />
+              <h2 className="text-xl font-semibold">ফোন কল</h2>
+              <p className="text-muted-foreground">+880 01624-712851</p>
+            </CardContent>
+          </Card>
+        </a>
 
-        <Card className="hover:shadow-lg transition">
-          <CardContent className="p-6 text-center space-y-2">
-            <MessageCircle className="w-10 h-10 mx-auto text-blue-500" />
-            <h2 className="text-xl font-semibold">লাইভ চ্যাট</h2>
-            <p className="text-muted-foreground">চ্যাটে এজেন্টের সাথে কথা বলুন</p>
-          </CardContent>
-        </Card>
+        {/* Live Chat */}
+        <a href="/live-chat">
+          <Card className="hover:shadow-xl transition hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-2">
+              <MessageCircle className="w-10 h-10 mx-auto text-blue-500" />
+              <h2 className="text-xl font-semibold">লাইভ চ্যাট</h2>
+              <p className="text-muted-foreground">চ্যাটে এজেন্টের সাথে কথা বলুন</p>
+            </CardContent>
+          </Card>
+        </a>
+
+        {/* WhatsApp */}
+        <a href="https://wa.me/8801624712851" target="_blank" rel="noopener noreferrer">
+          <Card className="hover:shadow-xl transition hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-2">
+              <FaWhatsapp className="w-10 h-10 mx-auto text-green-600" />
+              <h2 className="text-xl font-semibold">WhatsApp</h2>
+              <p className="text-muted-foreground">ডাইরেক্ট হোয়াটসঅ্যাপে যান</p>
+            </CardContent>
+          </Card>
+        </a>
+
+        {/* Telegram */}
+        <a href="https://t.me/+ylw3CCVehHQ1NWQ9" target="_blank" rel="noopener noreferrer">
+          <Card className="hover:shadow-xl transition hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-2">
+              <FaTelegramPlane className="w-10 h-10 mx-auto text-sky-500" />
+              <h2 className="text-xl font-semibold">Telegram</h2>
+              <p className="text-muted-foreground">আমাদের Telegram গ্রুপে যোগ দিন</p>
+            </CardContent>
+          </Card>
+        </a>
+
+        {/* Facebook Page */}
+        <a href="https://www.facebook.com/profile.php?id=61579242700749" target="_blank" rel="noopener noreferrer">
+          <Card className="hover:shadow-xl transition hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-2">
+              <FaFacebookF className="w-10 h-10 mx-auto text-blue-600" />
+              <h2 className="text-xl font-semibold">Facebook Page</h2>
+              <p className="text-muted-foreground">আমাদের FB কমিউনিটিতে যুক্ত হোন</p>
+            </CardContent>
+          </Card>
+        </a>
       </div>
 
       {/* Help Topics */}
@@ -70,7 +114,7 @@ export default function Support() {
         </Accordion>
       </div>
 
-      {/* Mini FAQ */}
+      {/* Extra FAQ */}
       <div>
         <h2 className="text-2xl font-bold mb-6">সাধারণ প্রশ্নোত্তর</h2>
         <div className="grid md:grid-cols-2 gap-6">
@@ -92,4 +136,3 @@ export default function Support() {
     </div>
   );
 }
-
