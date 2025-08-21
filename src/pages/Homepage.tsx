@@ -65,13 +65,13 @@ export default function Homepage() {
       {/* Main Content */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <div className="lg:col-span-1 hidden lg:block">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar - Hidden on mobile */}
+            <div className="hidden lg:block lg:w-1/4">
               <CategorySidebar />
 
               {/* Trending Products - Hidden on mobile */}
-              <Card className="p-6 mt-6 hidden lg:block">
+              <Card className="p-6 mt-6">
                 <div className="flex items-center mb-4">
                   <TrendingUp className="h-5 w-5 text-primary mr-2" />
                   <h3 className="text-lg font-semibold">জনপ্রিয় পণ্য</h3>
@@ -92,7 +92,7 @@ export default function Homepage() {
             </div>
 
             {/* Product Grid */}
-            <div className="lg:col-span-3">
+            <div className="w-full lg:w-3/4">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold">সর্বশেষ পণ্যসমূহ</h2>
                 <Button
@@ -104,17 +104,41 @@ export default function Homepage() {
                 </Button>
               </div>
 
-              {/* Modified ProductGrid for mobile responsiveness */}
+              {/* Modified ProductGrid with proper mobile responsiveness */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <ProductGrid limit={12} />
+                {/* Sample product cards - these should be replaced with your actual ProductGrid component */}
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                  <Card key={item} className="overflow-hidden">
+                    <div className="aspect-square bg-muted relative">
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                        -33%
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium text-sm mb-1">Mini Hand Fan</h3>
+                      <div className="flex items-center mb-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        ))}
+                        <span className="text-xs ml-1 text-muted-foreground">(35)</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-primary font-bold">৳৩,৩৯৯</span>
+                          <span className="text-muted-foreground text-xs line-through ml-1">৳৫,৫৯৯</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section - Hidden on mobile */}
-      <section className="py-16 bg-secondary/20 hidden lg:block">
+      {/* Features Section - Hidden on mobile and desktop */}
+      <section className="py-16 bg-secondary/20 hidden">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
             কেন আমাদের বেছে নিবেন?
