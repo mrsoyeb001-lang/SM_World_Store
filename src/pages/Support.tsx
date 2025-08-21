@@ -9,6 +9,7 @@ import {
   SendHorizonal,
 } from "lucide-react";
 import { SiWhatsapp, SiTelegram, SiFacebook, SiTiktok } from "react-icons/si";
+import { motion } from "framer-motion";
 
 import logo from "@/assets/logo.png";
 
@@ -44,18 +45,18 @@ const HANDOFF_LINKS = {
   tiktok: "https://www.tiktok.com/@smworldstore",
 };
 
-// ✅ Rule-based Answer
+// Rule Based Answer
 function ruleBasedAnswer(q: string): string {
   const s = q.toLowerCase();
 
   if (/অর্ডার|order/.test(s)) {
-    return `✅ অর্ডার করতে প্রোডাক্টে যান → “Add to Cart” → “Checkout”। ঠিকানা ও পেমেন্ট দিয়ে অর্ডার কনফার্ম করুন।`;
+    return `✅ অর্ডার করতে প্রোডাক্টে যান → “Add to Cart” → “Checkout”।`;
   }
   if (/ট্র্যাক|track/.test(s)) {
-    return `📦 অর্ডার ট্র্যাক করতে Dashboard → “My Orders” এ যান।`;
+    return `📦 Dashboard → “My Orders” এ গিয়ে অর্ডার ট্র্যাক করতে পারবেন।`;
   }
   if (/পেমেন্ট|payment|bkash|নগদ|rocket/.test(s)) {
-    return `💳 আমরা বিকাশ/নগদ/রকেট, কার্ড পেমেন্ট এবং ক্যাশ অন ডেলিভারি গ্রহণ করি।`;
+    return `💳 বিকাশ/নগদ/রকেট, কার্ড পেমেন্ট এবং ক্যাশ অন ডেলিভারি সাপোর্ট করি।`;
   }
   if (/ডেলিভারি|shipping/.test(s)) {
     return `🚚 ঢাকার ভেতরে ২৪–৪৮ ঘণ্টা, ঢাকার বাইরে ৩–৫ কর্মদিবস লাগে।`;
@@ -64,31 +65,31 @@ function ruleBasedAnswer(q: string): string {
     return `↩️ ৭ দিনের মধ্যে শর্তসাপেক্ষে রিটার্ন/এক্সচেঞ্জ করা যায়।`;
   }
   if (/ওয়ারেন্টি|গ্যারান্টি|warranty/.test(s)) {
-    return `🛡️ বিভিন্ন ক্যাটেগরিতে ৬ মাস থেকে ১ বছরের ওয়ারেন্টি থাকে।`;
+    return `🛡️ ক্যাটেগরিভেদে ৬ মাস থেকে ১ বছরের ওয়ারেন্টি থাকে।`;
   }
   if (/ফেসবুক|facebook/.test(s)) {
-    return `📘 আমাদের অফিসিয়াল ফেসবুক পেজ: ${HANDOFF_LINKS.facebook}`;
+    return `📘 Facebook Page: ${HANDOFF_LINKS.facebook}`;
   }
   if (/টিকটক|tiktok/.test(s)) {
-    return `🎵 আমাদের অফিসিয়াল TikTok: ${HANDOFF_LINKS.tiktok}`;
+    return `🎵 TikTok: ${HANDOFF_LINKS.tiktok}`;
   }
   if (/whatsapp|ওয়াটসঅ্যাপ/.test(s)) {
-    return `🟢 আমাদের WhatsApp: ${HANDOFF_LINKS.whatsapp}`;
+    return `🟢 WhatsApp: ${HANDOFF_LINKS.whatsapp}`;
   }
   if (/টেলিগ্রাম|telegram/.test(s)) {
-    return `📨 আমাদের Telegram Group: ${HANDOFF_LINKS.telegram}`;
+    return `📨 Telegram Group: ${HANDOFF_LINKS.telegram}`;
   }
   if (/কাস্টমার কেয়ার|customer care|phone/.test(s)) {
     return `📞 কাস্টমার কেয়ার: ${HANDOFF_LINKS.tel}`;
   }
   if (/mail|ইমেইল|gmail/.test(s)) {
-    return `📧 আমাদের অফিসিয়াল ইমেইল: ${HANDOFF_LINKS.mail}`;
+    return `📧 ইমেইল: ${HANDOFF_LINKS.mail}`;
   }
   if (/অ্যাফিলিয়েট|affiliate/.test(s)) {
-    return `🤝 আমাদের অ্যাফিলিয়েট প্রোগ্রামে যোগ দিয়ে ইনকাম করতে পারবেন। বিস্তারিত জানার জন্য কাস্টমার কেয়ারের সাথে যোগাযোগ করুন অথবা ওয়েবসাইটের "Affiliate Program" সেকশন ভিজিট করুন।`;
+    return `🤝 আমাদের অ্যাফিলিয়েট প্রোগ্রামে যোগ দিন এবং ইনকাম শুরু করুন।`;
   }
 
-  return "🤔 আমি বুঝেছি। একটু বিস্তারিত বলবেন? চাইলে WhatsApp, Telegram, Facebook বা লাইভ চ্যাটেও যেতে পারেন।";
+  return "🤔 বুঝতে পারিনি, একটু বিস্তারিত বলবেন? চাইলে WhatsApp, Telegram, Facebook এ যোগাযোগ করতে পারেন।";
 }
 
 export default function SupportPage() {
@@ -99,7 +100,7 @@ export default function SupportPage() {
       id: crypto.randomUUID(),
       role: "assistant",
       content:
-        "👋 হ্যালো! আমি **SM World Store AI সহকারী**। অর্ডার, ডেলিভারি, রিটার্ন, পেমেন্ট, ট্র্যাকিং, অ্যাফিলিয়েট প্রোগ্রাম—যেকোন প্রশ্ন করুন।",
+        "👋 হ্যালো! আমি **SM World Store AI সহকারী**। অর্ডার, ডেলিভারি, রিটার্ন, পেমেন্ট, ট্র্যাকিং বা অন্য যেকোনো প্রশ্ন করুন।",
       ts: Date.now(),
     },
   ]);
@@ -112,7 +113,7 @@ export default function SupportPage() {
     }
   }, [messages]);
 
-  const sendMessage = async (text?: string) => {
+  const sendMessage = (text?: string) => {
     const content = (text ?? input).trim();
     if (!content) return;
 
@@ -126,7 +127,7 @@ export default function SupportPage() {
     setInput("");
     setLoading(true);
 
-    try {
+    setTimeout(() => {
       const reply = ruleBasedAnswer(content);
       const botMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -135,88 +136,70 @@ export default function SupportPage() {
         ts: Date.now(),
       };
       setMessages((m) => [...m, botMsg]);
-    } finally {
       setLoading(false);
-    }
+    }, 800);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-200 via-blue-100 to-pink-100 py-10 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col items-center mb-8">
-          <img src={logo} alt="SM World Store" className="w-20 h-20 mb-3" />
-          <h1 className="text-4xl font-extrabold text-gray-800">
+        <motion.div
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col items-center mb-10"
+        >
+          <img
+            src={logo}
+            alt="SM World Store"
+            className="w-20 h-20 mb-3 drop-shadow-xl"
+          />
+          <h1 className="text-4xl font-extrabold text-gray-800 bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
             SM World Store Support
           </h1>
           <p className="text-center text-gray-600 mt-2">
-            যেকোনো প্রশ্ন, সমস্যা বা সাহায্যের জন্য আমাদের সাথে যোগাযোগ করুন
+            যেকোনো প্রশ্ন, সমস্যা বা সাহায্যের জন্য যোগাযোগ করুন 💬
           </p>
-        </div>
+        </motion.div>
 
         {/* Quick Support Options */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-10">
-          <a
-            href={HANDOFF_LINKS.tel}
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
-            <PhoneCall className="w-8 h-8 text-blue-600" />
-            <span className="mt-2 text-sm font-semibold">কল</span>
-          </a>
-          <a
-            href={HANDOFF_LINKS.mail}
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
-            <Mail className="w-8 h-8 text-red-600" />
-            <span className="mt-2 text-sm font-semibold">ইমেইল</span>
-          </a>
-          <a
-            href={HANDOFF_LINKS.whatsapp}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
-            <SiWhatsapp className="w-8 h-8 text-green-600" />
-            <span className="mt-2 text-sm font-semibold">WhatsApp</span>
-          </a>
-          <a
-            href={HANDOFF_LINKS.telegram}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
-            <SiTelegram className="w-8 h-8 text-sky-500" />
-            <span className="mt-2 text-sm font-semibold">Telegram</span>
-          </a>
-          <a
-            href={HANDOFF_LINKS.facebook}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
-            <SiFacebook className="w-8 h-8 text-blue-700" />
-            <span className="mt-2 text-sm font-semibold">Facebook</span>
-          </a>
-          <a
-            href={HANDOFF_LINKS.tiktok}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
-            <SiTiktok className="w-8 h-8 text-black" />
-            <span className="mt-2 text-sm font-semibold">TikTok</span>
-          </a>
+          {[
+            { icon: <PhoneCall className="w-8 h-8 text-blue-600" />, text: "কল", link: HANDOFF_LINKS.tel },
+            { icon: <Mail className="w-8 h-8 text-red-600" />, text: "ইমেইল", link: HANDOFF_LINKS.mail },
+            { icon: <SiWhatsapp className="w-8 h-8 text-green-600" />, text: "WhatsApp", link: HANDOFF_LINKS.whatsapp },
+            { icon: <SiTelegram className="w-8 h-8 text-sky-500" />, text: "Telegram", link: HANDOFF_LINKS.telegram },
+            { icon: <SiFacebook className="w-8 h-8 text-blue-700" />, text: "Facebook", link: HANDOFF_LINKS.facebook },
+            { icon: <SiTiktok className="w-8 h-8 text-black" />, text: "TikTok", link: HANDOFF_LINKS.tiktok },
+          ].map((item, i) => (
+            <motion.a
+              key={i}
+              href={item.link}
+              target="_blank"
+              rel="noreferrer"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+              className="group rounded-2xl border p-6 flex flex-col items-center justify-center shadow-lg hover:shadow-2xl bg-white/70 backdrop-blur-md transition-all duration-300"
+            >
+              {item.icon}
+              <span className="mt-2 text-sm font-semibold">{item.text}</span>
+            </motion.a>
+          ))}
         </div>
 
-        {/* AI Assistant Chat Box */}
-        <div className="rounded-2xl border bg-white shadow-xl overflow-hidden">
-          {/* Header */}
+        {/* Chat Box */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9 }}
+          className="rounded-2xl border bg-white/80 backdrop-blur-md shadow-2xl overflow-hidden"
+        >
+          {/* Chat Header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
             <Bot className="w-6 h-6" />
             <div>
-              <p className="font-semibold leading-none">
-                AI সহকারী (SM World Store)
-              </p>
+              <p className="font-semibold leading-none">AI সহকারী</p>
               <p className="text-xs opacity-90">২৪/৭ সহায়তা</p>
             </div>
           </div>
@@ -224,8 +207,11 @@ export default function SupportPage() {
           {/* Messages */}
           <div ref={scrollRef} className="h-96 overflow-y-auto p-4 space-y-3">
             {messages.map((m) => (
-              <div
+              <motion.div
                 key={m.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
                 className={`flex items-start gap-2 ${
                   m.role === "user" ? "justify-end" : "justify-start"
                 }`}
@@ -238,7 +224,7 @@ export default function SupportPage() {
                 <div
                   className={`rounded-2xl px-4 py-2 text-sm max-w-[80%] shadow-sm ${
                     m.role === "user"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
@@ -249,7 +235,7 @@ export default function SupportPage() {
                     <UserRound className="w-4 h-4 text-gray-600" />
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))}
             {loading && (
               <div className="flex items-center gap-2 text-gray-500 text-sm">
@@ -265,7 +251,7 @@ export default function SupportPage() {
               <button
                 key={q}
                 onClick={() => sendMessage(q)}
-                className="shrink-0 rounded-full border px-3 py-1 text-xs hover:bg-gray-200"
+                className="shrink-0 rounded-full border px-3 py-1 text-xs hover:bg-gray-200 transition"
               >
                 {q}
               </button>
@@ -289,13 +275,13 @@ export default function SupportPage() {
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 text-white px-3 py-2 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 disabled:opacity-50"
             >
               <SendHorizonal className="w-4 h-4" />
               পাঠান
             </button>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
