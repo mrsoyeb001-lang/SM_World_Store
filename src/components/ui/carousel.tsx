@@ -159,7 +159,7 @@ const CarouselContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "flex",
+          "flex flex-wrap",   // ✅ wrap করা হলো
           orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
           className
         )}
@@ -182,8 +182,7 @@ const CarouselItem = React.forwardRef<
       role="group"
       aria-roledescription="slide"
       className={cn(
-        // ✅ শুধু মোবাইলে প্রতি লাইনে ২টা
-        "min-w-0 shrink-0 grow-0 basis-1/2 px-2",
+        "min-w-0 shrink-0 grow-0 basis-1/2 px-2",  // ✅ মোবাইলে প্রতি লাইনে ২টা
         orientation === "horizontal" ? "pl-4" : "pt-4",
         className
       )}
