@@ -11,7 +11,7 @@ import {
   HelpCircle,
   Loader2,
 } from "lucide-react";
-import logo from "@/assets/logo.png"; // ✅ আপনার লোগো এখানে ব্যবহার হবে
+import logo from "@/public/logo.png"; // ✅ আপনার লোগো এখানে ব্যবহার হবে
 
 type ChatMessage = {
   id: string;
@@ -139,7 +139,7 @@ export default function SupportPage() {
       <div className="max-w-5xl mx-auto">
         {/* Header with Logo */}
         <div className="flex flex-col items-center gap-2 mb-8">
-          <img src={logo} alt="SM World Store Logo" className="h-16 w-auto" />
+          <img src=/logo.png alt="SM World Store Logo" className="h-16 w-auto" />
           <h1 className="text-3xl font-bold text-center">📞 SM World Store Support</h1>
           <p className="text-center text-gray-600">
             যেকোনো প্রশ্ন, সমস্যা বা সাহায্যের জন্য আমাদের সাথে যোগাযোগ করুন
