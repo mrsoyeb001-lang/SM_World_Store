@@ -1,105 +1,17 @@
-import { useNavigate } from 'react-router-dom';
+import { CategorySidebar } from '@/components/layout/CategorySidebar';
+import { ProductGrid } from '@/components/product/ProductGrid';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { ArrowRight, Star, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const Homepage = () => {
+export default function Homepage() {
   const navigate = useNavigate();
 
-  // পণ্যের ডেমো ডেটা - আপনার আসল ডেটা দিয়ে প্রতিস্থাপন করুন
-  const products = [
-    {
-      id: 1,
-      name: "Mini Hand Fan",
-      price: 3399,
-      originalPrice: 5599,
-      discount: 33,
-      rating: 5,
-      reviews: 35,
-      sold: 12,
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 2,
-      name: "4 Port USB 3.0 Hub",
-      price: 1200,
-      originalPrice: 1950,
-      discount: 38,
-      rating: 4,
-      reviews: 28,
-      sold: 8,
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 3,
-      name: "Rose Diamond Table Lamp",
-      price: 920,
-      originalPrice: 1200,
-      discount: 23,
-      rating: 5,
-      reviews: 42,
-      sold: 15,
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 4,
-      name: "Mouse Pad Earth Design",
-      price: 480,
-      originalPrice: 650,
-      discount: 26,
-      rating: 4,
-      reviews: 19,
-      sold: 7,
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 5,
-      name: "Flame Effect Bluetooth Speaker",
-      price: 1450,
-      originalPrice: 1999,
-      discount: 27,
-      rating: 5,
-      reviews: 56,
-      sold: 20,
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 6,
-      name: "Key Ring for Bikers",
-      price: 280,
-      originalPrice: 350,
-      discount: 20,
-      rating: 4,
-      reviews: 31,
-      sold: 5,
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 7,
-      name: "Cable Wire Holder",
-      price: 180,
-      originalPrice: 250,
-      discount: 28,
-      rating: 4,
-      reviews: 24,
-      sold: 3,
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 8,
-      name: "Wireless Earbuds",
-      price: 1299,
-      originalPrice: 1799,
-      discount: 28,
-      rating: 5,
-      reviews: 67,
-      sold: 25,
-      image: "/placeholder.jpg"
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+      <section className="hero-gradient text-white py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -108,130 +20,136 @@ const Homepage = () => {
             <p className="text-xl md:text-2xl mb-8 opacity-90">
               সেরা মানের পণ্য, সাশ্রয়ী দাম
             </p>
-            <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center mx-auto">
+            <Button size="lg" variant="secondary" className="shadow-glow">
               কেনাকাটা শুরু করুন
               <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-8 bg-blue-50">
+      <section className="py-8 bg-secondary/20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white p-6 text-center rounded-lg shadow">
-              <div className="text-2xl font-bold text-blue-600 mb-2">১০০০+</div>
-              <div className="text-sm text-gray-600">
+            <Card className="p-6 text-center">
+              <div className="text-2xl font-bold text-primary mb-2">১০০০+</div>
+              <div className="text-sm text-muted-foreground">
                 সন্তুষ্ট গ্রাহক
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white p-6 text-center rounded-lg shadow">
-              <div className="text-2xl font-bold text-blue-600 mb-2">৫০০+</div>
-              <div className="text-sm text-gray-600">
+            <Card className="p-6 text-center">
+              <div className="text-2xl font-bold text-primary mb-2">৫০০+</div>
+              <div className="text-sm text-muted-foreground">
                 পণ্যের সংগ্রহ
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white p-6 text-center rounded-lg shadow">
+            <Card className="p-6 text-center">
               <div className="flex items-center justify-center mb-2">
                 <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-                <span className="text-2xl font-bold text-blue-600 ml-1">৪.৮</span>
+                <span className="text-2xl font-bold text-primary ml-1">৪.৮</span>
               </div>
-              <div className="text-sm text-gray-600">গড় রেটিং</div>
-            </div>
+              <div className="text-sm text-muted-foreground">গড় রেটিং</div>
+            </Card>
 
-            <div className="bg-white p-6 text-center rounded-lg shadow">
-              <div className="text-2xl font-bold text-blue-600 mb-2">২৪/৭</div>
-              <div className="text-sm text-gray-600">সাপোর্ট</div>
-            </div>
+            <Card className="p-6 text-center">
+              <div className="text-2xl font-bold text-primary mb-2">২৪/৭</div>
+              <div className="text-sm text-muted-foreground">সাপোর্ট</div>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* Main Content - Product Grid */}
+      {/* Main Content */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold">সর্বশেষ পণ্যসমূহ</h2>
-            <button
-              className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg flex items-center"
-              onClick={() => navigate('/products')}
-            >
-              সব দেখুন
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </button>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <CategorySidebar />
 
-          {/* Product Grid - 2 columns on mobile */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <div className="aspect-square bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-400">পণ্যের ছবি</span>
-                  </div>
-                  {product.discount > 0 && (
-                    <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                      -{product.discount}%
-                    </div>
-                  )}
+              {/* Trending Products */}
+              <Card className="p-6 mt-6">
+                <div className="flex items-center mb-4">
+                  <TrendingUp className="h-5 w-5 text-primary mr-2" />
+                  <h3 className="text-lg font-semibold">জনপ্রিয় পণ্য</h3>
                 </div>
-                
-                <div className="p-3">
-                  <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{product.name}</h3>
-                  
-                  <div className="flex items-center mb-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-3 w-3 ${i < product.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                      />
-                    ))}
-                    <span className="text-xs ml-1 text-gray-500">({product.reviews})</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-2">
-                    <div>
-                      <span className="text-blue-600 font-bold">৳{product.price.toLocaleString()}</span>
-                      {product.originalPrice > product.price && (
-                        <span className="text-gray-500 text-xs line-through ml-1">৳{product.originalPrice.toLocaleString()}</span>
-                      )}
+
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-muted rounded" />
+                      <div>
+                        <p className="text-sm font-medium">পণ্যের নাম {i}</p>
+                        <p className="text-sm text-primary font-bold">৳৯৯৯</p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="text-xs text-gray-500 mt-1">
-                    {product.sold} বিক্রিত
-                  </div>
-                  
-                  <button className="w-full bg-blue-600 text-white py-2 rounded-lg mt-3 text-sm font-medium hover:bg-blue-700 transition-colors">
-                    অর্ডার করুন
-                  </button>
+                  ))}
                 </div>
+              </Card>
+            </div>
+
+            {/* Product Grid */}
+            <div className="lg:col-span-3">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold">সর্বশেষ পণ্যসমূহ</h2>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/products')}
+                >
+                  সব দেখুন
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
-            ))}
+
+              <ProductGrid limit={12} />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Additional CSS for responsiveness */}
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .grid.grid-cols-2 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.75rem;
-          }
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
+      {/* Features Section */}
+      <section className="py-16 bg-secondary/20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            কেন আমাদের বেছে নিবেন?
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-8 text-center card-hover">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4">উন্নত মান</h3>
+              <p className="text-muted-foreground">
+                আমরা শুধুমাত্র সেরা মানের পণ্য বিক্রি করি
+              </p>
+            </Card>
+
+            <Card className="p-8 text-center card-hover">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4">দ্রুত ডেলিভারি</h3>
+              <p className="text-muted-foreground">
+                সারাদেশে দ্রুত ও নিরাপদ ডেলিভারি সেবা
+              </p>
+            </Card>
+
+            <Card className="p-8 text-center card-hover">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ArrowRight className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4">সহজ অর্ডার</h3>
+              <p className="text-muted-foreground">
+                মাত্র কয়েক ক্লিকেই অর্ডার সম্পন্ন করুন
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
-};
-
-export default Homepage;
+}
