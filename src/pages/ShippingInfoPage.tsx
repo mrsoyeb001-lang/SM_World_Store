@@ -1,5 +1,4 @@
 // src/pages/ShippingInfoPage.tsx
-import { motion } from "framer-motion";
 import {
   Truck,
   Clock,
@@ -29,19 +28,6 @@ const CONTACT = {
   TIKTOK: "https://www.tiktok.com/@smworldstore",
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-};
-
-const stagger = {
-  show: {
-    transition: {
-      staggerChildren: 0.12,
-    },
-  },
-};
-
 export default function ShippingInfoPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-violet-50">
@@ -52,13 +38,8 @@ export default function ShippingInfoPage() {
         <div className="pointer-events-none absolute top-0 right-0 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
 
         <div className="mx-auto max-w-6xl px-4 pt-16 pb-10">
-          <motion.div
-            initial="hidden"
-            animate="show"
-            variants={stagger}
-            className="grid items-center gap-8 md:grid-cols-[1.1fr_.9fr]"
-          >
-            <motion.div variants={fadeUp}>
+          <div className="grid items-center gap-8 md:grid-cols-[1.1fr_.9fr]">
+            <div>
               <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-sm font-medium text-white shadow-sm">
                 <ShieldCheck className="h-4 w-4" />
                 বিশ্বস্ত ও নিরাপদ ডেলিভারি
@@ -93,13 +74,10 @@ export default function ShippingInfoPage() {
                   মান নিয়ন্ত্রণকৃত প্যাকেজিং
                 </span>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Animated Truck Card */}
-            <motion.div
-              variants={fadeUp}
-              className="relative rounded-3xl border bg-white/80 p-6 shadow-xl backdrop-blur"
-            >
+            {/* Truck Card */}
+            <div className="relative rounded-3xl border bg-white/80 p-6 shadow-xl backdrop-blur">
               <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-blue-200/40 via-white to-fuchsia-200/40" />
               <div className="overflow-hidden rounded-2xl border bg-white p-5">
                 <div className="flex items-center justify-between">
@@ -113,17 +91,12 @@ export default function ShippingInfoPage() {
                 </div>
 
                 <div className="mt-6 h-24 w-full rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 p-3">
-                  <motion.div
-                    initial={{ x: -40 }}
-                    animate={{ x: ["-10%", "80%"] }}
-                    transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-                    className="flex w-max items-center gap-2"
-                  >
+                  <div className="flex w-max items-center gap-2 animate-move-truck">
                     <Truck className="h-9 w-9 text-indigo-600" />
                     <span className="rounded-md bg-white px-2 py-1 text-xs font-medium shadow">
                       On the way…
                     </span>
-                  </motion.div>
+                  </div>
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-3 text-center text-sm">
@@ -141,20 +114,14 @@ export default function ShippingInfoPage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ============= KPI CARDS ============= */}
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={stagger}
-          className="grid gap-5 md:grid-cols-3"
-        >
+        <div className="grid gap-5 md:grid-cols-3">
           {[
             {
               icon: <Clock className="h-6 w-6 text-blue-600" />,
@@ -172,9 +139,8 @@ export default function ShippingInfoPage() {
               desc: "ডাবল-লেয়ার বক্স, বুদবুদ র‍্যাপ ও সীল-ট্যাম্পার ব্যান্ড।",
             },
           ].map((c, i) => (
-            <motion.div
+            <div
               key={i}
-              variants={fadeUp}
               className="rounded-2xl border bg-white p-6 shadow hover:shadow-lg transition"
             >
               <div className="mb-3 inline-flex items-center justify-center rounded-xl bg-gray-50 p-3">
@@ -182,9 +148,9 @@ export default function ShippingInfoPage() {
               </div>
               <h3 className="text-lg font-semibold">{c.title}</h3>
               <p className="mt-1 text-gray-600">{c.desc}</p>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </section>
 
       {/* ============= MAP ============= */}
@@ -222,8 +188,8 @@ export default function ShippingInfoPage() {
       <section className="mx-auto max-w-6xl px-4 py-10">
         <h2 className="mb-6 text-center text-2xl font-bold">
           <svg className="inline h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 116 0h3a.75.75 0 00.75-.75V15z" />
-            <path d="M8.25 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zM15.75 6.75a.75.75 0 00-.75.75v11.25c0 .087.015.17.042.248a3 3 0 015.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 00-3.732-10.104 1.837 1.837 0 00-1.47-.725H15.75z" />
+            <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c极-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 116 0h3a.75.75 0 00.75-.75V15z" />
+            <path d="M8.25 19.5a1.5 1.5 极 10-3 0 1.5 1.5 0 003 0zM15.75 6.75a.75.75 0 00-.75.75v11.25c0 .087.015.17.042.248a3 3 0 015.958.464c.853-.175 1.522-.935 1.464-极.883a18.659 18.659 0 00-3.732-10.104 1.837 1.837 0 00-1.47-.725H15.75z" />
             <path d="M19.5 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
           </svg>
           ডেলিভারি প্রসেস (স্টেপ-বাই-স্টেপ)
@@ -251,12 +217,8 @@ export default function ShippingInfoPage() {
               desc: "আপনার ঠিকানায় নিরাপদে পৌঁছে দেওয়া।",
             },
           ].map((s, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
               className="relative rounded-2xl border bg-white p-6 shadow-sm"
             >
               <div className="absolute left-0 top-1/2 hidden h-1 w-full -translate-y-1/2 bg-gradient-to-r from-indigo-200 to-fuchsia-200 md:block" />
@@ -265,7 +227,7 @@ export default function ShippingInfoPage() {
                 <h3 className="text-lg font-semibold">{s.title}</h3>
                 <p className="mt-1 text-gray-600">{s.desc}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -273,9 +235,9 @@ export default function ShippingInfoPage() {
       {/* ============= RATE TABLE ============= */}
       <section className="mx-auto max-w-6xl px-4 pb-4">
         <h2 className="mb-4 text-2xl font-bold">
-          <svg className="inline h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="inline h-极 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 7.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" />
-            <path fillRule="evenodd" d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 14.625v-9.75zM8.25 9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM18.75 9a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75V9.75a.75.75 0 00-.75-.75h-.008zM4.5 9.75A.75.75 0 015.25 9h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75V9.75z" clipRule="evenodd" />
+            <path fillRule="evenodd" d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.极 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 14.625v-9.75zM8.25 9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM18.75 9a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 极 00.75-.75V9.75a.75.75 0 00-.75-.75h-.008zM4.5 9.75A.75.75 0 015.25 9h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75V9.75z" clipRule="evenodd" />
             <path d="M2.25 18a.75.75 0 000 1.5c5.4 0 10.63.722 15.6 2.075 1.19.324 2.4-.558 2.4-1.82V18.75a.75.75 0 00-.75-.75H2.25z" />
           </svg>
           ডেলিভারি চার্জ
@@ -297,7 +259,7 @@ export default function ShippingInfoPage() {
                 <td className="px-4 py-3">৳ 60</td>
                 <td className="px-4 py-3">এক্সপ্রেস ডেলিভারি সম্ভব*</td>
               </tr>
-              <tr className="hover:bg-gray-50">
+              <tr className="hover:bg-gray极">
                 <td className="px-4 py-3">ঢাকার বাইরে</td>
                 <td className="px-4 py-3">২–৫ কর্মদিবস</td>
                 <td className="px-4 py-3">৳ 100–150</td>
@@ -320,7 +282,7 @@ export default function ShippingInfoPage() {
         <div className="grid gap-6 md:grid-cols-3">
           {[
             {
-              icon: <Lock className="h-7 w-7 text-emerald-600" />,
+              icon: <Lock className="h-7 w-7 text-emerald-600极 />,
               title: "SSL সিকিউর পেমেন্ট",
               desc: "আপনার কার্ড/মোবাইল পেমেন্ট সম্পূর্ণ এনক্রিপ্টেড ও নিরাপদ।",
             },
@@ -335,18 +297,14 @@ export default function ShippingInfoPage() {
               desc: "ভুল/ত্রুটিপূর্ণ পণ্য হলে সহজ রিটার্ন/রিপ্লেসমেন্ট।",
             },
           ].map((b, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
               className="rounded-2xl border bg-white p-6 shadow hover:shadow-lg transition"
             >
               <div className="mb-3 inline-flex rounded-xl bg-gray-50 p-3">{b.icon}</div>
               <h3 className="text-lg font-semibold">{b.title}</h3>
               <p className="mt-1 text-gray-600">{b.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -355,7 +313,7 @@ export default function ShippingInfoPage() {
       <section className="mx-auto max-w-6xl px-4 pb-6">
         <h2 className="mb-4 text-2xl font-bold">
           <svg className="inline h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 极 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 极v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
           </svg>
           শিপিং সম্পর্কিত সাধারণ প্রশ্ন
         </h2>
@@ -374,7 +332,7 @@ export default function ShippingInfoPage() {
               a: "বেশিরভাগ এলাকায় আছে, কিছু রিমোট লোকেশনে অগ্রিম চার্জ প্রযোজ্য হতে পারে।",
             },
             {
-              q: "একই দিনে ডেলivery?",
+              q: "একই দিনে ডেলিভারি?",
               a: "ঢাকার মধ্যে বিশেষ ক্ষেত্রে এক্সপ্রেস (সেইম-ডে) সম্ভব—WhatsApp এ যোগাযোগ করুন।",
             },
           ].map((item, i) => (
@@ -394,7 +352,7 @@ export default function ShippingInfoPage() {
       {/* ============= CTA ============= */}
       <section className="relative mx-auto max-w-6xl px-4 pb-16">
         <div className="overflow-hidden rounded-3xl border bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-blue-600 p-1 shadow-xl">
-          <div className="rounded-[22px] bg-white/95 p-6 md:p-8">
+          <div className="rounded-[22px] bg-white/95 p-极 md:p-8">
             <div className="grid items-center gap-6 md:grid-cols-[1.2fr_.8fr]">
               <div>
                 <h3 className="text-2xl font-bold">শিপিং নিয়ে সাহায্য দরকার?</h3>
@@ -424,7 +382,7 @@ export default function ShippingInfoPage() {
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </a>
                   <a
-                    href={CONTACT.TELEGRAM}
+                    href极CONTACT.TELEGRAM}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-white shadow hover:opacity-95"
@@ -460,7 +418,7 @@ export default function ShippingInfoPage() {
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-3 text-center">
                   <div className="rounded-lg bg-gray-50 p-3">
-                    <p className="text-sm font-semibold">ঢাকা</p>
+                    <p className="text-sm font-semib极">ঢাকা</p>
                     <p className="text-xs text-gray-500">১–২ দিন</p>
                   </div>
                   <div className="rounded-lg bg-gray-50 p-3">
