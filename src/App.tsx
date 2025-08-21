@@ -25,7 +25,7 @@ import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";   // ✅ নতুন করে ইমপোর্ট করা হলো
 import Support from "./pages/Support";   // ✅ নতুন করে ইমপোর্ট করা হলো
 import LiveChat from "./pages/LiveChat";   // ✅ নতুন করে ইমপোর্ট করা হলো
-import ShippingInfoPage from "@/pages/ShippingInfoPage";   // ✅ নতুন করে ইমপোর্ট করা হলো
+import ShippingInfoPage from "/pages/ShippingInfoPage";   // ✅ নতুন করে ইমপোর্ট করা হলো
 
 const queryClient = new QueryClient();
 
