@@ -8,12 +8,7 @@ import {
   Loader2,
   SendHorizonal,
 } from "lucide-react";
-import {
-  SiWhatsapp,
-  SiTelegram,
-  SiFacebook,
-  SiTiktok,
-} from "react-icons/si";
+import { SiWhatsapp, SiTelegram, SiFacebook, SiTiktok } from "react-icons/si";
 
 import logo from "@/assets/logo.png";
 
