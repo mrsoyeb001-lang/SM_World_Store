@@ -1,10 +1,30 @@
-import { Mail, Phone, MessageCircle, HeadphonesIcon } from "lucide-react";
-import { FaWhatsapp, FaTelegramPlane, FaFacebookF } from "react-icons/fa";
-import { HelpCircle } from "lucide-react";
+import { useState } from "react";
+import { Mail, Phone, MessageCircle, HeadphonesIcon, HelpCircle } from "lucide-react";
+import { FaWhatsapp, FaTelegramPlane, FaFacebookF, FaRobot } from "react-icons/fa";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function Support() {
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { from: "bot", text: "হ্যালো 👋 আমি আপনার AI Assistant। কীভাবে সাহায্য করতে পারি?" },
+  ]);
+  const [input, setInput] = useState("");
+
+  // Dummy AI Reply
+  const handleSend = () => {
+    if (!input) return;
+    setMessages([...messages, { from: "user", text: input }]);
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { from: "bot", text: "🤖 আমি আপনার মেসেজ বুঝেছি: " + input },
+      ]);
+    }, 1000);
+    setInput("");
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
       {/* Hero Section */}
@@ -18,7 +38,6 @@ export default function Support() {
 
       {/* Contact Options */}
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Email */}
         <a href="mailto:smworldstoreofficial@gmail.com">
           <Card className="hover:shadow-xl transition hover:-translate-y-1">
             <CardContent className="p-6 text-center space-y-2">
@@ -29,8 +48,7 @@ export default function Support() {
           </Card>
         </a>
 
-        {/* Phone */}
-        <a href="tel:+880162712851">
+        <a href="tel:+8801624712851">
           <Card className="hover:shadow-xl transition hover:-translate-y-1">
             <CardContent className="p-6 text-center space-y-2">
               <Phone className="w-10 h-10 mx-auto text-green-500" />
@@ -40,7 +58,6 @@ export default function Support() {
           </Card>
         </a>
 
-        {/* Live Chat */}
         <a href="/live-chat">
           <Card className="hover:shadow-xl transition hover:-translate-y-1">
             <CardContent className="p-6 text-center space-y-2">
@@ -51,7 +68,6 @@ export default function Support() {
           </Card>
         </a>
 
-        {/* WhatsApp */}
         <a href="https://wa.me/8801624712851" target="_blank" rel="noopener noreferrer">
           <Card className="hover:shadow-xl transition hover:-translate-y-1">
             <CardContent className="p-6 text-center space-y-2">
@@ -62,7 +78,6 @@ export default function Support() {
           </Card>
         </a>
 
-        {/* Telegram */}
         <a href="https://t.me/+ylw3CCVehHQ1NWQ9" target="_blank" rel="noopener noreferrer">
           <Card className="hover:shadow-xl transition hover:-translate-y-1">
             <CardContent className="p-6 text-center space-y-2">
@@ -73,7 +88,6 @@ export default function Support() {
           </Card>
         </a>
 
-        {/* Facebook Page */}
         <a href="https://www.facebook.com/profile.php?id=61579242700749" target="_blank" rel="noopener noreferrer">
           <Card className="hover:shadow-xl transition hover:-translate-y-1">
             <CardContent className="p-6 text-center space-y-2">
@@ -114,24 +128,48 @@ export default function Support() {
         </Accordion>
       </div>
 
-      {/* Extra FAQ */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6">সাধারণ প্রশ্নোত্তর</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-2">ডেলিভারি কতদিনে হয়?</h3>
-              <p className="text-muted-foreground">ঢাকার ভিতরে ২-৩ দিন, ঢাকার বাইরে ৩-৫ দিন।</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-2">রিটার্ন পলিসি কেমন?</h3>
-              <p className="text-muted-foreground">৭ দিনের মধ্যে পণ্য ফেরত দেওয়া যাবে, শর্ত প্রযোজ্য।</p>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Floating Chat Widget */}
+      <div className="fixed bottom-6 right-6">
+        {chatOpen ? (
+          <div className="w-80 h-96 bg-white shadow-2xl rounded-2xl flex flex-col">
+            <div className="bg-blue-600 text-white p-3 flex justify-between items-center rounded-t-2xl">
+              <span className="font-semibold">AI Assistant</span>
+              <button onClick={() => setChatOpen(false)}>✖</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`p-2 rounded-lg max-w-[70%] ${
+                    msg.from === "user"
+                      ? "bg-blue-100 ml-auto"
+                      : "bg-gray-100"
+                  }`}
+                >
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+            <div className="p-2 border-t flex gap-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-1 border rounded-lg px-2"
+                placeholder="টাইপ করুন..."
+              />
+              <Button size="sm" onClick={handleSend}>
+                পাঠান
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            onClick={() => setChatOpen(true)}
+            className="rounded-full w-14 h-14 shadow-lg flex items-center justify-center bg-blue-600 text-white"
+          >
+            <FaRobot className="w-6 h-6" />
+          </Button>
+        )}
       </div>
     </div>
   );
