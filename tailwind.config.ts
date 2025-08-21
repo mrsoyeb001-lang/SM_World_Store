@@ -77,23 +77,17 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        // 🔥 Slideshow Animation
+        // 🔥 New Slideshow Animation
         slideShow: {
           "0%, 33%": { opacity: "1" },
           "34%, 100%": { opacity: "0" },
-        },
-        // 🚚 Truck Animation
-        moveTruck: {
-          "0%": { transform: "translateX(-10%)" },
-          "50%": { transform: "translateX(80%)" },
-          "100%": { transform: "translateX(-10%)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        // 🔥 New Slideshow Animation
         slideShow: "slideShow 15s infinite",
-        "move-truck": "moveTruck 5s ease-in-out infinite",
       },
     },
   },
