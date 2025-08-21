@@ -158,7 +158,7 @@ export default function ShippingInfoPage() {
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-2xl font-bold">
             <svg className="inline h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path fillRule="evenodd" d="M8.161 2.58a1.875 1.875 0 011.678 0l4.993 2.498c.106.052.23.052.336 0l3.869-1.935A1.875 1.875 0 0121.75 4.82v12.485c0 .71-.401 1.36-1.037 1.677l-4.875 2.437a1.875 1.875 0 01-1.676 0l-4.994-2.497a.375.375 0 00-.336 0l-3.868 1.935A1.875 1.875 0 012.25 19.18V6.695c0-.71.401-1.36 1.036-1.677l4.875-2.437zM9 6a.75.75 0 01.75.75V15a.75.75 0 01-1.5 0V6.75A.75.75 0 019 6zm6.75 3a.75.75 0 00-1.5 0v8.25a.75.75 0 001.5 0V9z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M8.161 2.58a1.875 1.875 0 011.678 0l4.993 2.498c.106.052.23.052.336 0l3.869-1.935A1.875 1.875 0 0121.75 4.82v12.485c0 .71-.401 1.36-1.037 1.677l-4.875 2.437a1.875 1.875 0 01-1.676 0l-4.994-2.497a.375.375 极 00-.336 0l-3.868 1.935A1.875 1.875 0 012.25 19.18V6.695c0-.71.401-1.36 1.036-1.677l4.875-2.437zM9 6a.75.75 0 01.75.极V15a.75.75 0 01-1.5 0V6.75A.75.75 0 019 6zm6.75 3a.75.75 0 00-1.5 0v8.25a.75.75 0 001.5 0V9z" clipRule="evenodd" />
             </svg>
             কভারেজ ম্যাপ
           </h2>
@@ -188,8 +188,8 @@ export default function ShippingInfoPage() {
       <section className="mx-auto max-w-6xl px-4 py-10">
         <h2 className="mb-6 text-center text-2xl font-bold">
           <svg className="inline h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c极-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 116 0h3a.75.75 0 00.75-.75V15z" />
-            <path d="M8.25 19.5a1.5 1.5 极 10-3 0 1.5 1.5 0 003 0zM15.75 6.75a.75.75 0 00-.75.75v11.25c0 .087.015.17.042.248a3 3 0 015.958.464c.853-.175 1.522-.935 1.464-极.883a18.659 18.659 0 00-3.732-10.104 1.837 1.837 0 00-1.47-.725H15.75z" />
+            <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 116 0h3a.75.75 0 00.75-.75V15z" />
+            <path d="M8.25 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zM15.75 6.75a.75.75 0 00-.75.75v11.25c0 .087.015.17.042.248a3 3 0 015.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 00-3.732-10.104 1.837 1.837 0 00-1.47-.725H15.75z" />
             <path d="M19.5 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
           </svg>
           ডেলিভারি প্রসেস (স্টেপ-বাই-স্টেপ)
@@ -235,9 +235,9 @@ export default function ShippingInfoPage() {
       {/* ============= RATE TABLE ============= */}
       <section className="mx-auto max-w-6xl px-4 pb-4">
         <h2 className="mb-4 text-2xl font-bold">
-          <svg className="inline h-极 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="inline h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 7.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" />
-            <path fillRule="evenodd" d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.极 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 14.625v-9.75zM8.25 9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM18.75 9a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 极 00.75-.75V9.75a.75.75 0 00-.75-.75h-.008zM4.5 9.75A.75.75 0 015.25 9h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75V9.75z" clipRule="evenodd" />
+            <path fillRule="evenodd" d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 14.625v-9.75zM8.25 9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM18.75 9a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75V9.75a.75.75 0 00-.75-.75h-.008zM4.5 9.75A.75.75 0 015.25 9h.008a.75.75 0 01.75.75极.008a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75V9.75z" clipRule="evenodd" />
             <path d="M2.25 18a.75.75 0 000 1.5c5.4 0 10.63.722 15.6 2.075 1.19.324 2.4-.558 2.4-1.82V18.75a.75.75 0 00-.75-.75H2.25z" />
           </svg>
           ডেলিভারি চার্জ
@@ -255,17 +255,17 @@ export default function ShippingInfoPage() {
             <tbody className="divide-y">
               <tr className="hover:bg-gray-50">
                 <td className="px-4 py-3">ঢাকা সিটি</td>
-                <td className="px-4 py-3">১–২ কর্মদিবস</td>
+                <td className="px-4 py极">১–২ কর্মদিবস</td>
                 <td className="px-4 py-3">৳ 60</td>
                 <td className="px-4 py-3">এক্সপ্রেস ডেলিভারি সম্ভব*</td>
               </tr>
-              <tr className="hover:bg-gray极">
+              <tr className="hover:bg-gray-50">
                 <td className="px-4 py-3">ঢাকার বাইরে</td>
                 <td className="px-4 py-3">২–৫ কর্মদিবস</td>
                 <td className="px-4 py-3">৳ 100–150</td>
                 <td className="px-4 py-3">কুরিয়ার লোকেশন অনুযায়ী</td>
               </tr>
-              <tr className="hover:bg-gray-50">
+              <tr className="hover极bg-gray-50">
                 <td className="px-4 py-3">রিমোট/হার্ড টু রিচ</td>
                 <td className="px-4 py-3">৩–৭ কর্মদিবস</td>
                 <td className="px-4 py-3">৳ 150–220</td>
@@ -282,7 +282,7 @@ export default function ShippingInfoPage() {
         <div className="grid gap-6 md:grid-cols-3">
           {[
             {
-              icon: <Lock className="h-7 w-7 text-emerald-600极 />,
+              icon: <Lock className="h-7 w-7 text-emerald-600" />,
               title: "SSL সিকিউর পেমেন্ট",
               desc: "আপনার কার্ড/মোবাইল পেমেন্ট সম্পূর্ণ এনক্রিপ্টেড ও নিরাপদ।",
             },
@@ -301,7 +301,7 @@ export default function ShippingInfoPage() {
               key={i}
               className="rounded-2xl border bg-white p-6 shadow hover:shadow-lg transition"
             >
-              <div className="mb-3 inline-flex rounded-xl bg-gray-50 p-3">{b.icon}</div>
+              <div className="mb-3 inline-flex rounded-xl bg-gray-极 p-3">{b.icon}</div>
               <h3 className="text-lg font-semibold">{b.title}</h3>
               <p className="mt-1 text-gray-600">{b.desc}</p>
             </div>
@@ -313,7 +313,7 @@ export default function ShippingInfoPage() {
       <section className="mx-auto max-w-6xl px-4 pb-6">
         <h2 className="mb-4 text-2xl font-bold">
           <svg className="inline h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 极 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 极v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5极" clipRule="evenodd" />
           </svg>
           শিপিং সম্পর্কিত সাধারণ প্রশ্ন
         </h2>
@@ -352,7 +352,7 @@ export default function ShippingInfoPage() {
       {/* ============= CTA ============= */}
       <section className="relative mx-auto max-w-6xl px-4 pb-16">
         <div className="overflow-hidden rounded-3xl border bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-blue-600 p-1 shadow-xl">
-          <div className="rounded-[22px] bg-white/95 p-极 md:p-8">
+          <div className="rounded-[22px] bg-white/95 p-6 md:p-8">
             <div className="grid items-center gap-6 md:grid-cols-[1.2fr_.8fr]">
               <div>
                 <h3 className="text-2xl font-bold">শিপিং নিয়ে সাহায্য দরকার?</h3>
@@ -382,7 +382,7 @@ export default function ShippingInfoPage() {
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </a>
                   <a
-                    href极CONTACT.TELEGRAM}
+                    href={CONTACT.TELEGRAM}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-white shadow hover:opacity-95"
@@ -418,7 +418,7 @@ export default function ShippingInfoPage() {
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-3 text-center">
                   <div className="rounded-lg bg-gray-50 p-3">
-                    <p className="text-sm font-semib极">ঢাকা</p>
+                    <p className="text-sm font-semibold">ঢাকা</p>
                     <p className="text-xs text-gray-500">১–২ দিন</p>
                   </div>
                   <div className="rounded-lg bg-gray-50 p-3">
