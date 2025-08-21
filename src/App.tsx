@@ -23,6 +23,7 @@ import Search from "./pages/Search";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";   // ✅ নতুন করে ইমপোর্ট করা হলো
+import Support from "./pages/Support";   // ✅ নতুন করে ইমপোর্ট করা হলো
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
                     <Route path="/products" element={<Products />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/faq" element={<FAQ />} />   {/* ✅ FAQ Route যোগ হলো */}
+                    <Route path="/support" element={<Support />} />   {/* ✅ FAQ Route যোগ হলো */}
                     
                     {/* সব কাস্টম রুট এই লাইনের উপরে লিখুন */}
                     <Route path="*" element={<NotFound />} />
