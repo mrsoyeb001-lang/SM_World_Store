@@ -20,6 +20,7 @@ import Favorites from "./pages/Favorites";
 import Search from "./pages/Search";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
+import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
                     <Route path="/search" element={<Search />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/faq" element={<FAQ />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
