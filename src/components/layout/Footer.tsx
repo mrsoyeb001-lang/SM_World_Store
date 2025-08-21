@@ -275,25 +275,25 @@ export function Footer() {
         </div>
 
         {/* Payment Methods – just bKash, Nagad, Rocket */}
-        <div className="mt-12 border-t border-white/10 pt-8">
-          <h4 className="font-semibold text-white mb-4">Payment Methods</h4>
-          <div className="flex items-center gap-3 flex-wrap">
-            {[
-              { src: "/payments/bkash.png", alt: "bKash" },
-              { src: "/payments/nagad.png", alt: "Nagad" },
-              { src: "/payments/rocket.png", alt: "Rocket" },
-              { src: "/payments/cashon.png", alt: "Rocket" },
-            ].map((p) => (
-              <div
-                key={p.alt}
-                className="p-2 bg-white rounded-md shadow-sm ring-1 ring-black/5"
-                title={p.alt}
-              >
-                <img src={p.src} alt={p.alt} className="h-8 w-auto object-contain" />
-              </div>
-            ))}
-          </div>
-        </div>
+<div className="mt-12 border-t border-white/10 pt-8">
+  <h4 className="font-semibold text-white mb-4">Payment Methods</h4>
+  <div className="flex items-center gap-3 flex-wrap">
+    {[
+      { src: "/payments/bkash.png", alt: "bKash" },
+      { src: "/payments/nagad.png", alt: "Nagad" },
+      { src: "/payments/rocket.png", alt: "Rocket" },
+      { src: "/payments/cashon.png", alt: "Cash on Delivery" },
+    ].map((p) => (
+      <div
+        key={p.alt}
+        className="inline-flex items-center justify-center bg-white rounded-md shadow-sm ring-1 ring-black/5"
+        title={p.alt}
+      >
+        <img src={p.src} alt={p.alt} className="h-8 w-auto object-contain" />
+      </div>
+    ))}
+  </div>
+</div>
 
         {/* Bottom bar with all policies as links */}
         <div className="border-t border-white/10 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
