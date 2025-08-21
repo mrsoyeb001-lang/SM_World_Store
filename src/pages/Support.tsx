@@ -138,10 +138,10 @@ export default function SupportPage() {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-10 px-4">
       <div className="max-w-5xl mx-auto">
         {/* Header with Logo */}
-        <div className="flex flex-col items-center gap-2 mb-8">
-          <img src=/logo.png alt="SM World Store Logo" className="h-16 w-auto" />
-          <h1 className="text-3xl font-bold text-center">📞 SM World Store Support</h1>
-          <p className="text-center text-gray-600">
+<div className="flex flex-col items-center gap-2 mb-8">
+  <img src="/logo.png" alt="SM World Store Logo" className="h-16 w-auto" />
+  <h1 className="text-3xl font-bold text-center">📞 SM World Store Support</h1>
+  <p className="text-center text-gray-600">
             যেকোনো প্রশ্ন, সমস্যা বা সাহায্যের জন্য আমাদের সাথে যোগাযোগ করুন
           </p>
         </div>
