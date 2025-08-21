@@ -9,7 +9,7 @@ import { FavoritesProvider } from "@/hooks/useFavorites";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
-// Pages
+// ✅ Pages
 import Homepage from "./pages/Homepage";
 import Auth from "./pages/Auth";
 import ProductDetails from "./pages/ProductDetails";
@@ -22,10 +22,10 @@ import Favorites from "./pages/Favorites";
 import Search from "./pages/Search";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
-import FAQ from "./pages/FAQ";   // ✅ নতুন করে ইমপোর্ট করা হলো
-import Support from "./pages/Support";   // ✅ নতুন করে ইমপোর্ট করা হলো
-import LiveChat from "./pages/LiveChat";   // ✅ নতুন করে ইমপোর্ট করা হলো
-import ShippingInfoPage from "/pages/ShippingInfoPage";   // ✅ নতুন করে ইমপোর্ট করা হলো
+import FAQ from "./pages/FAQ";  
+import Support from "./pages/Support";  
+import LiveChat from "./pages/LiveChat";  
+import ShippingInfoPage from "./pages/ShippingInfoPage";   // ✅ ঠিক করা হলো
 
 const queryClient = new QueryClient();
 
@@ -39,7 +39,10 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <div className="min-h-screen bg-background flex flex-col">
+                {/* 🔝 Navbar */}
                 <Navbar />
+
+                {/* 🔗 Routes */}
                 <main className="flex-1">
                   <Routes>
                     <Route path="/" element={<Homepage />} />
@@ -53,15 +56,19 @@ const App = () => (
                     <Route path="/search" element={<Search />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/faq" element={<FAQ />} />   {/* ✅ FAQ Route যোগ হলো */}
-                    <Route path="/support" element={<Support />} />   {/* ✅ FAQ Route যোগ হলো */}
-                    <Route path="/live-chat" element={<LiveChat />} />   {/* ✅ FAQ Route যোগ হলো */}
-                    <Route path="/shipping-info" element={<ShippingInfoPage />} />   {/* ✅ FAQ Route যোগ হলো */}
-                    
-                    {/* সব কাস্টম রুট এই লাইনের উপরে লিখুন */}
+
+                    {/* ℹ️ Extra Pages */}
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/support" element={<Support />} />
+                    <Route path="/live-chat" element={<LiveChat />} />
+                    <Route path="/shipping-info" element={<ShippingInfoPage />} />
+
+                    {/* 404 Fallback */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
+
+                {/* 🔻 Footer */}
                 <Footer />
               </div>
             </BrowserRouter>
