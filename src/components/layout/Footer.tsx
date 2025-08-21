@@ -667,29 +667,26 @@ export function Footer() {
         </div>
 
         {/* Payment Methods */}
-        <div className="mt-12 border-t border-white/10 pt-8">
-          <h4 className="font-semibold text-white mb-4 text-center md:text-left">পেমেন্ট Methods</h4>
-          <div className="flex items-center justify-center md:justify-start gap-4 flex-wrap">
-            {[
-              { src: "/payments/bkash.png", alt: "bKash" },
-              { src: "/payments/nagad.png", alt: "Nagad" },
-              { src: "/payments/rocket.png", alt: "Rocket" },
-              { src: "/payments/visa.png", alt: "Visa" },
-              { src: "/payments/mastercard.png", alt: "MasterCard" },
-              { src: "/payments/amex.png", alt: "American Express" },
-              { src: "/payments/paypal.png", alt: "PayPal" },
-              { src: "/payments/cashon.png", alt: "Cash on Delivery" },
-            ].map((p) => (
-              <div
-                key={p.alt}
-                className="inline-flex items-center justify-center bg-white rounded-md shadow-sm ring-1 ring-black/5 p-2 hover:scale-110 transition-transform duration-200"
-                title={p.alt}
-              >
-                <img src={p.src} alt={p.alt} className="h-6 w-auto object-contain" />
-              </div>
-            ))}
-          </div>
-        </div>
+<div className="mt-12 border-t border-white/10 pt-8">
+  <h4 className="font-semibold text-white mb-4">Payment Methods</h4>
+  <div className="flex items-center gap-3 flex-wrap">
+    {[
+      { src: "/payments/bkash.png", alt: "bKash" },
+      { src: "/payments/nagad.png", alt: "Nagad" },
+      { src: "/payments/rocket.png", alt: "Rocket" },
+      { src: "/payments/cashon.png", alt: "Cash on Delivery" },
+    ].map((p) => (
+      <div
+        key={p.alt}
+        className="inline-flex items-center justify-center bg-white rounded-md shadow-sm ring-1 ring-black/5"
+        title={p.alt}
+      >
+        <img src={p.src} alt={p.alt} className="h-8 w-auto object-contain" />
+      </div>
+    ))}
+  </div>
+</div>
+
 
         {/* Download Our App */}
         <div className="mt-8 bg-white/5 rounded-xl p-6 border border-white/10">
