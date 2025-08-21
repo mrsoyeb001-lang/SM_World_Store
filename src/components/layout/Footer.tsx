@@ -178,7 +178,7 @@ export function Footer() {
             <h4 className="font-semibold text-white mb-4">কাস্টমার সার্ভিস</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link to="/support" className="group inline-flex items-center gap-2 hover:underline">
+                <Link to="/Support" className="group inline-flex items-center gap-2 hover:underline">
                   <HelpCircle className="w-4 h-4 opacity-80 group-hover:opacity-100" />
                   সাপোর্ট / হেল্প সেন্টার
                 </Link>
