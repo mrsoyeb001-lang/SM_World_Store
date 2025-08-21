@@ -42,51 +42,6 @@ const HANDOFF_LINKS = {
   tiktok: "https://www.tiktok.com/@smworldstore",
 };
 
-// ✅ কাস্টম SVG আইকন (react-icons বাদ দিয়ে)
-const WhatsAppIcon = () => (
-  <svg
-    className="w-8 h-8 text-green-600"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 448 512"
-    fill="currentColor"
-  >
-    <path d="M380.9 97.1C339-....Z" />
-  </svg>
-);
-
-const TelegramIcon = () => (
-  <svg
-    className="w-8 h-8 text-sky-500"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 496 512"
-    fill="currentColor"
-  >
-    <path d="M248 8C111....Z" />
-  </svg>
-);
-
-const FacebookIcon = () => (
-  <svg
-    className="w-8 h-8 text-blue-700"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 320 512"
-    fill="currentColor"
-  >
-    <path d="M279.14 288l14.22-92.66h-88.91V127....Z" />
-  </svg>
-);
-
-const TikTokIcon = () => (
-  <svg
-    className="w-8 h-8 text-black"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 448 512"
-    fill="currentColor"
-  >
-    <path d="M448 209.91a210....Z" />
-  </svg>
-);
-
 // Rule Based Answer
 function ruleBasedAnswer(q: string): string {
   const s = q.toLowerCase();
@@ -210,10 +165,43 @@ export default function SupportPage() {
           {[
             { icon: <PhoneCall className="w-8 h-8 text-blue-600" />, text: "কল", link: HANDOFF_LINKS.tel },
             { icon: <Mail className="w-8 h-8 text-red-600" />, text: "ইমেইল", link: HANDOFF_LINKS.mail },
-            { icon: <WhatsAppIcon />, text: "WhatsApp", link: HANDOFF_LINKS.whatsapp },
-            { icon: <TelegramIcon />, text: "Telegram", link: HANDOFF_LINKS.telegram },
-            { icon: <FacebookIcon />, text: "Facebook", link: HANDOFF_LINKS.facebook },
-            { icon: <TikTokIcon />, text: "TikTok", link: HANDOFF_LINKS.tiktok },
+            {
+              icon: (
+                <svg className="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16.7 14.3c-.3-.1-1.8-.9-2.1-1s-.5-.1-.7.1c-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.1-1.3-.5-2.5-1.6-.9-.8-1.6-1.7-1.8-2-.2-.3 0-.5.1-.6.1-.1.3-.4.4-.6.1-.2.1-.3.2-.5.1-.2 0-.4 0-.5s-.7-1.7-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.8 4.3 4 .6.3 1.1.5 1.5.6.6.2 1.1.2 1.5.1.5-.1 1.8-.7 2-1.3.2-.6.2-1.1.2-1.2-.1 0-.3-.1-.6-.2z" />
+                  <path d="M12 2C6.5 2 2 6.3 2 11.6c0 1.9.5 3.8 1.5 5.4L2 22l5.2-1.7c1.6.9 3.5 1.3 5.4 1.3 5.5 0 10-4.3 10-9.6S17.5 2 12 2z" />
+                </svg>
+              ),
+              text: "WhatsApp",
+              link: HANDOFF_LINKS.whatsapp,
+            },
+            {
+              icon: (
+                <svg className="w-8 h-8 text-sky-500" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.4 0 0 4.9 0 10.9c0 3.4 1.8 6.5 4.7 8.5v4.6l4.3-2.4c1 .3 2 .4 3 .4 6.6 0 12-4.9 12-10.9S18.6 0 12 0z" />
+                </svg>
+              ),
+              text: "Telegram",
+              link: HANDOFF_LINKS.telegram,
+            },
+            {
+              icon: (
+                <svg className="w-8 h-8 text-blue-700" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M22.675 0H1.325C.593 0 0 .6 0 1.3v21.4C0 23.4.593 24 1.325 24h11.5V14.7h-3.1v-3.6h3.1V8.4c0-3.1 1.9-4.9 4.8-4.9 1.4 0 2.8.2 2.8.2v3h-1.6c-1.6 0-2.1 1-2.1 2v2.4h3.5l-.6 3.6h-2.9V24h5.7c.7 0 1.3-.6 1.3-1.3V1.3c0-.7-.6-1.3-1.3-1.3z" />
+                </svg>
+              ),
+              text: "Facebook",
+              link: HANDOFF_LINKS.facebook,
+            },
+            {
+              icon: (
+                <svg className="w-8 h-8 text-black" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.75 2h3.5v12.1c0 3.3-2.7 5.9-6 5.9s-6-2.6-6-5.9V9.9h3.5v4.2c0 1.3 1.1 2.4 2.5 2.4s2.5-1.1 2.5-2.4V2z" />
+                </svg>
+              ),
+              text: "TikTok",
+              link: HANDOFF_LINKS.tiktok,
+            },
           ].map((item, i) => (
             <motion.a
               key={i}
@@ -229,14 +217,6 @@ export default function SupportPage() {
             </motion.a>
           ))}
         </div>
-
-        {/* Chat Box */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9 }}
-          className="rounded-2xl border bg-white/80 backdrop-blur-md shadow-2xl overflow-hidden"
-        >
           {/* Chat Header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
             <Bot className="w-6 h-6" />
