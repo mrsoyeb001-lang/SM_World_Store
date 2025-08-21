@@ -196,7 +196,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="group inline-flex items-center gap-2 hover:underline">
+                <Link to="/FAQ" className="group inline-flex items-center gap-2 hover:underline">
                   <FileText className="w-4 h-4 opacity-80 group-hover:opacity-100" />
                   FAQ
                 </Link>
