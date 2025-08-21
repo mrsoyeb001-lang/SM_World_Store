@@ -141,53 +141,27 @@ export default function SupportPage() {
 
         {/* Quick Support Options */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-10">
-          <a
-            href={HANDOFF_LINKS.tel}
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
+          <a href={HANDOFF_LINKS.tel} className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition">
             <Phone className="w-8 h-8 text-blue-600" />
             <span className="mt-2 text-sm font-semibold">কল</span>
           </a>
-          <a
-            href={HANDOFF_LINKS.mail}
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
+          <a href={HANDOFF_LINKS.mail} className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition">
             <Mail className="w-8 h-8 text-red-600" />
             <span className="mt-2 text-sm font-semibold">ইমেইল</span>
           </a>
-          <a
-            href={HANDOFF_LINKS.whatsapp}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
+          <a href={HANDOFF_LINKS.whatsapp} target="_blank" rel="noreferrer" className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition">
             <FaWhatsapp className="w-8 h-8 text-green-600" />
             <span className="mt-2 text-sm font-semibold">WhatsApp</span>
           </a>
-          <a
-            href={HANDOFF_LINKS.telegram}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
+          <a href={HANDOFF_LINKS.telegram} target="_blank" rel="noreferrer" className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition">
             <FaTelegram className="w-8 h-8 text-sky-500" />
             <span className="mt-2 text-sm font-semibold">Telegram</span>
           </a>
-          <a
-            href={HANDOFF_LINKS.facebook}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
+          <a href={HANDOFF_LINKS.facebook} target="_blank" rel="noreferrer" className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition">
             <FaFacebook className="w-8 h-8 text-blue-700" />
             <span className="mt-2 text-sm font-semibold">Facebook</span>
           </a>
-          <a
-            href={HANDOFF_LINKS.tiktok}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition"
-          >
+          <a href={HANDOFF_LINKS.tiktok} target="_blank" rel="noreferrer" className="group rounded-2xl border p-6 flex flex-col items-center shadow hover:shadow-lg bg-white transition">
             <FaTiktok className="w-8 h-8 text-black" />
             <span className="mt-2 text-sm font-semibold">TikTok</span>
           </a>
@@ -209,24 +183,13 @@ export default function SupportPage() {
           {/* Messages */}
           <div ref={scrollRef} className="h-96 overflow-y-auto p-4 space-y-3">
             {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex items-start gap-2 ${
-                  m.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+              <div key={m.id} className={`flex items-start gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 {m.role === "assistant" && (
                   <div className="shrink-0 mt-0.5 rounded-full border p-1 bg-blue-50">
                     <Bot className="w-4 h-4 text-blue-600" />
                   </div>
                 )}
-                <div
-                  className={`rounded-2xl px-4 py-2 text-sm max-w-[80%] shadow-sm ${
-                    m.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
+                <div className={`rounded-2xl px-4 py-2 text-sm max-w-[80%] shadow-sm ${m.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"}`}>
                   {m.content}
                 </div>
                 {m.role === "user" && (
@@ -247,35 +210,16 @@ export default function SupportPage() {
           {/* Quick Suggestions */}
           <div className="flex gap-2 overflow-x-auto px-4 pb-2 border-t bg-gray-50">
             {QUICK_SUGGESTIONS.map((q) => (
-              <button
-                key={q}
-                onClick={() => sendMessage(q)}
-                className="shrink-0 rounded-full border px-3 py-1 text-xs hover:bg-gray-200"
-              >
+              <button key={q} onClick={() => sendMessage(q)} className="shrink-0 rounded-full border px-3 py-1 text-xs hover:bg-gray-200">
                 {q}
               </button>
             ))}
           </div>
 
           {/* Input */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendMessage();
-            }}
-            className="flex items-center gap-2 border-t p-3"
-          >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="আপনার প্রশ্ন লিখুন…"
-              className="flex-1 rounded-xl border px-3 py-2 outline-none focus:ring focus:ring-blue-300"
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 text-white px-3 py-2 disabled:opacity-50"
-            >
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2 border-t p-3">
+            <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="আপনার প্রশ্ন লিখুন…" className="flex-1 rounded-xl border px-3 py-2 outline-none focus:ring focus:ring-blue-300" />
+            <button type="submit" disabled={loading || !input.trim()} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 text-white px-3 py-2 disabled:opacity-50">
               <Send className="w-4 h-4" />
               পাঠান
             </button>
