@@ -351,10 +351,13 @@ export function Footer() {
           </section>
         </div>
 
-        {/* Payment Methods Section */}
-<div className="mt-12 border-t border-white/10 pt-8">
-  <h4 className="font-semibold text-white mb-4">Payment Methods</h4>
-  <div className="flex items-center gap-3 flex-wrap">
+{/* Payment Methods Section */}
+<div className="border-t border-white/10 pt-8 mb-8">
+  <h4 className="font-semibold text-white mb-5 flex items-center gap-2">
+    <CreditCard className="w-5 h-5 text-blue-400" />
+    পেমেন্ট Methods
+  </h4>
+  <div className="flex items-center gap-4 flex-wrap">
     {[
       { src: "/payments/bkash.png", alt: "bKash" },
       { src: "/payments/nagad.png", alt: "Nagad" },
@@ -363,7 +366,7 @@ export function Footer() {
     ].map((p) => (
       <div
         key={p.alt}
-        className="inline-flex items-center justify-center bg-white rounded-md shadow-sm ring-1 ring-black/5"
+        className="inline-flex items-center justify-center bg-white rounded-md shadow-sm hover:shadow-lg transition duration-300"
         title={p.alt}
       >
         <img src={p.src} alt={p.alt} className="h-8 w-auto object-contain" />
@@ -371,6 +374,7 @@ export function Footer() {
     ))}
   </div>
 </div>
+
 
         {/* Copyright and Policies */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
