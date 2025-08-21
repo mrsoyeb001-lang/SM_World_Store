@@ -309,7 +309,7 @@ export function Footer() {
               <FileText className="w-4 h-4" />
               নিয়ম ও শর্তাবলী
             </Link>
-            <Link to="/refund-policy" className="inline-flex items-center gap-1 hover:underline">
+            <Link to="/return-policy" className="inline-flex items-center gap-1 hover:underline">
               <RotateCcw className="w-4 h-4" />
               রিফান্ড পলিসি
             </Link>
