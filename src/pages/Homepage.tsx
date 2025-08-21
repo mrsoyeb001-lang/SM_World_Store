@@ -106,31 +106,7 @@ export default function Homepage() {
 
               {/* Modified ProductGrid with proper mobile responsiveness */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {/* Sample product cards - these should be replaced with your actual ProductGrid component */}
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                  <Card key={item} className="overflow-hidden">
-                    <div className="aspect-square bg-muted relative">
-                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                        -33%
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-medium text-sm mb-1">Mini Hand Fan</h3>
-                      <div className="flex items-center mb-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        ))}
-                        <span className="text-xs ml-1 text-muted-foreground">(35)</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-primary font-bold">৳৩,৩৯৯</span>
-                          <span className="text-muted-foreground text-xs line-through ml-1">৳৫,৫৯৯</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                <ProductGrid limit={12} />
               </div>
             </div>
           </div>
