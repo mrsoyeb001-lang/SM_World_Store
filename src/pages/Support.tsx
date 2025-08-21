@@ -8,7 +8,6 @@ import {
   Loader2,
   SendHorizonal,
 } from "lucide-react";
-import { SiWhatsapp, SiTelegram, SiFacebook, SiTiktok } from "react-icons/si";
 import { motion } from "framer-motion";
 
 type ChatMessage = {
@@ -42,6 +41,51 @@ const HANDOFF_LINKS = {
   facebook: "https://www.facebook.com/profile.php?id=61579242700749",
   tiktok: "https://www.tiktok.com/@smworldstore",
 };
+
+// ✅ কাস্টম SVG আইকন (react-icons বাদ দিয়ে)
+const WhatsAppIcon = () => (
+  <svg
+    className="w-8 h-8 text-green-600"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 448 512"
+    fill="currentColor"
+  >
+    <path d="M380.9 97.1C339-....Z" />
+  </svg>
+);
+
+const TelegramIcon = () => (
+  <svg
+    className="w-8 h-8 text-sky-500"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 496 512"
+    fill="currentColor"
+  >
+    <path d="M248 8C111....Z" />
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg
+    className="w-8 h-8 text-blue-700"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 320 512"
+    fill="currentColor"
+  >
+    <path d="M279.14 288l14.22-92.66h-88.91V127....Z" />
+  </svg>
+);
+
+const TikTokIcon = () => (
+  <svg
+    className="w-8 h-8 text-black"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 448 512"
+    fill="currentColor"
+  >
+    <path d="M448 209.91a210....Z" />
+  </svg>
+);
 
 // Rule Based Answer
 function ruleBasedAnswer(q: string): string {
@@ -166,10 +210,10 @@ export default function SupportPage() {
           {[
             { icon: <PhoneCall className="w-8 h-8 text-blue-600" />, text: "কল", link: HANDOFF_LINKS.tel },
             { icon: <Mail className="w-8 h-8 text-red-600" />, text: "ইমেইল", link: HANDOFF_LINKS.mail },
-            { icon: <SiWhatsapp className="w-8 h-8 text-green-600" />, text: "WhatsApp", link: HANDOFF_LINKS.whatsapp },
-            { icon: <SiTelegram className="w-8 h-8 text-sky-500" />, text: "Telegram", link: HANDOFF_LINKS.telegram },
-            { icon: <SiFacebook className="w-8 h-8 text-blue-700" />, text: "Facebook", link: HANDOFF_LINKS.facebook },
-            { icon: <SiTiktok className="w-8 h-8 text-black" />, text: "TikTok", link: HANDOFF_LINKS.tiktok },
+            { icon: <WhatsAppIcon />, text: "WhatsApp", link: HANDOFF_LINKS.whatsapp },
+            { icon: <TelegramIcon />, text: "Telegram", link: HANDOFF_LINKS.telegram },
+            { icon: <FacebookIcon />, text: "Facebook", link: HANDOFF_LINKS.facebook },
+            { icon: <TikTokIcon />, text: "TikTok", link: HANDOFF_LINKS.tiktok },
           ].map((item, i) => (
             <motion.a
               key={i}
