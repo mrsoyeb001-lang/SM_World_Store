@@ -27,6 +27,7 @@ import Support from "./pages/Support";
 import LiveChat from "./pages/LiveChat";  
 import ShippingInfoPage from "./pages/ShippingInfoPage";   // ✅ ঠিক করা হলো
 import ReturnPolicy from "./pages/ReturnPolicy";  // ✅ নতুন Return Policy Page ইমপোর্ট
+import PrivacyPolicy from "./pages/PrivacyPolicy";  // ✅ নতুন PrivacyPolicy Page ইমপোর্ট
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
                     <Route path="/live-chat" element={<LiveChat />} />
                     <Route path="/shipping-info" element={<ShippingInfoPage />} />
                     <Route path="/return-policy" element={<ReturnPolicy />} /> {/* ✅ নতুন Return Policy Route */}
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* ✅ নতুন PrivacyPolicy */}
 
                     {/* 404 Fallback */}
                     <Route path="*" element={<NotFound />} />
