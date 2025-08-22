@@ -30,6 +30,7 @@ import ReturnPolicy from "./pages/ReturnPolicy";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import SellerPolicy from "./pages/SellerPolicy";
+import CookiePolicy from "./pages/CookiePolicy";
 
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/seller-policy" element={<SellerPolicy />} />
+                    <Route path="/cookie-policy" element={<CookiePolicy />} />
 
 
                     {/* 404 Fallback */}
