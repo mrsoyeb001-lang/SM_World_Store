@@ -27,7 +27,6 @@ import Support from "./pages/Support";
 import LiveChat from "./pages/LiveChat";
 import ShippingInfoPage from "./pages/ShippingInfoPage";
 import ReturnPolicy from "./pages/ReturnPolicy";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -65,7 +64,6 @@ const App = () => (
                     <Route path="/live-chat" element={<LiveChat />} />
                     <Route path="/shipping-info" element={<ShippingInfoPage />} />
                     <Route path="/return-policy" element={<ReturnPolicy />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
                     {/* 404 Fallback */}
                     <Route path="*" element={<NotFound />} />
