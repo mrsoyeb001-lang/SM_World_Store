@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { toast } from '@/hooks/use-toast';
-import { Helmet } from "react-helmet-async";  // ✅ SEO যোগ করা হলো
 
 interface Product {
   id: string;
@@ -112,7 +111,7 @@ export default function ProductDetails() {
         user_id: user.id,
         product_id: product.id
       });
-      toast({ title: "ফেভারিটে যোগ হয়েছে ❤️" });
+      toast({ title: "ফেভারিটে যোগ হয়েছে❤️" });
     } else {
       await supabase.from("favorites")
         .delete()
@@ -157,127 +156,106 @@ export default function ProductDetails() {
   const currentPrice = product.sale_price || product.price;
 
   return (
-    <>
-      {/* ✅ Dynamic SEO meta tags */}
-      <Helmet>
-        <title>{product.name} - SM World Store</title>
-        <meta name="description" content={product.description} />
-
-        {/* Open Graph */}
-        <meta property="og:type" content="product" />
-        <meta property="og:title" content={product.name} />
-        <meta property="og:description" content={product.description} />
-        <meta property="og:image" content={product.images[0]} />
-        <meta property="og:url" content={`https://smworldstore.vercel.app/product/${product.id}`} />
-
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={product.name} />
-        <meta name="twitter:description" content={product.description} />
-        <meta name="twitter:image" content={product.images[0]} />
-      </Helmet>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Button variant="ghost" asChild>
-            <Link to="/"><ArrowLeft className="mr-2 h-4 w-4" /> পেছনে যান</Link>
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Product Images */}
-          <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-lg border">
-              <img src={product.images[selectedImage] || '/placeholder.svg'} alt={product.name} className="h-full w-full object-cover" />
-            </div>
-            {product.images.length > 1 && (
-              <div className="flex gap-2">
-                {product.images.map((image, index) => (
-                  <button key={index} onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 border rounded-lg overflow-hidden ${selectedImage === index ? 'ring-2 ring-primary' : ''}`}>
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-6">
-            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            {/* Rating */}
-            <div className="flex items-center gap-2 mb-4">
-              {[1,2,3,4,5].map((star) => (
-                <Star key={star} className={`h-4 w-4 ${star <= product.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-              ))}
-              <span className="text-sm text-muted-foreground">({product.review_count} রিভিউ)</span>
-            </div>
-
-            {/* Price */}
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-3xl font-bold text-primary">৳{currentPrice}</span>
-              {product.sale_price && (
-                <>
-                  <span className="text-xl text-muted-foreground line-through">৳{product.price}</span>
-                  <Badge variant="destructive">-{discountPercentage}%</Badge>
-                </>
-              )}
-            </div>
-
-            {/* Stock */}
-            {product.stock_quantity > 0 ? (
-              <Badge variant="outline" className="text-green-600 border-green-600">স্টকে আছে ({product.stock_quantity} টি)</Badge>
-            ) : (
-              <Badge variant="destructive">স্টক শেষ</Badge>
-            )}
-
-            <Separator />
-
-            {/* Quantity */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">পরিমাণ</label>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus className="h-4 w-4" /></Button>
-                <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-20 text-center" min="1" max={product.stock_quantity} />
-                <Button variant="outline" size="sm" onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-3">
-              <Button onClick={handleBuyNow} disabled={product.stock_quantity <= 0} className="w-full btn-gradient" size="lg">এখনই কিনুন</Button>
-              <div className="flex gap-3">
-                <Button onClick={handleAddToCart} disabled={product.stock_quantity <= 0} variant="outline" className="flex-1">
-                  <ShoppingCart className="mr-2 h-4 w-4" /> কার্টে যোগ করুন
-                </Button>
-                <Button variant={favorite ? "default" : "outline"} size="icon" onClick={handleFavorite}>
-                  <Heart className={`h-4 w-4 ${favorite ? 'fill-red-500 text-red-500' : ''}`} />
-                </Button>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Stylish Description */}
-            <Card className="p-4 bg-gradient-to-br from-gray-50 to-white border shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">✨ পণ্যের বিস্তারিত</h3>
-              <div className="text-muted-foreground leading-relaxed space-y-2">
-                {product.description.split("\n").map((line, i) => (
-                  <p key={i} className="pl-2 border-l-4 border-primary/40 bg-primary/5 rounded-sm py-1 px-2">{line}</p>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* More Products */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6">আরো দেখুন</h2>
-          <ProductGrid categoryId={product.category_id} limit={4} />
-        </section>
+    <div className="container mx-auto px-4 py-8">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Button variant="ghost" asChild>
+          <Link to="/"><ArrowLeft className="mr-2 h-4 w-4" /> পেছনে যান</Link>
+        </Button>
       </div>
-    </>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        {/* Product Images */}
+        <div className="space-y-4">
+          <div className="aspect-square overflow-hidden rounded-lg border">
+            <img src={product.images[selectedImage] || '/placeholder.svg'} alt={product.name} className="h-full w-full object-cover" />
+          </div>
+          {product.images.length > 1 && (
+            <div className="flex gap-2">
+              {product.images.map((image, index) => (
+                <button key={index} onClick={() => setSelectedImage(index)}
+                  className={`w-20 h-20 border rounded-lg overflow-hidden ${selectedImage === index ? 'ring-2 ring-primary' : ''}`}>
+                  <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+          {/* Rating */}
+          <div className="flex items-center gap-2 mb-4">
+            {[1,2,3,4,5].map((star) => (
+              <Star key={star} className={`h-4 w-4 ${star <= product.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+            ))}
+            <span className="text-sm text-muted-foreground">({product.review_count} রিভিউ)</span>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-center gap-4 mb-4">
+            <span className="text-3xl font-bold text-primary">৳{currentPrice}</span>
+            {product.sale_price && (
+              <>
+                <span className="text-xl text-muted-foreground line-through">৳{product.price}</span>
+                <Badge variant="destructive">-{discountPercentage}%</Badge>
+              </>
+            )}
+          </div>
+
+          {/* Stock */}
+          {product.stock_quantity > 0 ? (
+            <Badge variant="outline" className="text-green-600 border-green-600">স্টকে আছে ({product.stock_quantity} টি)</Badge>
+          ) : (
+            <Badge variant="destructive">স্টক শেষ</Badge>
+          )}
+
+          <Separator />
+
+          {/* Quantity */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">পরিমাণ</label>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus className="h-4 w-4" /></Button>
+              <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 text-center" min="1" max={product.stock_quantity} />
+              <Button variant="outline" size="sm" onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="space-y-3">
+            <Button onClick={handleBuyNow} disabled={product.stock_quantity <= 0} className="w-full btn-gradient" size="lg">এখনই কিনুন</Button>
+            <div className="flex gap-3">
+              <Button onClick={handleAddToCart} disabled={product.stock_quantity <= 0} variant="outline" className="flex-1">
+                <ShoppingCart className="mr-2 h-4 w-4" /> কার্টে যোগ করুন
+              </Button>
+              <Button variant={favorite ? "default" : "outline"} size="icon" onClick={handleFavorite}>
+                <Heart className={`h-4 w-4 ${favorite ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Stylish Description */}
+          <Card className="p-4 bg-gradient-to-br from-gray-50 to-white border shadow-sm">
+            <h3 className="text-lg font-semibold mb-3">✨ পণ্যের বিস্তারিত</h3>
+            <div className="text-muted-foreground leading-relaxed space-y-2">
+              {product.description.split("\n").map((line, i) => (
+                <p key={i} className="pl-2 border-l-4 border-primary/40 bg-primary/5 rounded-sm py-1 px-2">{line}</p>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* More Products */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6">আরো দেখুন</h2>
+        <ProductGrid categoryId={product.category_id} limit={4} />
+      </section>
+    </div>
   );
 }
