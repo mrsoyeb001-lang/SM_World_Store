@@ -9,7 +9,7 @@ import { FavoritesProvider } from "@/hooks/useFavorites";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
-// ✅ Pages
+// Pages
 import Homepage from "./pages/Homepage";
 import Auth from "./pages/Auth";
 import ProductDetails from "./pages/ProductDetails";
@@ -22,14 +22,13 @@ import Favorites from "./pages/Favorites";
 import Search from "./pages/Search";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
-import FAQ from "./pages/FAQ";  
-import Support from "./pages/Support";  
-import LiveChat from "./pages/LiveChat";  
-import ShippingInfoPage from "./pages/ShippingInfoPage";   // ✅ Shipping Info
-import ReturnPolicy from "./pages/ReturnPolicy";           // ✅ Return Policy Page
-import PrivacyPolicy from "./pages/PrivacyPolicy";         // ✅ Privacy Policy Page
+import FAQ from "./pages/FAQ";
+import Support from "./pages/Support";
+import LiveChat from "./pages/LiveChat";
+import ShippingInfoPage from "./pages/ShippingInfoPage";
+import ReturnPolicy from "./pages/ReturnPolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
-// ✅ React Query Client
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -38,20 +37,16 @@ const App = () => (
       <AuthProvider>
         <FavoritesProvider>
           <CartProvider>
-            {/* 🔔 Toast Notifications */}
             <Toaster />
             <Sonner />
-
-            {/* 🌐 Router */}
             <BrowserRouter>
               <div className="min-h-screen bg-background flex flex-col">
-                {/* 🔝 Navbar */}
+                {/* Navbar */}
                 <Navbar />
 
-                {/* 🔗 Routes */}
+                {/* Routes */}
                 <main className="flex-1">
                   <Routes>
-                    {/* 🏠 Main Pages */}
                     <Route path="/" element={<Homepage />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/product/:id" element={<ProductDetails />} />
@@ -64,7 +59,7 @@ const App = () => (
                     <Route path="/products" element={<Products />} />
                     <Route path="/admin" element={<AdminDashboard />} />
 
-                    {/* ℹ️ Extra Pages */}
+                    {/* Extra Pages */}
                     <Route path="/faq" element={<FAQ />} />
                     <Route path="/support" element={<Support />} />
                     <Route path="/live-chat" element={<LiveChat />} />
@@ -72,12 +67,12 @@ const App = () => (
                     <Route path="/return-policy" element={<ReturnPolicy />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
-                    {/* ❌ 404 Fallback */}
+                    {/* 404 Fallback */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
 
-                {/* 🔻 Footer */}
+                {/* Footer */}
                 <Footer />
               </div>
             </BrowserRouter>
