@@ -22,7 +22,6 @@ import {
   FileBadge2,
   ChevronRight,
   Globe,
-  UserPlus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -112,24 +111,6 @@ export default function SellerPolicy() {
               </div>
             </div>
           </div>
-
-          {/* Hero CTA */}
-          <div className="mt-8 flex gap-4">
-            <a
-              href={`${CONTACT.URL}/auth`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-white font-medium shadow hover:opacity-95"
-            >
-              <UserPlus className="h-5 w-5" />
-              এফিলিয়েট যোগ দিন
-            </a>
-            <a
-              href={`${CONTACT.URL}/auth`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 px-5 py-3 text-white font-medium shadow hover:opacity-95"
-            >
-              <ChevronRight className="h-5 w-5" />
-              সেলার রেজিস্ট্রেশন
-            </a>
-          </div>
         </div>
       </section>
 
@@ -154,8 +135,162 @@ export default function SellerPolicy() {
 
       {/* CONTENT */}
       <section className="mx-auto max-w-6xl px-4 py-10 space-y-8">
-        {/* এখানে উপরে দেওয়া সব Article সেকশন যাবে */}
-        {/* তুমি আগের মতো সব কনটেন্ট রাখবে */}
+        <Article id="overview" icon={<ShieldCheck className="h-6 w-6 text-emerald-600" />} title="সারসংক্ষেপ">
+          <p className="text-gray-700 leading-relaxed">
+            {CONTACT.SITE} (“আমরা”, “প্ল্যাটফর্ম”)–এ সেলার হিসেবে যুক্ত হলে আপনি এই Seller Policy,{" "}
+            <Link to="/terms" className="text-indigo-600 hover:underline">Terms</Link> এবং{" "}
+            <Link to="/privacy-policy" className="text-indigo-600 hover:underline">Privacy Policy</Link>–এর অধীনে থাকবেন।
+            আমাদের লক্ষ্য—সবার জন্য নিরাপদ, স্বচ্ছ ও ন্যায্য মার্কেটপ্লেস।
+          </p>
+        </Article>
+
+        <Article id="eligibility" icon={<BadgeCheck className="h-6 w-6 text-indigo-600" />} title="সেলার যোগ্যতা ও যাচাই">
+          <ul className="list-disc pl-5 text-gray-700 space-y-2">
+            <li>সঠিক নাম, NID/Passport, ঠিকানা, সক্রিয় মোবাইল/ইমেইল—KYC আবশ্যক।</li>
+            <li>একজন ব্যক্তি/ব্যবসা একটিই প্রাইমারি সেলার অ্যাকাউন্ট রাখতে পারবেন।</li>
+            <li>ব্যবসায়িক ব্যাংক/মোবাইল ব্যাংকিং তথ্য যাচাইযোগ্য হতে হবে।</li>
+            <li>ভুয়া/অসত্য তথ্য দিলে অ্যাকাউন্ট সাসপেন্ড/ব্যান হতে পারে।</li>
+          </ul>
+        </Article>
+
+        <Article id="listing" icon={<Package className="h-6 w-6 text-blue-600" />} title="প্রোডাক্ট লিস্টিং নীতি">
+          <div className="grid md:grid-cols-2 gap-6 text-gray-700">
+            <ul className="list-disc pl-5 space-y-2">
+              <li>অরিজিনাল/অনুমোদিত পণ্য—নকল/রেপ্লিকা নয়।</li>
+              <li>শিরোনাম, বর্ণনা, ব্র্যান্ড, বৈশিষ্ট্য ও স্পেসিফিকেশন পরিষ্কারভাবে উল্লেখ করুন।</li>
+              <li>হাই-কোয়ালিটি ইমেজ (ওয়াটারমার্ক ছাড়া) ব্যবহার করুন।</li>
+              <li>স্টক আউট হলে তাৎক্ষণিকভাবে লিস্টিং আপডেট করুন।</li>
+            </ul>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>ভ্যারিয়্যান্ট (সাইজ/কালার/ওয়ারেন্টি) সঠিকভাবে সেট করতে হবে।</li>
+              <li>ভুল দাবী (misleading claims) বা অতিরঞ্জিত মার্কেটিং নিষিদ্ধ।</li>
+              <li>সিরিয়াল/IMEI থাকা আইটেমে বৈধ কাগজপত্র/ওয়ারেন্টি তথ্য সংযুক্ত করতে হবে।</li>
+            </ul>
+          </div>
+        </Article>
+
+        <Article id="pricing" icon={<Tag className="h-6 w-6 text-fuchsia-600" />} title="প্রাইসিং ও প্রমোশন">
+          <ul className="list-disc pl-5 text-gray-700 space-y-2">
+            <li>মূল্য VAT/Tax সহ (যদি প্রযোজ্য) স্বচ্ছভাবে প্রদর্শন করতে হবে।</li>
+            <li>ভুল “মিথ্যা ডিসকাউন্ট” বা স্ট্রাইকথ্রু প্রাইসিং করা যাবে না।</li>
+            <li>কুপন/ভাউচার/বুস্ট ক্যাম্পেইন শুধুমাত্র অনুমতিপ্রাপ্ত হলে ব্যবহারযোগ্য।</li>
+          </ul>
+        </Article>
+
+        <Article id="orders" icon={<PackageCheck className="h-6 w-6 text-emerald-700" />} title="অর্ডার, ফালফিলমেন্ট ও SLA">
+          <ul className="list-disc pl-5 text-gray-700 space-y-2">
+            <li>অর্ডার কনফার্মের পর <b>২৪ ঘণ্টার মধ্যে</b> প্যাকেট প্রস্তুত করুন (ব্যবসায়িক দিন)।</li>
+            <li>স্টক সমস্যা/ডিলে থাকলে দ্রুত কাস্টমারকে জানিয়ে বিকল্প প্রস্তাব দিন।</li>
+            <li>অর্ডার ক্যানসেল/রিশিপ/হারানো প্যাকেজ—প্ল্যাটফর্ম নীতিমালা অনুযায়ী নিষ্পত্তি হবে।</li>
+            <li>SLA ভাঙলে রেটিং/ভিজিবিলিটি কমা বা পেনাল্টি প্রযোজ্য হতে পারে।</li>
+          </ul>
+        </Article>
+
+        <Article id="shipping" icon={<Truck className="h-6 w-6 text-cyan-600" />} title="শিপিং ও ডেলিভারি">
+          <ul className="list-disc pl-5 text-gray-700 space-y-2">
+            <li>অনুমোদিত কুরিয়ার/লজিস্টিক পার্টনারের মাধ্যমেই শিপমেন্ট পাঠান।</li>
+            <li>সঠিক প্যাকেজিং, ইনভয়েস/চালান ও ফ্র্যাজাইল আইটেমে উপযুক্ত সুরক্ষা আবশ্যক।</li>
+            <li>ভুল ঠিকানা/ফোনের ক্ষেত্রে কাস্টমার/সাপোর্টের সঙ্গে সমন্বয় করুন।</li>
+          </ul>
+        </Article>
+
+        <Article id="payment" icon={<Wallet className="h-6 w-6 text-violet-600" />} title="কমিশন, পেআউট ও ইনভয়েসিং">
+          <div className="text-gray-700 space-y-2">
+            <p>প্রত্যেক সফল অর্ডারের উপর পূর্ব-ঘোষিত কমিশন কর্তন করা হয়। COD/গেটওয়ে ফি (যদি প্রযোজ্য) আলাদা থাকতে পারে।</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>পেআউট সাইকেল: সাপ্তাহিক/মাসিক (ড্যাশবোর্ডে প্রদর্শিত সময়সূচী)।</li>
+              <li>রিটার্ন/চার্জব্যাক/ফ্রড কেসে সংশ্লিষ্ট এমাউন্ট হোল্ড হতে পারে।</li>
+              <li>ব্যাংক/মোবাইল ব্যাংকিং তথ্য সঠিক না হলে পেআউট বিলম্বিত হবে।</li>
+            </ul>
+          </div>
+        </Article>
+
+        <Article id="return" icon={<RefreshCcw className="h-6 w-6 text-sky-600" />} title="রিটার্ন, রিফান্ড ও বিতর্ক">
+          <ul className="list-disc pl-5 text-gray-700 space-y-2">
+            <li>ড্যামেজ/ভুল/মিসিং আইটেম—কাস্টমারের প্রমাণসহ রিটার্ন গ্রহণযোগ্য।</li>
+            <li>রিটার্ন উইন্ডো ক্যাটাগরি অনুযায়ী নির্ধারিত (সাধারণত ৭–১৪ দিন)।</li>
+            <li>বিতর্ক হলে প্ল্যাটফর্মের সিদ্ধান্তই চূড়ান্ত; প্রয়োজনে ডকুমেন্ট/লগ যাচাই হবে।</li>
+          </ul>
+        </Article>
+
+        <Article id="prohibited" icon={<Ban className="h-6 w-6 text-red-600" />} title="নিষিদ্ধ/সীমাবদ্ধ পণ্য">
+          <div className="grid md:grid-cols-2 gap-6 text-gray-700">
+            <ul className="list-disc pl-5 space-y-2">
+              <li>নকল/পাইরেটেড/কপিরাইট-লঙ্ঘনকারী পণ্য</li>
+              <li>অস্ত্র/বিস্ফোরক/ড্রাগ/হ্যাজার্ডাস কেমিক্যাল</li>
+              <li>মেডিকেল/প্রেসক্রিপশন-নির্ভর পণ্য (অননুমোদিত)</li>
+            </ul>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>ঘৃণা/সহিংসতা/প্রাপ্তবয়স্ক কন্টেন্ট সম্পর্কিত আইটেম</li>
+              <li>রিস্ট্রিকটেড সার্ভেইলেন্স/স্পাই ডিভাইস</li>
+              <li>যে কোনো আইন/রেগুলেশন-বিরোধী পণ্য</li>
+            </ul>
+          </div>
+        </Article>
+
+        <Article id="compliance" icon={<Gavel className="h-6 w-6 text-orange-600" />} title="কমপ্লায়েন্স, পেনাল্টি ও ব্যান">
+          <ul className="list-disc pl-5 text-gray-700 space-y-2">
+            <li>পলিসি লঙ্ঘনে সতর্কতা, জরিমানা, লিস্টিং ডাউন বা স্থায়ী ব্যান হতে পারে।</li>
+            <li>ফেক অর্ডার/ভুয়া রিভিউ/ডাটা ম্যানিপুলেশন—শূন্য সহনশীলতা।</li>
+            <li>আইনগত অনুরোধ/তদন্তে প্রয়োজনীয় তথ্য সরবরাহ বাধ্যতামূলক।</li>
+          </ul>
+        </Article>
+
+        <Article id="ip" icon={<Scale className="h-6 w-6 text-rose-600" />} title="ব্র্যান্ড, কপিরাইট ও আইপি">
+          <ul className="list-disc pl-5 text-gray-700 space-y-2">
+            <li>ব্র্যান্ডের অনুমতি ছাড়া ট্রেডমার্কড আইটেম বিক্রি নিষিদ্ধ।</li>
+            <li>আইপি-টেকডাউন রিকোয়েস্ট পেলে লিস্টিং সাময়িকভাবে সাসপেন্ড হতে পারে।</li>
+            <li>বারবার লঙ্ঘনে স্থায়ী নিষেধাজ্ঞা প্রযোজ্য।</li>
+          </ul>
+        </Article>
+
+        <Article id="data" icon={<Lock className="h-6 w-6 text-emerald-700" />} title="ডেটা প্রাইভেসি ও সিকিউরিটি">
+          <p className="text-gray-700">
+            কাস্টমারের তথ্য শুধুমাত্র অর্ডার প্রসেসিংয়ের জন্য ব্যবহার করুন; অন্য কোনো মার্কেটিং/শেয়ারিং নিষিদ্ধ।
+            বিস্তারিত দেখতে <Link to="/privacy-policy" className="text-indigo-600 hover:underline">Privacy Policy</Link> দেখুন।
+          </p>
+        </Article>
+
+        <Article id="changes" icon={<History className="h-6 w-6 text-gray-700" />} title="নীতিমালা আপডেট">
+          <p className="text-gray-700">
+            প্রয়োজন অনুসারে Seller Policy আপডেট হতে পারে। গুরুত্বপূর্ণ পরিবর্তনে ড্যাশবোর্ড নোটিস/ইমেইল করা হবে।
+            “শেষ আপডেট” তারিখ উপরে দেখুন।
+          </p>
+        </Article>
+
+        <Article id="support" icon={<LifeBuoy className="h-6 w-6 text-indigo-600" />} title="সাপোর্ট ও যোগাযোগ">
+          <div className="grid md:grid-cols-3 gap-4 text-gray-700">
+            <a href={`mailto:${CONTACT.MAIL}`} className="rounded-xl border p-4 hover:bg-gray-50 flex items-center gap-3">
+              <Mail className="h-5 w-5 text-indigo-600" /> {CONTACT.MAIL}
+            </a>
+            <a href={`tel:${CONTACT.PHONE}`} className="rounded-xl border p-4 hover:bg-gray-50 flex items-center gap-3">
+              <Phone className="h-5 w-5 text-emerald-600" /> {CONTACT.PHONE}
+            </a>
+            <a href={CONTACT.WHATSAPP} target="_blank" rel="noreferrer" className="rounded-xl border p-4 hover:bg-gray-50 flex items-center gap-3">
+              <MessageSquare className="h-5 w-5 text-green-600" /> WhatsApp
+            </a>
+          </div>
+          <p className="text-xs text-gray-500 mt-3">
+            আইনি নোটিশ: এই ডকুমেন্ট সাধারণ তথ্যের জন্য; এটি আইনগত পরামর্শ নয়। প্ল্যাটফর্ম লিঙ্ক:{" "}
+            <a href={CONTACT.URL} className="text-indigo-600 hover:underline" target="_blank" rel="noreferrer">
+              {CONTACT.URL}
+            </a>
+          </p>
+        </Article>
+
+        {/* CTA */}
+        <div className="rounded-2xl border bg-white p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h4 className="text-xl font-semibold">সেলার হতে প্রস্তুত?</h4>
+            <p className="text-gray-600">নীতিমালা মেনে দ্রুত ভেরিফিকেশন সম্পন্ন করুন—আপনার ব্যবসা গ্রো করতে আমরা সাথে আছি।</p>
+          </div>
+          <a
+            href={`${CONTACT.URL}/auth`}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-white font-medium shadow hover:opacity-95"
+          >
+            সেলার রেজিস্ট্রেশন <ChevronRight className="h-4 w-4" />
+          </a>
+        </div>
       </section>
     </div>
   );
