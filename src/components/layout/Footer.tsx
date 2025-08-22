@@ -383,7 +383,7 @@ export function Footer() {
               `© ${currentYear} ${brand}. সকল অধিকার সংরক্ষিত।`}
           </p>
           <div className="flex flex-wrap gap-4 text-sm order-1 md:order-2 mb-4 md:mb-0">
-            <Link to="/PrivacyPolicy" className="inline-flex items-center gap-1 hover:text-white transition-colors">
+            <Link to="//privacy-policy" className="inline-flex items-center gap-1 hover:text-white transition-colors">
               <Lock className="w-4 h-4" />
               প্রাইভেসি পলিসি
             </Link>
