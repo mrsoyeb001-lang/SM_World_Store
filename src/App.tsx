@@ -25,10 +25,11 @@ import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";  
 import Support from "./pages/Support";  
 import LiveChat from "./pages/LiveChat";  
-import ShippingInfoPage from "./pages/ShippingInfoPage";   // ✅ ঠিক করা হলো
-import ReturnPolicy from "./pages/ReturnPolicy";  // ✅ নতুন Return Policy Page ইমপোর্ট
-import PrivacyPolicy from "./pages/PrivacyPolicy";  // ✅ নতুন PrivacyPolicy Page ইমপোর্ট
+import ShippingInfoPage from "./pages/ShippingInfoPage";   // ✅ Shipping Info
+import ReturnPolicy from "./pages/ReturnPolicy";           // ✅ Return Policy Page
+import PrivacyPolicy from "./pages/PrivacyPolicy";         // ✅ Privacy Policy Page
 
+// ✅ React Query Client
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -37,8 +38,11 @@ const App = () => (
       <AuthProvider>
         <FavoritesProvider>
           <CartProvider>
+            {/* 🔔 Toast Notifications */}
             <Toaster />
             <Sonner />
+
+            {/* 🌐 Router */}
             <BrowserRouter>
               <div className="min-h-screen bg-background flex flex-col">
                 {/* 🔝 Navbar */}
@@ -47,6 +51,7 @@ const App = () => (
                 {/* 🔗 Routes */}
                 <main className="flex-1">
                   <Routes>
+                    {/* 🏠 Main Pages */}
                     <Route path="/" element={<Homepage />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/product/:id" element={<ProductDetails />} />
@@ -64,10 +69,10 @@ const App = () => (
                     <Route path="/support" element={<Support />} />
                     <Route path="/live-chat" element={<LiveChat />} />
                     <Route path="/shipping-info" element={<ShippingInfoPage />} />
-                    <Route path="/return-policy" element={<ReturnPolicy />} /> {/* ✅ নতুন Return Policy Route */}
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* ✅ নতুন PrivacyPolicy */}
+                    <Route path="/return-policy" element={<ReturnPolicy />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
-                    {/* 404 Fallback */}
+                    {/* ❌ 404 Fallback */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
