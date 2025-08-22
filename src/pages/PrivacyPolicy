@@ -62,10 +62,11 @@ export default function PrivacyPolicy() {
         <div className="mx-auto max-w-6xl px-4 pt-16 pb-10">
           <div className="grid items-center gap-8 md:grid-cols-[1.1fr_.9fr]">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-sm font-medium text-white shadow-sm">
-                <ShieldCheck className="h-4 w-4" />
-                প্রাইভেসি পলিসি — {CONTACT.SITE}
-              </span>
+              <span className="inline-flex items-center gap-2">
+  <ShieldCheck className="h-4 w-4" />
+  {`প্রাইভেসি পলিসি – ${CONTACT.SITE}`}
+</span>
+
               <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight text-gray-900 md:text-5xl">
                 আপনার তথ্যের নিরাপত্তা, স্বচ্ছতা ও নিয়ন্ত্রণ
               </h1>
