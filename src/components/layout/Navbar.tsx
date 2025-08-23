@@ -49,10 +49,11 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo with name */}
+          
+          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/logo.png"  // <-- public ফোল্ডারে logo.png রাখবে
+              src="/logo.png"
               alt="SM World Store Logo" 
               className="w-10 h-10 object-contain"
             />
@@ -60,16 +61,21 @@ export function Navbar() {
           </Link>
 
           {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <form 
+            onSubmit={handleSearch} 
+            className="hidden md:flex flex-1 max-w-lg mx-8"
+          >
+            <div className="flex w-full rounded-lg border overflow-hidden">
               <Input
                 type="search"
-                placeholder="পণ্য খুঁজুন..."
+                placeholder="Search by Categories (Appliances, Electronics, etc...)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="flex-1 border-0 focus-visible:ring-0 px-4"
               />
+              <Button type="submit" className="rounded-none">
+                <Search className="h-5 w-5" />
+              </Button>
             </div>
           </form>
 
@@ -169,17 +175,20 @@ export function Navbar() {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
+                  
                   {/* Mobile Search */}
                   <form onSubmit={handleSearch}>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <div className="flex w-full rounded-lg border overflow-hidden">
                       <Input
                         type="search"
                         placeholder="পণ্য খুঁজুন..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
+                        className="flex-1 border-0 focus-visible:ring-0 px-4"
                       />
+                      <Button type="submit" className="rounded-none">
+                        <Search className="h-5 w-5" />
+                      </Button>
                     </div>
                   </form>
 
