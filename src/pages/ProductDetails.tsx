@@ -89,7 +89,7 @@ export default function ProductDetails() {
     const user = await checkAuth();
     if (!user) {
       toast({ title: "অনুগ্রহ করে লগইন করুন", description: "কেনাকাটা করতে হলে আগে লগইন করুন।" });
-      navigate("/login");
+      navigate("/auth");
       return;
     }
     await handleAddToCart();
@@ -102,7 +102,7 @@ export default function ProductDetails() {
     const user = await checkAuth();
     if (!user) {
       toast({ title: "অনুগ্রহ করে লগইন করুন", description: "ফেভারিট করতে হলে আগে লগইন করুন।" });
-      navigate("/login");
+      navigate("/auth");
       return;
     }
 
