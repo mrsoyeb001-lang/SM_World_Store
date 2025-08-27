@@ -8,6 +8,7 @@ import { CartProvider } from "@/hooks/useCart";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import OrderConfirmation from '@/components/order/OrderConfirmation';
 
 // Pages
 import Homepage from "./pages/Homepage";
@@ -73,6 +74,7 @@ const App = () => (
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/seller-policy" element={<SellerPolicy />} />
                     <Route path="/cookie-policy" element={<CookiePolicy />} />
+                    <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
 
                     {/* 404 Fallback */}
