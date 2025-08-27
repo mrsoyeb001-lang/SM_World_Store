@@ -383,16 +383,6 @@ export default function Checkout() {
                 />
               </div>
 
-              <Button 
-                type="submit"
-                disabled={loading || !selectedShipping}
-                className="w-full mt-6"
-                size="lg"
-              >
-                {loading ? "অর্ডার করা হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
-              </Button>
-            </form>
-          </Card>
 
           {/* Order Summary */}
           <Card className="p-6 h-fit">
@@ -454,6 +444,17 @@ export default function Checkout() {
                     প্রয়োগ
                   </Button>
                 </div>
+                    <Button 
+                type="submit"
+                disabled={loading || !selectedShipping}
+                className="w-full mt-6"
+                size="lg"
+              >
+                {loading ? "অর্ডার করা হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
+              </Button>
+            </form>
+          </Card>
+
               )}
             </div>
           </Card>
