@@ -203,14 +203,22 @@ export default function Checkout() {
       // Clear cart
       await clearCart();
 
-      // Enhanced order confirmation
-      toast({
-        title: "অর্ডার সফল! 🎉",
-        description: `অর্ডার #${order.id.slice(0, 8)} সফলভাবে প্লেস হয়েছে। মোট: ৳${finalTotal.toLocaleString()}। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।`,
-        duration: 6000,
-      });
+      // Prepare order confirmation data
+      const orderConfirmationData = {
+        orderId: order.id,
+        totalAmount: finalTotal,
+        orderItems: items.map(item => ({
+          product_name: item.product.name,
+          quantity: item.quantity,
+          price: item.product.sale_price || item.product.price,
+          image_url: item.product.image_url
+        }))
+      };
 
-      navigate('/dashboard');
+      // Navigate to order confirmation page with data
+      navigate('/order-confirmation', { 
+        state: orderConfirmationData 
+      });
 
     } catch (error: any) {
       toast({
@@ -374,6 +382,15 @@ export default function Checkout() {
                   placeholder="বিশেষ নির্দেশনা..."
                 />
               </div>
+
+              <Button 
+                type="submit"
+                disabled={loading || !selectedShipping}
+                className="w-full mt-6"
+                size="lg"
+              >
+                {loading ? "অর্ডার করা হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
+              </Button>
             </form>
           </Card>
 
@@ -439,15 +456,6 @@ export default function Checkout() {
                 </div>
               )}
             </div>
-
-            <Button 
-              onClick={handleSubmit}
-              disabled={loading || !selectedShipping}
-              className="w-full mt-6"
-              size="lg"
-            >
-              {loading ? "অর্ডার করা হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
-            </Button>
           </Card>
         </div>
       </div>
