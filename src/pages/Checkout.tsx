@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { CheckCircle } from 'lucide-react';
 
 interface ShippingRate {
   id: string;
@@ -41,6 +42,8 @@ export default function Checkout() {
   const [appliedPromoCode, setAppliedPromoCode] = useState<PromoCode | null>(null);
   const [discount, setDiscount] = useState(0);
   const [paymentSettings, setPaymentSettings] = useState<any>(null);
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -59,14 +62,14 @@ export default function Checkout() {
       return;
     }
 
-    if (items.length === 0) {
+    if (items.length === 0 && !orderConfirmed) {
       navigate('/cart');
       return;
     }
 
     fetchShippingRates();
     fetchPaymentSettings();
-  }, [user, items, navigate]);
+  }, [user, items, navigate, orderConfirmed]);
 
   const fetchShippingRates = async () => {
     const { data } = await supabase
@@ -200,24 +203,35 @@ export default function Checkout() {
           .eq('id', appliedPromoCode.id);
       }
 
+      // Set order details for confirmation
+      setOrderDetails({
+        id: order.id,
+        total: finalTotal,
+        items: items.map(item => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: (item.product.sale_price || item.product.price) * item.quantity
+        })),
+        shippingAddress: {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city
+        },
+        paymentMethod: formData.paymentMethod
+      });
+
       // Clear cart
       await clearCart();
 
-      // Prepare order confirmation data
-      const orderConfirmationData = {
-        orderId: order.id,
-        totalAmount: finalTotal,
-        orderItems: items.map(item => ({
-          product_name: item.product.name,
-          quantity: item.quantity,
-          price: item.product.sale_price || item.product.price,
-          image_url: item.product.image_url
-        }))
-      };
+      // Show order confirmation
+      setOrderConfirmed(true);
 
-      // Navigate to order confirmation page with data
-      navigate('/order-confirmation', { 
-        state: orderConfirmationData 
+      // Enhanced order confirmation
+      toast({
+        title: "অর্ডার সফল! 🎉",
+        description: `অর্ডার #${order.id.slice(0, 8)} সফলভাবে প্লেস হয়েছে। মোট: ৳${finalTotal.toLocaleString()}। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।`,
+        duration: 6000,
       });
 
     } catch (error: any) {
@@ -230,6 +244,42 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+
+  // Order Confirmation Component
+  const OrderConfirmation = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="p-6 max-w-md w-full">
+        <div className="text-center">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">অর্ডার সফল!</h2>
+          <p className="text-gray-600 mb-6">আপনার অর্ডারটি সফলভাবে প্লেস হয়েছে।</p>
+          
+          <div className="bg-gray-50 p-4 rounded-lg mb-6 text-left">
+            <h3 className="font-semibold mb-2">অর্ডার বিবরণ:</h3>
+            <p className="text-sm">অর্ডার নম্বর: #{orderDetails?.id.slice(0, 8)}</p>
+            <p className="text-sm">মোট Amount: ৳{orderDetails?.total.toLocaleString()}</p>
+            <p className="text-sm">পেমেন্ট Method: {orderDetails?.paymentMethod === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : 
+              orderDetails?.paymentMethod === 'bkash' ? 'বিকাশ' : 
+              orderDetails?.paymentMethod === 'rocket' ? 'রকেট' : 'নগদ'}</p>
+          </div>
+          
+          <Button 
+            onClick={() => {
+              setOrderConfirmed(false);
+              navigate('/dashboard');
+            }}
+            className="w-full"
+          >
+            ড্যাশবোর্ডে যান
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+
+  if (orderConfirmed) {
+    return <OrderConfirmation />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -382,7 +432,8 @@ export default function Checkout() {
                   placeholder="বিশেষ নির্দেশনা..."
                 />
               </div>
-
+            </form>
+          </Card>
 
           {/* Order Summary */}
           <Card className="p-6 h-fit">
@@ -444,19 +495,17 @@ export default function Checkout() {
                     প্রয়োগ
                   </Button>
                 </div>
-                    <Button 
-                type="submit"
-                disabled={loading || !selectedShipping}
-                className="w-full mt-6"
-                size="lg"
-              >
-                {loading ? "অর্ডার করা হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
-              </Button>
-            </form>
-          </Card>
-
               )}
             </div>
+
+            <Button 
+              onClick={handleSubmit}
+              disabled={loading || !selectedShipping}
+              className="w-full mt-6"
+              size="lg"
+            >
+              {loading ? "অর্ডার করা হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
+            </Button>
           </Card>
         </div>
       </div>
