@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Edit, Trash2, Plus, Percent, DollarSign, Package, Users, Calendar, Hash } from 'lucide-react';
+import { Edit, Trash2, Plus, Percent, DollarSign, Package, Users, Calendar, Hash, Search, Link, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,12 +27,15 @@ interface PromoCode {
   applies_to: 'all' | 'specific';
   product_ids: string[] | null;
   usage_per_user: number | null;
+  products?: Product[];
 }
 
 interface Product {
   id: string;
   name: string;
   price: number;
+  image_url: string | null;
+  category: string;
 }
 
 interface PromoCodeUsage {
@@ -52,6 +55,8 @@ interface PromoCodeUsage {
 export default function AdvancedPromoCodeManagement() {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [usageHistory, setUsageHistory] = useState<PromoCodeUsage[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -77,11 +82,26 @@ export default function AdvancedPromoCodeManagement() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
+    }
+  }, [searchTerm, products]);
+
   const fetchPromoCodes = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('promo_codes')
-      .select('*')
+      .select(`
+        *,
+        products (*)
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -99,13 +119,14 @@ export default function AdvancedPromoCodeManagement() {
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, price')
+      .select('id, name, price, image_url, category')
       .order('name');
 
     if (error) {
       console.error("পণ্য লোড করতে ব্যর্থ:", error);
     } else {
       setProducts(data || []);
+      setFilteredProducts(data || []);
     }
   };
 
@@ -138,8 +159,12 @@ export default function AdvancedPromoCodeManagement() {
     setLoading(true);
 
     try {
+      // যদি নির্দিষ্ট পণ্যের জন্য প্রমো কোড হয়, তাহলে ন্যূনতম অর্ডার পরিমাণ 0 সেট করুন
+      const minOrderAmount = formData.applies_to === 'specific' ? 0 : formData.min_order_amount;
+      
       const promoData = {
         ...formData,
+        min_order_amount: minOrderAmount,
         code: formData.code.toUpperCase(),
         max_uses: formData.max_uses > 0 ? formData.max_uses : null,
         expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
@@ -240,6 +265,7 @@ export default function AdvancedPromoCodeManagement() {
       usage_per_user: 1
     });
     setEditingPromo(null);
+    setSearchTerm('');
   };
 
   const generateRandomCode = () => {
@@ -268,6 +294,27 @@ export default function AdvancedPromoCodeManagement() {
     });
   };
 
+  const addProductById = (productId: string) => {
+    if (!productId.trim()) return;
+    
+    const product = products.find(p => p.id === productId);
+    if (product && !formData.product_ids?.includes(productId)) {
+      setFormData(prev => ({
+        ...prev,
+        product_ids: [...(prev.product_ids || []), productId]
+      }));
+    }
+  };
+
+  const getProductPrice = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    return product ? product.price : 0;
+  };
+
+  const getSelectedProductsTotal = () => {
+    return formData.product_ids?.reduce((total, id) => total + getProductPrice(id), 0) || 0;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -279,7 +326,7 @@ export default function AdvancedPromoCodeManagement() {
               নতুন প্রমো কোড
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingPromo ? 'প্রমো কোড সম্পাদনা' : 'নতুন প্রমো কোড'}
@@ -336,18 +383,20 @@ export default function AdvancedPromoCodeManagement() {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="min_order_amount">নূন্যতম অর্ডার পরিমাণ (৳)</Label>
-                  <Input
-                    id="min_order_amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.min_order_amount}
-                    onChange={(e) => setFormData({ ...formData, min_order_amount: Number(e.target.value) })}
-                    placeholder="500"
-                  />
-                </div>
+                {formData.applies_to === 'all' && (
+                  <div>
+                    <Label htmlFor="min_order_amount">নূন্যতম অর্ডার পরিমাণ (৳)</Label>
+                    <Input
+                      id="min_order_amount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.min_order_amount}
+                      onChange={(e) => setFormData({ ...formData, min_order_amount: Number(e.target.value) })}
+                      placeholder="500"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="max_uses">সর্বোচ্চ ব্যবহার (খালি রাখলে সীমাহীন)</Label>
@@ -401,31 +450,145 @@ export default function AdvancedPromoCodeManagement() {
                 </div>
 
                 {formData.applies_to === 'specific' && (
-                  <div className="col-span-2">
-                    <Label>পণ্য নির্বাচন করুন</Label>
-                    <div className="mt-2 border rounded-md p-3 max-h-40 overflow-y-auto">
-                      {products.length === 0 ? (
-                        <div className="text-center py-4 text-muted-foreground">
-                          কোন পণ্য পাওয়া যায়নি
+                  <>
+                    <div className="col-span-2">
+                      <Label>পণ্য আইডি দ্বারা যোগ করুন</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          placeholder="পণ্য আইডি লিখুন"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addProductById(e.currentTarget.value);
+                              e.currentTarget.value = '';
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => {
+                            const input = document.querySelector('input[placeholder="পণ্য আইডি লিখুন"]') as HTMLInputElement;
+                            if (input) {
+                              addProductById(input.value);
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          যোগ করুন
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2">
+                      <Label>পণ্য অনুসন্ধান</Label>
+                      <div className="relative mt-1">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="পণ্য নাম বা ক্যাটাগরি দ্বারা খুঁজুন"
+                          className="pl-8"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        {searchTerm && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={() => setSearchTerm('')}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="col-span-2">
+                      <Label>নির্বাচিত পণ্যসমূহ</Label>
+                      {formData.product_ids && formData.product_ids.length > 0 ? (
+                        <div className="mt-2 border rounded-md p-3">
+                          <div className="mb-2 font-medium">
+                            মোট পণ্য মূল্য: ৳{getSelectedProductsTotal()}
+                          </div>
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {formData.product_ids.map(id => {
+                              const product = products.find(p => p.id === id);
+                              return product ? (
+                                <div key={id} className="flex items-center justify-between p-2 border rounded-md">
+                                  <div className="flex items-center gap-3">
+                                    {product.image_url && (
+                                      <img 
+                                        src={product.image_url} 
+                                        alt={product.name}
+                                        className="w-10 h-10 object-cover rounded"
+                                      />
+                                    )}
+                                    <div>
+                                      <div className="font-medium">{product.name}</div>
+                                      <div className="text-sm text-muted-foreground">৳{product.price}</div>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => toggleProductSelection(id)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
                         </div>
                       ) : (
-                        products.map(product => (
-                          <div key={product.id} className="flex items-center space-x-2 py-2">
-                            <input
-                              type="checkbox"
-                              id={`product-${product.id}`}
-                              checked={formData.product_ids?.includes(product.id) || false}
-                              onChange={() => toggleProductSelection(product.id)}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor={`product-${product.id}`} className="flex-1 cursor-pointer">
-                              {product.name} - ৳{product.price}
-                            </Label>
-                          </div>
-                        ))
+                        <div className="mt-2 border rounded-md p-4 text-center text-muted-foreground">
+                          কোন পণ্য নির্বাচন করা হয়নি
+                        </div>
                       )}
                     </div>
-                  </div>
+
+                    <div className="col-span-2">
+                      <Label>পণ্য তালিকা</Label>
+                      <div className="mt-2 border rounded-md p-3 max-h-60 overflow-y-auto">
+                        {filteredProducts.length === 0 ? (
+                          <div className="text-center py-4 text-muted-foreground">
+                            {searchTerm ? 'কোন পণ্য পাওয়া যায়নি' : 'কোন পণ্য পাওয়া যায়নি'}
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {filteredProducts.map(product => (
+                              <div 
+                                key={product.id} 
+                                className={`flex items-center justify-between p-2 border rounded-md cursor-pointer ${formData.product_ids?.includes(product.id) ? 'bg-muted' : ''}`}
+                                onClick={() => toggleProductSelection(product.id)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  {product.image_url && (
+                                    <img 
+                                      src={product.image_url} 
+                                      alt={product.name}
+                                      className="w-10 h-10 object-cover rounded"
+                                    />
+                                  )}
+                                  <div>
+                                    <div className="font-medium">{product.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {product.category} • ৳{product.price}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  আইডি: {product.id}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 <div className="col-span-2 flex items-center space-x-2">
@@ -499,10 +662,12 @@ export default function AdvancedPromoCodeManagement() {
                           </span>
                         </div>
                         
-                        <div>
-                          <span className="text-muted-foreground">নূন্যতম অর্ডার:</span>
-                          <span className="ml-1">৳{promo.min_order_amount}</span>
-                        </div>
+                        {promo.applies_to === 'all' && (
+                          <div>
+                            <span className="text-muted-foreground">নূন্যতম অর্ডার:</span>
+                            <span className="ml-1">৳{promo.min_order_amount}</span>
+                          </div>
+                        )}
                         
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-muted-foreground" />
@@ -526,17 +691,18 @@ export default function AdvancedPromoCodeManagement() {
                         <div className="mt-3">
                           <span className="text-sm text-muted-foreground">প্রযোজ্য পণ্য: </span>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {promo.product_ids.slice(0, 3).map(id => {
-                              const product = products.find(p => p.id === id);
-                              return product ? (
-                                <Badge key={id} variant="secondary" className="text-xs">
-                                  {product.name}
-                                </Badge>
-                              ) : null;
-                            })}
-                            {promo.product_ids.length > 3 && (
+                            {promo.products?.slice(0, 5).map(product => (
+                              <Badge key={product.id} variant="secondary" className="text-xs">
+                                {product.name}
+                              </Badge>
+                            )) || promo.product_ids.slice(0, 5).map(id => (
+                              <Badge key={id} variant="secondary" className="text-xs">
+                                {id}
+                              </Badge>
+                            ))}
+                            {promo.product_ids.length > 5 && (
                               <Badge variant="secondary" className="text-xs">
-                                +{promo.product_ids.length - 3} more
+                                +{promo.product_ids.length - 5} more
                               </Badge>
                             )}
                           </div>
