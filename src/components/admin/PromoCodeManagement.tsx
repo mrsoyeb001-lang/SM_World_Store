@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Edit, Trash2, Plus, Percent, DollarSign, Package, Users, Calendar, Hash, Search, Link, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Edit, Trash2, Plus, Percent, DollarSign, Package, Users, Calendar, Hash, X, Check, Zap, Copy } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PromoCode {
   id: string;
@@ -27,14 +28,12 @@ interface PromoCode {
   applies_to: 'all' | 'specific';
   product_ids: string[] | null;
   usage_per_user: number | null;
-  products?: Product[];
 }
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  image_url: string | null;
   category: string;
 }
 
@@ -55,13 +54,12 @@ interface PromoCodeUsage {
 export default function AdvancedPromoCodeManagement() {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [usageHistory, setUsageHistory] = useState<PromoCodeUsage[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
   const [activeTab, setActiveTab] = useState('codes');
+  const [selectedPromoForUsage, setSelectedPromoForUsage] = useState<PromoCode | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -82,26 +80,11 @@ export default function AdvancedPromoCodeManagement() {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredProducts(filtered);
-    } else {
-      setFilteredProducts(products);
-    }
-  }, [searchTerm, products]);
-
   const fetchPromoCodes = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('promo_codes')
-      .select(`
-        *,
-        products (*)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -119,18 +102,18 @@ export default function AdvancedPromoCodeManagement() {
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, price, image_url, category')
+      .select('id, name, price, category')
       .order('name');
 
     if (error) {
       console.error("পণ্য লোড করতে ব্যর্থ:", error);
     } else {
       setProducts(data || []);
-      setFilteredProducts(data || []);
     }
   };
 
-  const fetchUsageHistory = async (promoId: string) => {
+  const fetchUsageHistory = async (promo: PromoCode) => {
+    setSelectedPromoForUsage(promo);
     const { data, error } = await supabase
       .from('promo_code_usages')
       .select(`
@@ -138,7 +121,7 @@ export default function AdvancedPromoCodeManagement() {
         users:user_id (email),
         orders:order_id (total_amount)
       `)
-      .eq('promo_code_id', promoId)
+      .eq('promo_code_id', promo.id)
       .order('used_at', { ascending: false });
 
     if (error) {
@@ -159,9 +142,17 @@ export default function AdvancedPromoCodeManagement() {
     setLoading(true);
 
     try {
-      // যদি নির্দিষ্ট পণ্যের জন্য প্রমো কোড হয়, তাহলে ন্যূনতম অর্ডার পরিমাণ 0 সেট করুন
-      const minOrderAmount = formData.applies_to === 'specific' ? 0 : formData.min_order_amount;
+      // Calculate minimum order amount for specific products
+      let minOrderAmount = formData.min_order_amount;
       
+      if (formData.applies_to === 'specific' && formData.product_ids.length > 0) {
+        const selectedProducts = products.filter(p => formData.product_ids.includes(p.id));
+        if (selectedProducts.length > 0) {
+          // Set min order amount to the highest product price in the selection
+          minOrderAmount = Math.max(...selectedProducts.map(p => p.price));
+        }
+      }
+
       const promoData = {
         ...formData,
         min_order_amount: minOrderAmount,
@@ -265,7 +256,6 @@ export default function AdvancedPromoCodeManagement() {
       usage_per_user: 1
     });
     setEditingPromo(null);
-    setSearchTerm('');
   };
 
   const generateRandomCode = () => {
@@ -294,60 +284,79 @@ export default function AdvancedPromoCodeManagement() {
     });
   };
 
-  const addProductById = (productId: string) => {
-    if (!productId.trim()) return;
-    
-    const product = products.find(p => p.id === productId);
-    if (product && !formData.product_ids?.includes(productId)) {
-      setFormData(prev => ({
-        ...prev,
-        product_ids: [...(prev.product_ids || []), productId]
-      }));
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "কপি করা হয়েছে",
+      description: "প্রমো কোড ক্লিপবোর্ডে কপি করা হয়েছে"
+    });
+  };
+
+  // Calculate minimum order amount for specific products
+  const calculateMinOrderForSpecificProducts = () => {
+    if (formData.applies_to === 'specific' && formData.product_ids.length > 0) {
+      const selectedProducts = products.filter(p => formData.product_ids.includes(p.id));
+      if (selectedProducts.length > 0) {
+        return Math.max(...selectedProducts.map(p => p.price));
+      }
     }
+    return formData.min_order_amount;
   };
 
-  const getProductPrice = (productId: string) => {
-    const product = products.find(p => p.id === productId);
-    return product ? product.price : 0;
-  };
-
-  const getSelectedProductsTotal = () => {
-    return formData.product_ids?.reduce((total, id) => total + getProductPrice(id), 0) || 0;
-  };
+  const minOrderAmount = calculateMinOrderForSpecificProducts();
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">উন্নত প্রমো কোড ব্যবস্থাপনা</h2>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">উন্নত প্রমো কোড ব্যবস্থাপনা</h2>
+          <p className="text-muted-foreground">আপনার প্রমো কোডগুলি তৈরি, পরিচালনা এবং ট্র্যাক করুন</p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="w-4 h-4 mr-2" />
+            <Button onClick={resetForm} className="gap-2">
+              <Plus className="w-4 h-4" />
               নতুন প্রমো কোড
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingPromo ? 'প্রমো কোড সম্পাদনা' : 'নতুন প্রমো কোড'}
+                {editingPromo ? 'প্রমো কোড সম্পাদনা' : 'নতুন প্রমো কোড তৈরি করুন'}
               </DialogTitle>
+              <DialogDescription>
+                {editingPromo 
+                  ? 'আপনার প্রমো কোডের তথ্য আপডেট করুন' 
+                  : 'একটি নতুন প্রমো কোড তৈরি করুন এবং এর বৈশিষ্ট্য কনফিগার করুন'
+                }
+              </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
                   <Label htmlFor="code">প্রমো কোড *</Label>
                   <div className="flex gap-2">
                     <Input
                       id="code"
                       value={formData.code}
                       onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                      placeholder="SAVE50"
+                      placeholder="SUMMER25"
                       required
+                      className="font-mono"
                     />
-                    <Button type="button" variant="outline" onClick={generateRandomCode}>
-                      জেনারেট
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button type="button" variant="outline" onClick={generateRandomCode}>
+                            <Zap className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>র‍্যান্ডম কোড জেনারেট করুন</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
 
@@ -361,15 +370,25 @@ export default function AdvancedPromoCodeManagement() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="percentage">শতাংশ (%)</SelectItem>
-                      <SelectItem value="fixed">নির্দিষ্ট পরিমাণ (৳)</SelectItem>
+                      <SelectItem value="percentage">
+                        <div className="flex items-center">
+                          <Percent className="w-4 h-4 mr-2" />
+                          শতাংশ (%)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="fixed">
+                        <div className="flex items-center">
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          নির্দিষ্ট পরিমাণ
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <Label htmlFor="discount_value">
-                    {formData.discount_type === 'percentage' ? 'ছাড়ের শতকরা হার *' : 'ছাড়ের পরিমাণ *'}
+                    {formData.discount_type === 'percentage' ? 'ছাড়ের শতকরা হার *' : 'ছাড়ের পরিমাণ (৳) *'}
                   </Label>
                   <Input
                     id="discount_value"
@@ -383,31 +402,39 @@ export default function AdvancedPromoCodeManagement() {
                   />
                 </div>
 
-                {formData.applies_to === 'all' && (
-                  <div>
-                    <Label htmlFor="min_order_amount">নূন্যতম অর্ডার পরিমাণ (৳)</Label>
-                    <Input
-                      id="min_order_amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.min_order_amount}
-                      onChange={(e) => setFormData({ ...formData, min_order_amount: Number(e.target.value) })}
-                      placeholder="500"
-                    />
-                  </div>
-                )}
+                <div>
+                  <Label htmlFor="min_order_amount">
+                    {formData.applies_to === 'all' ? 'নূন্যতম অর্ডার পরিমাণ (৳)' : 'স্বয়ংক্রিয় ন্যূনতম অর্ডার'}
+                  </Label>
+                  <Input
+                    id="min_order_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.applies_to === 'specific' ? minOrderAmount : formData.min_order_amount}
+                    onChange={(e) => setFormData({ ...formData, min_order_amount: Number(e.target.value) })}
+                    placeholder="500"
+                    disabled={formData.applies_to === 'specific'}
+                    className={formData.applies_to === 'specific' ? 'bg-muted' : ''}
+                  />
+                  {formData.applies_to === 'specific' && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      নির্দিষ্ট পণ্যের জন্য স্বয়ংক্রিয়ভাবে সেট করা হয়েছে
+                    </p>
+                  )}
+                </div>
 
                 <div>
-                  <Label htmlFor="max_uses">সর্বোচ্চ ব্যবহার (খালি রাখলে সীমাহীন)</Label>
+                  <Label htmlFor="max_uses">সর্বোচ্চ ব্যবহার</Label>
                   <Input
                     id="max_uses"
                     type="number"
                     min="0"
                     value={formData.max_uses}
                     onChange={(e) => setFormData({ ...formData, max_uses: Number(e.target.value) })}
-                    placeholder="100"
+                    placeholder="সীমাহীন (খালি রাখুন)"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">খালি রাখলে সীমাহীন ব্যবহার</p>
                 </div>
 
                 <div>
@@ -431,9 +458,10 @@ export default function AdvancedPromoCodeManagement() {
                     onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">খালি রাখলে সীমাহীন মেয়াদ</p>
                 </div>
 
-                <div className="col-span-2">
+                <div className="md:col-span-2">
                   <Label htmlFor="applies_to">প্রযোজ্যতা</Label>
                   <Select 
                     value={formData.applies_to} 
@@ -443,218 +471,172 @@ export default function AdvancedPromoCodeManagement() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">সব পণ্যে</SelectItem>
-                      <SelectItem value="specific">নির্দিষ্ট পণ্যে</SelectItem>
+                      <SelectItem value="all">
+                        <div className="flex items-center">
+                          <Users className="w-4 h-4 mr-2" />
+                          সব পণ্যে
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="specific">
+                        <div className="flex items-center">
+                          <Package className="w-4 h-4 mr-2" />
+                          নির্দিষ্ট পণ্যে
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {formData.applies_to === 'specific' && (
-                  <>
-                    <div className="col-span-2">
-                      <Label>পণ্য আইডি দ্বারা যোগ করুন</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          placeholder="পণ্য আইডি লিখুন"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              addProductById(e.currentTarget.value);
-                              e.currentTarget.value = '';
-                            }
-                          }}
-                        />
-                        <Button 
-                          type="button" 
-                          variant="outline"
-                          onClick={() => {
-                            const input = document.querySelector('input[placeholder="পণ্য আইডি লিখুন"]') as HTMLInputElement;
-                            if (input) {
-                              addProductById(input.value);
-                              input.value = '';
-                            }
-                          }}
-                        >
-                          যোগ করুন
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="col-span-2">
-                      <Label>পণ্য অনুসন্ধান</Label>
-                      <div className="relative mt-1">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="পণ্য নাম বা ক্যাটাগরি দ্বারা খুঁজুন"
-                          className="pl-8"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        {searchTerm && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => setSearchTerm('')}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="col-span-2">
-                      <Label>নির্বাচিত পণ্যসমূহ</Label>
-                      {formData.product_ids && formData.product_ids.length > 0 ? (
-                        <div className="mt-2 border rounded-md p-3">
-                          <div className="mb-2 font-medium">
-                            মোট পণ্য মূল্য: ৳{getSelectedProductsTotal()}
-                          </div>
-                          <div className="space-y-2 max-h-40 overflow-y-auto">
-                            {formData.product_ids.map(id => {
-                              const product = products.find(p => p.id === id);
-                              return product ? (
-                                <div key={id} className="flex items-center justify-between p-2 border rounded-md">
-                                  <div className="flex items-center gap-3">
-                                    {product.image_url && (
-                                      <img 
-                                        src={product.image_url} 
-                                        alt={product.name}
-                                        className="w-10 h-10 object-cover rounded"
-                                      />
-                                    )}
-                                    <div>
-                                      <div className="font-medium">{product.name}</div>
-                                      <div className="text-sm text-muted-foreground">৳{product.price}</div>
-                                    </div>
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => toggleProductSelection(id)}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ) : null;
-                            })}
-                          </div>
+                  <div className="md:col-span-2">
+                    <Label>পণ্য নির্বাচন করুন *</Label>
+                    <div className="mt-2 border rounded-md p-3 max-h-48 overflow-y-auto">
+                      {products.length === 0 ? (
+                        <div className="text-center py-4 text-muted-foreground">
+                          কোন পণ্য পাওয়া যায়নি
                         </div>
                       ) : (
-                        <div className="mt-2 border rounded-md p-4 text-center text-muted-foreground">
-                          কোন পণ্য নির্বাচন করা হয়নি
+                        <div className="space-y-2">
+                          {products.map(product => (
+                            <div key={product.id} className="flex items-start space-x-2 py-2">
+                              <input
+                                type="checkbox"
+                                id={`product-${product.id}`}
+                                checked={formData.product_ids?.includes(product.id) || false}
+                                onChange={() => toggleProductSelection(product.id)}
+                                className="w-4 h-4 mt-1"
+                              />
+                              <Label htmlFor={`product-${product.id}`} className="flex-1 cursor-pointer">
+                                <div className="font-medium">{product.name}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {product.category} • ৳{product.price}
+                                </div>
+                              </Label>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
-
-                    <div className="col-span-2">
-                      <Label>পণ্য তালিকা</Label>
-                      <div className="mt-2 border rounded-md p-3 max-h-60 overflow-y-auto">
-                        {filteredProducts.length === 0 ? (
-                          <div className="text-center py-4 text-muted-foreground">
-                            {searchTerm ? 'কোন পণ্য পাওয়া যায়নি' : 'কোন পণ্য পাওয়া যায়নি'}
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {filteredProducts.map(product => (
-                              <div 
-                                key={product.id} 
-                                className={`flex items-center justify-between p-2 border rounded-md cursor-pointer ${formData.product_ids?.includes(product.id) ? 'bg-muted' : ''}`}
-                                onClick={() => toggleProductSelection(product.id)}
-                              >
-                                <div className="flex items-center gap-3">
-                                  {product.image_url && (
-                                    <img 
-                                      src={product.image_url} 
-                                      alt={product.name}
-                                      className="w-10 h-10 object-cover rounded"
-                                    />
-                                  )}
-                                  <div>
-                                    <div className="font-medium">{product.name}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {product.category} • ৳{product.price}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  আইডি: {product.id}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
+                    {formData.product_ids.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        নির্বাচিত পণ্য: {formData.product_ids.length}টি | 
+                        ন্যূনতম অর্ডার: ৳{minOrderAmount}
+                      </p>
+                    )}
+                  </div>
                 )}
 
-                <div className="col-span-2 flex items-center space-x-2">
+                <div className="md:col-span-2 flex items-center space-x-2 p-3 bg-muted rounded-md">
                   <Switch
                     id="is_active"
                     checked={formData.is_active}
                     onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                   />
-                  <Label htmlFor="is_active">সক্রিয় প্রমো কোড</Label>
+                  <Label htmlFor="is_active" className="flex-1">
+                    <div className="font-medium">সক্রিয় প্রমো কোড</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formData.is_active ? 'ব্যবহারকারীরা এই কোড ব্যবহার করতে পারবে' : 'এই কোডটি সাময়িকভাবে নিষ্ক্রিয় করা হয়েছে'}
+                    </div>
+                  </Label>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <DialogFooter className="gap-2 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   বাতিল
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'সেভ করা হচ্ছে...' : editingPromo ? 'আপডেট করুন' : 'তৈরি করুন'}
+                  {loading ? (
+                    <>সেভ করা হচ্ছে...</>
+                  ) : editingPromo ? (
+                    <>আপডেট করুন</>
+                  ) : (
+                    <>তৈরি করুন</>
+                  )}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="codes">প্রমো কোডসমূহ</TabsTrigger>
-          <TabsTrigger value="usage">ব্যবহারের ইতিহাস</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="codes" className="flex items-center gap-2">
+            <Hash className="w-4 h-4" />
+            প্রমো কোডসমূহ
+          </TabsTrigger>
+          <TabsTrigger value="usage" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            ব্যবহারের ইতিহাস
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="codes">
-          <div className="grid gap-4">
-            {loading ? (
-              <div className="text-center py-8">লোড হচ্ছে...</div>
-            ) : promoCodes.length === 0 ? (
-              <div className="text-center py-8">কোন প্রমো কোড পাওয়া যায়নি</div>
-            ) : (
-              promoCodes.map((promo) => (
-                <Card key={promo.id} className="p-4">
-                  <div className="flex items-center justify-between">
+        <TabsContent value="codes" className="space-y-4">
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">প্রমো কোড লোড হচ্ছে...</p>
+            </div>
+          ) : promoCodes.length === 0 ? (
+            <div className="text-center py-12 border rounded-lg">
+              <Package className="w-12 h-12 text-muted-foreground mx-auto" />
+              <h3 className="mt-4 font-medium">কোন প্রমো কোড পাওয়া যায়নি</h3>
+              <p className="text-muted-foreground mb-4">একটি নতুন প্রমো কোড তৈরি করে শুরু করুন</p>
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                নতুন প্রমো কোড
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {promoCodes.map((promo) => (
+                <Card key={promo.id} className="p-5 overflow-hidden">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-bold text-xl font-mono">{promo.code}</h3>
-                        <Badge variant={promo.is_active ? "default" : "secondary"}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-xl font-mono bg-primary/10 px-2 py-1 rounded-md">
+                            {promo.code}
+                          </h3>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  onClick={() => copyToClipboard(promo.code)}
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>কোড কপি করুন</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <Badge variant={promo.is_active ? "default" : "secondary"} className="gap-1">
+                          {promo.is_active ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                           {promo.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
                         </Badge>
                         {promo.expires_at && new Date(promo.expires_at) < new Date() && (
-                          <Badge variant="destructive">মেয়াদ শেষ</Badge>
-                        )}
-                        {promo.applies_to === 'specific' && (
-                          <Badge variant="outline">
-                            <Package className="w-3 h-3 mr-1" />
-                            নির্দিষ্ট পণ্য
+                          <Badge variant="destructive" className="gap-1">
+                            <X className="w-3 h-3" />
+                            মেয়াদ শেষ
                           </Badge>
                         )}
                       </div>
                       
-                      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
                           {promo.discount_type === 'percentage' ? (
                             <Percent className="w-4 h-4 text-green-600" />
                           ) : (
                             <DollarSign className="w-4 h-4 text-green-600" />
                           )}
-                          <span>
+                          <span className="font-medium">
                             {promo.discount_type === 'percentage' 
                               ? `${promo.discount_value}% ছাড়`
                               : `৳${promo.discount_value} ছাড়`
@@ -662,47 +644,48 @@ export default function AdvancedPromoCodeManagement() {
                           </span>
                         </div>
                         
-                        {promo.applies_to === 'all' && (
-                          <div>
-                            <span className="text-muted-foreground">নূন্যতম অর্ডার:</span>
-                            <span className="ml-1">৳{promo.min_order_amount}</span>
-                          </div>
-                        )}
+                        <div className="p-2 bg-muted rounded-md">
+                          <span className="text-muted-foreground">নূন্যতম অর্ডার: </span>
+                          <span className="font-medium">৳{promo.min_order_amount}</span>
+                        </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
                           <Users className="w-4 h-4 text-muted-foreground" />
                           <span>
-                            {promo.used_count}/{promo.max_uses || '∞'}
+                            ব্যবহার: <span className="font-medium">{promo.used_count}</span> / 
+                            {promo.max_uses || <span className="font-medium">∞</span>}
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
                           <Calendar className="w-4 h-4 text-muted-foreground" />
                           <span>
                             {promo.expires_at 
                               ? new Date(promo.expires_at).toLocaleDateString('bn-BD')
-                              : 'সীমাহীন'
+                              : 'সীমাহীন মেয়াদ'
                             }
                           </span>
                         </div>
                       </div>
 
                       {promo.applies_to === 'specific' && promo.product_ids && promo.product_ids.length > 0 && (
-                        <div className="mt-3">
-                          <span className="text-sm text-muted-foreground">প্রযোজ্য পণ্য: </span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {promo.products?.slice(0, 5).map(product => (
-                              <Badge key={product.id} variant="secondary" className="text-xs">
-                                {product.name}
-                              </Badge>
-                            )) || promo.product_ids.slice(0, 5).map(id => (
-                              <Badge key={id} variant="secondary" className="text-xs">
-                                {id}
-                              </Badge>
-                            ))}
-                            {promo.product_ids.length > 5 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{promo.product_ids.length - 5} more
+                        <div className="mt-4">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                            <Package className="w-4 h-4" />
+                            প্রযোজ্য পণ্য ({promo.product_ids.length}টি):
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {promo.product_ids.slice(0, 4).map(id => {
+                              const product = products.find(p => p.id === id);
+                              return product ? (
+                                <Badge key={id} variant="secondary" className="text-xs">
+                                  {product.name}
+                                </Badge>
+                              ) : null;
+                            })}
+                            {promo.product_ids.length > 4 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{promo.product_ids.length - 4} more
                               </Badge>
                             )}
                           </div>
@@ -710,66 +693,98 @@ export default function AdvancedPromoCodeManagement() {
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-row md:flex-col gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(promo)}
+                        className="gap-1"
                       >
                         <Edit className="w-4 h-4" />
+                        <span className="md:hidden">এডিট</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => fetchUsageHistory(promo.id)}
+                        onClick={() => fetchUsageHistory(promo)}
+                        className="gap-1"
                       >
                         <Hash className="w-4 h-4" />
+                        <span className="md:hidden">ইতিহাস</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDelete(promo.id)}
+                        className="gap-1 text-destructive"
                       >
                         <Trash2 className="w-4 h-4" />
+                        <span className="md:hidden">ডিলিট</span>
                       </Button>
                     </div>
                   </div>
                 </Card>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="usage">
-          <Card className="p-4">
-            <h3 className="font-bold text-lg mb-4">প্রমো কোড ব্যবহারের ইতিহাস</h3>
+          <Card className="p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h3 className="font-bold text-xl">প্রমো কোড ব্যবহারের ইতিহাস</h3>
+                {selectedPromoForUsage && (
+                  <p className="text-muted-foreground">
+                    কোড: <span className="font-mono font-medium">{selectedPromoForUsage.code}</span>
+                  </p>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => setActiveTab('codes')}
+                className="gap-2"
+              >
+                <X className="w-4 h-4" />
+                বন্ধ করুন
+              </Button>
+            </div>
+            
             {usageHistory.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                কোন ব্যবহারের ইতিহাস পাওয়া যায়নি
+              <div className="text-center py-12 border rounded-lg">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto" />
+                <h3 className="mt-4 font-medium">কোন ব্যবহারের ইতিহাস পাওয়া যায়নি</h3>
+                <p className="text-muted-foreground">
+                  এই প্রমো কোডটি এখনো ব্যবহার করা হয়নি
+                </p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ব্যবহারকারী</TableHead>
-                    <TableHead>অর্ডার আইডি</TableHead>
-                    <TableHead>অর্ডার পরিমাণ</TableHead>
-                    <TableHead>ব্যবহারের সময়</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {usageHistory.map((usage) => (
-                    <TableRow key={usage.id}>
-                      <TableCell>{usage.users?.email || 'অজানা ব্যবহারকারী'}</TableCell>
-                      <TableCell>{usage.order_id}</TableCell>
-                      <TableCell>৳{usage.orders?.total_amount || 0}</TableCell>
-                      <TableCell>
-                        {new Date(usage.used_at).toLocaleString('bn-BD')}
-                      </TableCell>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ব্যবহারকারী</TableHead>
+                      <TableHead>অর্ডার আইডি</TableHead>
+                      <TableHead>অর্ডার পরিমাণ</TableHead>
+                      <TableHead>ব্যবহারের সময়</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {usageHistory.map((usage) => (
+                      <TableRow key={usage.id}>
+                        <TableCell className="font-medium">
+                          {usage.users?.email || 'অজানা ব্যবহারকারী'}
+                        </TableCell>
+                        <TableCell className="font-mono">{usage.order_id}</TableCell>
+                        <TableCell>৳{usage.orders?.total_amount || 0}</TableCell>
+                        <TableCell>
+                          {new Date(usage.used_at).toLocaleString('bn-BD')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </Card>
         </TabsContent>
