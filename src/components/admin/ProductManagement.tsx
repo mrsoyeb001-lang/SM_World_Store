@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Trash2, Plus, Upload, X, Link, Star, Eye, BarChart3 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Edit, Trash2, Plus, Upload, X, Link, Star, Eye, BarChart3, Tag, Palette, Ruler } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -18,26 +19,41 @@ interface Product {
   description: string;
   price: number;
   sale_price?: number;
-  category_id: string;
+  category_ids: string[];
+  categories?: Category[];
   stock_quantity: number;
   is_active: boolean;
   images: string[];
   rating: number;
   review_count: number;
-  category?: {
-    name: string;
-  };
+  sizes: string[];
+  colors: string[];
+  tags: string[];
 }
 
 interface Category {
   id: string;
   name: string;
+  description?: string;
+}
+
+interface Size {
+  id: string;
+  name: string;
+}
+
+interface Color {
+  id: string;
+  name: string;
+  hex_code: string;
 }
 
 export default function ProductManagement() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [sizes, setSizes] = useState<Size[]>([]);
+  const [colors, setColors] = useState<Color[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -45,6 +61,13 @@ export default function ProductManagement() {
   const [imageUrl, setImageUrl] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [newTag, setNewTag] = useState('');
+  const [newSize, setNewSize] = useState('');
+  const [newColor, setNewColor] = useState({ name: '', hex_code: '#3b82f6' });
+  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [showSizeDialog, setShowSizeDialog] = useState(false);
+  const [showColorDialog, setShowColorDialog] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -52,16 +75,21 @@ export default function ProductManagement() {
     description: '',
     price: 0,
     sale_price: 0,
-    category_id: '',
+    category_ids: [] as string[],
     stock_quantity: 0,
     is_active: true,
     rating: 0,
-    review_count: 0
+    review_count: 0,
+    sizes: [] as string[],
+    colors: [] as string[],
+    tags: [] as string[],
   });
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchSizes();
+    fetchColors();
   }, []);
 
   useEffect(() => {
@@ -74,7 +102,7 @@ export default function ProductManagement() {
       .from('products')
       .select(`
         *,
-        categories:category_id (name)
+        categories:product_categories (category:categories (*))
       `)
       .order('created_at', { ascending: false });
 
@@ -85,7 +113,14 @@ export default function ProductManagement() {
         variant: "destructive"
       });
     } else {
-      setProducts(data || []);
+      // Transform the data to match our Product interface
+      const transformedData = data?.map(item => ({
+        ...item,
+        categories: item.categories?.map(pc => pc.category),
+        category_ids: item.categories?.map(pc => pc.category.id) || []
+      })) || [];
+      
+      setProducts(transformedData);
     }
     setLoading(false);
   };
@@ -98,6 +133,28 @@ export default function ProductManagement() {
     
     if (data) {
       setCategories(data);
+    }
+  };
+
+  const fetchSizes = async () => {
+    const { data } = await supabase
+      .from('sizes')
+      .select('*')
+      .order('name');
+    
+    if (data) {
+      setSizes(data);
+    }
+  };
+
+  const fetchColors = async () => {
+    const { data } = await supabase
+      .from('colors')
+      .select('*')
+      .order('name');
+    
+    if (data) {
+      setColors(data);
     }
   };
 
@@ -118,7 +175,8 @@ export default function ProductManagement() {
       filtered = filtered.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        product.categories?.some(cat => cat.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -221,13 +279,23 @@ export default function ProductManagement() {
     setLoading(true);
 
     try {
+      // First, create/update the product
       const productData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
+        price: formData.price,
         sale_price: formData.sale_price > 0 ? formData.sale_price : null,
-        images: images,
+        stock_quantity: formData.stock_quantity,
+        is_active: formData.is_active,
         rating: formData.rating || 0,
-        review_count: formData.review_count || 0
+        review_count: formData.review_count || 0,
+        images: images,
+        sizes: formData.sizes,
+        colors: formData.colors,
+        tags: formData.tags
       };
+
+      let productId;
 
       if (editingProduct) {
         const { error } = await supabase
@@ -236,22 +304,49 @@ export default function ProductManagement() {
           .eq('id', editingProduct.id);
 
         if (error) throw error;
+        productId = editingProduct.id;
         
         toast({
           title: "পণ্য আপডেট হয়েছে",
           description: "পণ্যের তথ্য সফলভাবে আপডেট করা হয়েছে।"
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('products')
-          .insert(productData);
+          .insert(productData)
+          .select()
+          .single();
 
         if (error) throw error;
+        productId = data.id;
         
         toast({
           title: "নতুন পণ্য যোগ হয়েছে",
           description: "নতুন পণ্য সফলভাবে যোগ করা হয়েছে।"
         });
+      }
+
+      // Then, update product categories
+      if (productId) {
+        // First, remove existing categories
+        await supabase
+          .from('product_categories')
+          .delete()
+          .eq('product_id', productId);
+
+        // Then, add new categories
+        if (formData.category_ids.length > 0) {
+          const categoryRelations = formData.category_ids.map(category_id => ({
+            product_id: productId,
+            category_id
+          }));
+
+          const { error } = await supabase
+            .from('product_categories')
+            .insert(categoryRelations);
+
+          if (error) throw error;
+        }
       }
 
       resetForm();
@@ -275,11 +370,14 @@ export default function ProductManagement() {
       description: product.description || '',
       price: product.price,
       sale_price: product.sale_price || 0,
-      category_id: product.category_id || '',
+      category_ids: product.category_ids || [],
       stock_quantity: product.stock_quantity || 0,
       is_active: product.is_active,
       rating: product.rating || 0,
-      review_count: product.review_count || 0
+      review_count: product.review_count || 0,
+      sizes: product.sizes || [],
+      colors: product.colors || [],
+      tags: product.tags || []
     });
     setImages(product.images || []);
     setIsDialogOpen(true);
@@ -314,15 +412,141 @@ export default function ProductManagement() {
       description: '',
       price: 0,
       sale_price: 0,
-      category_id: '',
+      category_ids: [],
       stock_quantity: 0,
       is_active: true,
       rating: 0,
-      review_count: 0
+      review_count: 0,
+      sizes: [],
+      colors: [],
+      tags: []
     });
     setEditingProduct(null);
     setImages([]);
     setImageUrl('');
+    setNewTag('');
+  };
+
+  const addTag = () => {
+    if (!newTag.trim()) return;
+    
+    if (formData.tags.includes(newTag)) {
+      toast({
+        title: "ট্যাগ ইতিমধ্যে আছে",
+        description: "এই ট্যাগটি ইতিমধ্যে যোগ করা হয়েছে।",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setFormData({
+      ...formData,
+      tags: [...formData.tags, newTag.trim()]
+    });
+    setNewTag('');
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(tag => tag !== tagToRemove)
+    });
+  };
+
+  const addNewCategory = async () => {
+    if (!newCategory.name.trim()) {
+      toast({
+        title: "ক্যাটাগরির নাম প্রয়োজন",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([{ name: newCategory.name, description: newCategory.description }])
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "ক্যাটাগরি তৈরি করতে সমস্যা",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      setCategories([...categories, data]);
+      setNewCategory({ name: '', description: '' });
+      setShowCategoryDialog(false);
+      toast({
+        title: "ক্যাটাগরি যোগ হয়েছে",
+        description: "নতুন ক্যাটাগরি সফলভাবে তৈরি করা হয়েছে।"
+      });
+    }
+  };
+
+  const addNewSize = async () => {
+    if (!newSize.trim()) {
+      toast({
+        title: "সাইজের নাম প্রয়োজন",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('sizes')
+      .insert([{ name: newSize }])
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "সাইজ তৈরি করতে সমস্যা",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      setSizes([...sizes, data]);
+      setNewSize('');
+      setShowSizeDialog(false);
+      toast({
+        title: "সাইজ যোগ হয়েছে",
+        description: "নতুন সাইজ সফলভাবে তৈরি করা হয়েছে।"
+      });
+    }
+  };
+
+  const addNewColor = async () => {
+    if (!newColor.name.trim()) {
+      toast({
+        title: "কালারের নাম প্রয়োজন",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('colors')
+      .insert([{ name: newColor.name, hex_code: newColor.hex_code }])
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "কালার তৈরি করতে সমস্যা",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      setColors([...colors, data]);
+      setNewColor({ name: '', hex_code: '#3b82f6' });
+      setShowColorDialog(false);
+      toast({
+        title: "কালার যোগ হয়েছে",
+        description: "নতুন কালার সফলভাবে তৈরি করা হয়েছে।"
+      });
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -357,7 +581,7 @@ export default function ProductManagement() {
               নতুন পণ্য যোগ করুন
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingProduct ? 'পণ্য সম্পাদনা করুন' : 'নতুন পণ্য যোগ করুন'}
@@ -378,22 +602,61 @@ export default function ProductManagement() {
 
                 <div>
                   <Label htmlFor="category">ক্যাটাগরি *</Label>
-                  <Select 
-                    value={formData.category_id} 
-                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="ক্যাটাগরি নির্বাচন করুন" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select 
+                      value="" 
+                      onValueChange={(value) => {
+                        if (!formData.category_ids.includes(value)) {
+                          setFormData({
+                            ...formData,
+                            category_ids: [...formData.category_ids, value]
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="ক্যাটাগরি নির্বাচন করুন" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setShowCategoryDialog(true)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {formData.category_ids.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.category_ids.map(catId => {
+                        const category = categories.find(c => c.id === catId);
+                        return category ? (
+                          <Badge 
+                            key={catId} 
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {category.name}
+                            <X 
+                              className="w-3 h-3 cursor-pointer" 
+                              onClick={() => setFormData({
+                                ...formData,
+                                category_ids: formData.category_ids.filter(id => id !== catId)
+                              })} 
+                            />
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -477,6 +740,135 @@ export default function ProductManagement() {
                     onChange={(e) => setFormData({ ...formData, review_count: Number(e.target.value) })}
                   />
                 </div>
+              </div>
+
+              {/* Sizes Section */}
+              <div className="space-y-2">
+                <Label>সাইজ</Label>
+                <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2 flex-1">
+                    {sizes.map(size => (
+                      <div key={size.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`size-${size.id}`}
+                          checked={formData.sizes.includes(size.name)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData({
+                                ...formData,
+                                sizes: [...formData.sizes, size.name]
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                sizes: formData.sizes.filter(s => s !== size.name)
+                              });
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`size-${size.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {size.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowSizeDialog(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Colors Section */}
+              <div className="space-y-2">
+                <Label>কালার</Label>
+                <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2 flex-1">
+                    {colors.map(color => (
+                      <div key={color.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`color-${color.id}`}
+                          checked={formData.colors.includes(color.name)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData({
+                                ...formData,
+                                colors: [...formData.colors, color.name]
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                colors: formData.colors.filter(c => c !== color.name)
+                              });
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`color-${color.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                        >
+                          <div 
+                            className="w-4 h-4 rounded-full border" 
+                            style={{ backgroundColor: color.hex_code }}
+                          />
+                          {color.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowColorDialog(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Tags Section */}
+              <div className="space-y-2">
+                <Label htmlFor="tags">ট্যাগ</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="ট্যাগ যোগ করুন..."
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTag();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={addTag}>
+                    যোগ করুন
+                  </Button>
+                </div>
+                
+                {formData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.tags.map((tag, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
+                        {tag}
+                        <X 
+                          className="w-3 h-3 cursor-pointer" 
+                          onClick={() => removeTag(tag)} 
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Image Management Section */}
@@ -599,6 +991,115 @@ export default function ProductManagement() {
         </Dialog>
       </div>
 
+      {/* Category Creation Dialog */}
+      <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>নতুন ক্যাটাগরি তৈরি করুন</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="categoryName">ক্যাটাগরির নাম</Label>
+              <Input
+                id="categoryName"
+                value={newCategory.name}
+                onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="categoryDescription">বিবরণ (ঐচ্ছিক)</Label>
+              <Textarea
+                id="categoryDescription"
+                value={newCategory.description}
+                onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowCategoryDialog(false)}>
+                বাতিল
+              </Button>
+              <Button onClick={addNewCategory}>
+                তৈরি করুন
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Size Creation Dialog */}
+      <Dialog open={showSizeDialog} onOpenChange={setShowSizeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>নতুন সাইজ তৈরি করুন</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="sizeName">সাইজের নাম</Label>
+              <Input
+                id="sizeName"
+                value={newSize}
+                onChange={(e) => setNewSize(e.target.value)}
+                placeholder="যেমন: M, L, XL, 38, 40 ইত্যাদি"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowSizeDialog(false)}>
+                বাতিল
+              </Button>
+              <Button onClick={addNewSize}>
+                তৈরি করুন
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Color Creation Dialog */}
+      <Dialog open={showColorDialog} onOpenChange={setShowColorDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>নতুন কালার তৈরি করুন</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="colorName">কালারের নাম</Label>
+              <Input
+                id="colorName"
+                value={newColor.name}
+                onChange={(e) => setNewColor({...newColor, name: e.target.value})}
+                placeholder="যেমন: লাল, নীল, সবুজ"
+              />
+            </div>
+            <div>
+              <Label htmlFor="colorHex">কালারের কোড</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="colorHex"
+                  type="color"
+                  value={newColor.hex_code}
+                  onChange={(e) => setNewColor({...newColor, hex_code: e.target.value})}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={newColor.hex_code}
+                  onChange={(e) => setNewColor({...newColor, hex_code: e.target.value})}
+                  className="flex-1"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowColorDialog(false)}>
+                বাতিল
+              </Button>
+              <Button onClick={addNewColor}>
+                তৈরি করুন
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Search and Filter Section */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-1/3">
@@ -616,176 +1117,52 @@ export default function ProductManagement() {
           >
             <path
               fillRule="evenodd"
-              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </div>
+              d="M8-- Products table
+CREATE TABLE products (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  sale_price DECIMAL(10,2),
+  stock_quantity INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  images TEXT[],
+  rating DECIMAL(2,1) DEFAULT 0,
+  review_count INTEGER DEFAULT 0,
+  sizes TEXT[],
+  colors TEXT[],
+  tags TEXT[],
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-          <TabsList>
-            <TabsTrigger value="all">সব পণ্য</TabsTrigger>
-            <TabsTrigger value="active">সক্রিয়</TabsTrigger>
-            <TabsTrigger value="inactive">নিষ্ক্রিয়</TabsTrigger>
-            <TabsTrigger value="lowStock">কম স্টক</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+-- Categories table
+CREATE TABLE categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-      {/* Products Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-blue-50 border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-blue-800">মোট পণ্য</h3>
-              <p className="text-2xl font-bold text-blue-900">{products.length}</p>
-            </div>
-            <BarChart3 className="h-8 w-8 text-blue-600" />
-          </div>
-        </Card>
-        
-        <Card className="p-4 bg-green-50 border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-green-800">সক্রিয় পণ্য</h3>
-              <p className="text-2xl font-bold text-green-900">
-                {products.filter(p => p.is_active).length}
-              </p>
-            </div>
-            <Eye className="h-8 w-8 text-green-600" />
-          </div>
-        </Card>
-        
-        <Card className="p-4 bg-amber-50 border-amber-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-amber-800">কম স্টক</h3>
-              <p className="text-2xl font-bold text-amber-900">
-                {products.filter(p => p.stock_quantity <= 10).length}
-              </p>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-            </svg>
-          </div>
-        </Card>
-        
-        <Card className="p-4 bg-purple-50 border-purple-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-purple-800">গড় রেটিং</h3>
-              <p className="text-2xl font-bold text-purple-900">
-                {products.length > 0 
-                  ? (products.reduce((sum, p) => sum + (p.rating || 0), 0) / products.length).toFixed(1)
-                  : '0.0'}
-              </p>
-            </div>
-            <Star className="h-8 w-8 text-purple-600 fill-purple-600" />
-          </div>
-        </Card>
-      </div>
+-- Product-Categories relationship table
+CREATE TABLE product_categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(product_id, category_id)
+);
 
-      {/* Products List */}
-      <div className="grid gap-4">
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2">লোড হচ্ছে...</p>
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {searchTerm || activeTab !== 'all' ? 'কোন পণ্য পাওয়া যায়নি' : 'কোন পণ্য যোগ করা হয়নি'}
-          </div>
-        ) : (
-          filteredProducts.map((product) => (
-            <Card key={product.id} className="p-4 hover:shadow-md transition-shadow">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-lg">{product.name}</h3>
-                    <Badge variant={product.is_active ? "default" : "secondary"}>
-                      {product.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                    </Badge>
-                    {product.stock_quantity <= 10 && (
-                      <Badge variant="destructive" className="bg-amber-500">
-                        কম স্টক
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                    {product.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-4 text-sm">
-                    <span className="font-medium">মূল্য: ৳{product.price.toFixed(2)}</span>
-                    {product.sale_price && product.sale_price > 0 && (
-                      <span className="text-green-600 font-medium">ছাড়: ৳{product.sale_price.toFixed(2)}</span>
-                    )}
-                    <span className={product.stock_quantity <= 10 ? "text-amber-600 font-medium" : ""}>
-                      স্টক: {product.stock_quantity}
-                    </span>
-                    <span>ক্যাটাগরি: {product.category?.name || 'N/A'}</span>
-                    
-                    {product.rating > 0 && (
-                      <div className="flex items-center">
-                        {renderStars(product.rating)}
-                        <span className="ml-1 text-muted-foreground">
-                          ({product.rating.toFixed(1)})
-                        </span>
-                      </div>
-                    )}
-                    
-                    {product.review_count > 0 && (
-                      <span className="text-muted-foreground">
-                        {product.review_count}টি রিভিউ
-                      </span>
-                    )}
-                  </div>
-                  
-                  {product.images && product.images.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {product.images.slice(0, 4).map((image, index) => (
-                        <img
-                          key={index}
-                          src={image}
-                          alt={`${product.name} ${index + 1}`}
-                          className="w-12 h-12 object-cover rounded border"
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder.svg';
-                          }}
-                        />
-                      ))}
-                      {product.images.length > 4 && (
-                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs border">
-                          +{product.images.length - 4}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex gap-2 self-end md:self-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(product)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(product.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
+-- Sizes table
+CREATE TABLE sizes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Colors table
+CREATE TABLE colors (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  hex_code TEXT NOT NULL DEFAULT '#000000',
+  created_at TIMESTAMP DEFAULT NOW()
+);v
