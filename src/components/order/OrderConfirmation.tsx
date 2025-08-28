@@ -3,12 +3,13 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Package, Truck, Home, Clock, MapPin, Phone, Mail, CreditCard, FileText, Calendar, User, Star, Gift, HeadphonesIcon, Shield, MessageCircle } from 'lucide-react';
+import { CheckCircle, Package, Truck, Home, Clock, MapPin, Phone, FileText, Calendar, User, Star, Gift, HeadphonesIcon, Shield, MessageCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface OrderItem {
   id: string;
@@ -54,43 +55,96 @@ export function OrderConfirmation() {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [estimatedDelivery, setEstimatedDelivery] = useState<string>('');
+  const [orderId, setOrderId] = useState<string>('');
 
-  // Get order data from navigation state or fetch from API
+  // Get order ID from navigation state or URL params
+  useEffect(() => {
+    if (location.state?.orderId) {
+      setOrderId(location.state.orderId);
+    } else {
+      // Try to get from URL params if not in state
+      const params = new URLSearchParams(location.search);
+      const idFromParams = params.get('order_id');
+      if (idFromParams) {
+        setOrderId(idFromParams);
+      }
+    }
+  }, [location]);
+
+  // Fetch order details
   useEffect(() => {
     const fetchOrderDetails = async () => {
+      if (!orderId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        if (location.state?.orderId) {
-          // Fetch order details from Supabase
-          const { data: order, error } = await supabase
-            .from('orders')
-            .select(`
+        setLoading(true);
+        
+        // First try to get the order with items
+        const { data: order, error } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
               *,
-              order_items (
-                *,
-                product:products (
-                  name,
-                  image_url
-                )
+              product:product_id (
+                name,
+                image_url
               )
-            `)
-            .eq('id', location.state.orderId)
-            .single();
+            )
+          `)
+          .eq('id', orderId)
+          .single();
 
-          if (error) throw error;
+        if (error) {
+          console.error('Error fetching order:', error);
+          throw error;
+        }
 
-          if (order) {
-            setOrderDetails(order as OrderDetails);
-            
-            // Calculate estimated delivery date (3 days from now)
-            const deliveryDate = new Date();
-            deliveryDate.setDate(deliveryDate.getDate() + 3);
-            setEstimatedDelivery(deliveryDate.toLocaleDateString('bn-BD', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }));
-          }
+        if (order) {
+          // Transform the data to match our interface
+          const transformedOrder: OrderDetails = {
+            id: order.id,
+            created_at: order.created_at,
+            total_amount: order.total_amount,
+            shipping_cost: order.shipping_cost,
+            discount_amount: order.discount_amount,
+            payment_method: order.payment_method,
+            status: order.status,
+            notes: order.notes,
+            promo_code: order.promo_code,
+            order_items: order.order_items.map((item: any) => ({
+              id: item.id,
+              product_id: item.product_id,
+              quantity: item.quantity,
+              price: item.price,
+              product: {
+                id: item.product?.id || '',
+                name: item.product?.name || 'Unknown Product',
+                image_url: item.product?.image_url
+              }
+            })),
+            shipping_address: order.shipping_address || {
+              full_name: '',
+              phone: '',
+              address: '',
+              city: ''
+            }
+          };
+
+          setOrderDetails(transformedOrder);
+          
+          // Calculate estimated delivery date (3 days from now)
+          const deliveryDate = new Date();
+          deliveryDate.setDate(deliveryDate.getDate() + 3);
+          setEstimatedDelivery(deliveryDate.toLocaleDateString('bn-BD', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }));
         }
       } catch (error) {
         console.error('Error fetching order details:', error);
@@ -104,44 +158,12 @@ export function OrderConfirmation() {
       }
     };
 
-    fetchOrderDetails();
-  }, [location.state, toast]);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="text-center pb-4">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <Package className="w-8 h-8 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl text-blue-800">অর্ডার লোড হচ্ছে...</CardTitle>
-            <p className="text-blue-600">আপনার অর্ডার বিবরণ প্রস্তুত করা হচ্ছে।</p>
-            <Progress value={65} className="mt-4 w-1/2 mx-auto" />
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!orderDetails) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card className="bg-yellow-50 border-yellow-200">
-          <CardHeader className="text-center pb-4">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-yellow-600" />
-            </div>
-            <CardTitle className="text-2xl text-yellow-800">অর্ডার খুঁজে পাওয়া যায়নি</CardTitle>
-            <p className="text-yellow-600">দুঃখিত, আমরা আপনার অর্ডার তথ্য খুঁজে পাইনি।</p>
-            <Button asChild className="mt-4">
-              <Link to="/user-dashboard/orders">আমার অর্ডার দেখুন</Link>
-            </Button>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
+    if (orderId) {
+      fetchOrderDetails();
+    } else {
+      setLoading(false);
+    }
+  }, [orderId, toast]);
 
   const getPaymentMethodText = (method: string) => {
     switch (method) {
@@ -180,11 +202,64 @@ export function OrderConfirmation() {
     }
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Card className="bg-blue-50 border-blue-200">
+          <CardHeader className="text-center pb-4">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-blue-600" />
+            </div>
+            <CardTitle className="text-2xl text-blue-800">অর্ডার লোড হচ্ছে...</CardTitle>
+            <p className="text-blue-600">আপনার অর্ডার বিবরণ প্রস্তুত করা হচ্ছে।</p>
+            <Progress value={65} className="mt-4 w-1/2 mx-auto" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state - no order found
+  if (!orderDetails) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardHeader className="text-center pb-4">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-yellow-600" />
+            </div>
+            <CardTitle className="text-2xl text-yellow-800">অর্ডার খুঁজে পাওয়া যায়নি</CardTitle>
+            <p className="text-yellow-600 mb-4">
+              {orderId 
+                ? `অর্ডার আইডি #${orderId} দিয়ে আমরা কোনো অর্ডার খুঁজে পাইনি।` 
+                : 'আমরা আপনার অর্ডার তথ্য খুঁজে পাইনি।'
+              }
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild variant="outline">
+                <Link to="/user-dashboard/orders">আমার অর্ডার দেখুন</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/">হোমপেজে ফিরে যান</Link>
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Success Confetti Effect */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-50">
-        {[...Array(50)].map((_, i) => (
+        {[...Array(30)].map((_, i) => (
           <div 
             key={i}
             className="absolute w-2 h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full opacity-70"
@@ -229,60 +304,23 @@ export function OrderConfirmation() {
             </div>
             
             <div className="grid grid-cols-5 gap-2 text-xs text-center mt-4">
-              <div className={`flex flex-col items-center ${orderDetails.status !== 'pending' ? 'text-green-600' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${orderDetails.status !== 'pending' ? 'bg-green-100' : 'bg-gray-100'}`}>
-                  {orderDetails.status !== 'pending' ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <span>1</span>
-                  )}
-                </div>
-                <span className="mt-1">বিচারাধীন</span>
-              </div>
-              
-              <div className={`flex flex-col items-center ${['confirmed', 'processing', 'shipped', 'delivered'].includes(orderDetails.status) ? 'text-green-600' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['confirmed', 'processing', 'shipped', 'delivered'].includes(orderDetails.status) ? 'bg-green-100' : 'bg-gray-100'}`}>
-                  {['confirmed', 'processing', 'shipped', 'delivered'].includes(orderDetails.status) ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <span>2</span>
-                  )}
-                </div>
-                <span className="mt-1">নিশ্চিতকৃত</span>
-              </div>
-              
-              <div className={`flex flex-col items-center ${['processing', 'shipped', 'delivered'].includes(orderDetails.status) ? 'text-green-600' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['processing', 'shipped', 'delivered'].includes(orderDetails.status) ? 'bg-green-100' : 'bg-gray-100'}`}>
-                  {['processing', 'shipped', 'delivered'].includes(orderDetails.status) ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <span>3</span>
-                  )}
-                </div>
-                <span className="mt-1">প্রসেসিং</span>
-              </div>
-              
-              <div className={`flex flex-col items-center ${['shipped', 'delivered'].includes(orderDetails.status) ? 'text-green-600' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['shipped', 'delivered'].includes(orderDetails.status) ? 'bg-green-100' : 'bg-gray-100'}`}>
-                  {['shipped', 'delivered'].includes(orderDetails.status) ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <span>4</span>
-                  )}
-                </div>
-                <span className="mt-1">শিপ করা হয়েছে</span>
-              </div>
-              
-              <div className={`flex flex-col items-center ${orderDetails.status === 'delivered' ? 'text-green-600' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${orderDetails.status === 'delivered' ? 'bg-green-100' : 'bg-gray-100'}`}>
-                  {orderDetails.status === 'delivered' ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <span>5</span>
-                  )}
-                </div>
-                <span className="mt-1">ডেলিভারি সম্পন্ন</span>
-              </div>
+              {['বিচারাধীন', 'নিশ্চিতকৃত', 'প্রসেসিং', 'শিপ করা হয়েছে', 'ডেলিভারি সম্পন্ন'].map((status, index) => {
+                const statusKey = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'][index];
+                const isCompleted = index <= ['pending', 'confirmed', 'processing', 'shipped', 'delivered'].indexOf(orderDetails.status);
+                
+                return (
+                  <div key={index} className={`flex flex-col items-center ${isCompleted ? 'text-green-600' : 'text-gray-400'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted ? 'bg-green-100' : 'bg-gray-100'}`}>
+                      {isCompleted ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        <span>{index + 1}</span>
+                      )}
+                    </div>
+                    <span className="mt-1">{status}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -511,6 +549,7 @@ export function OrderConfirmation() {
                 <li>• পণ্য ডেলিভারির সময় প্যাকেট খুলে যাচাই করে নিন</li>
                 <li>• কোন সমস্যা থাকলে ডেলিভারি পার্সনকে জানান বা আমাদের হেল্পলাইনে কল করুন</li>
                 <li>• রিটার্ন/রিফান্ডের জন্য ৭ কার্যদিবস সময় লাগতে পারে</li>
+                <li>• অর্ডার ট্র্যাক করতে "অর্ডার ট্র্যাক করুন" বাটনে ক্লিক করুন</li>
               </ul>
             </CardContent>
           </Card>
