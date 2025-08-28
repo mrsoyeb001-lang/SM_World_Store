@@ -34,7 +34,6 @@ interface Product {
   name: string;
   price: number;
   category: string;
-  image_url: string | null;
 }
 
 interface PromoCodeUsage {
@@ -61,7 +60,6 @@ export default function AdvancedPromoCodeManagement() {
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
   const [activeTab, setActiveTab] = useState('codes');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -83,8 +81,29 @@ export default function AdvancedPromoCodeManagement() {
   }, []);
 
   useEffect(() => {
-    filterProducts();
-  }, [products, searchTerm, selectedCategory]);
+    if (searchTerm) {
+      const filtered = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
+    }
+  }, [searchTerm, products]);
+
+  useEffect(() => {
+    if (formData.applies_to === 'specific' && formData.product_ids.length > 0) {
+      const selectedProductsTotal = products
+        .filter(product => formData.product_ids.includes(product.id))
+        .reduce((total, product) => total + product.price, 0);
+      
+      setFormData(prev => ({
+        ...prev,
+        min_order_amount: selectedProductsTotal
+      }));
+    }
+  }, [formData.product_ids, formData.applies_to, products]);
 
   const fetchPromoCodes = async () => {
     setLoading(true);
@@ -108,36 +127,15 @@ export default function AdvancedPromoCodeManagement() {
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, price, category, image_url')
+      .select('id, name, price, category')
       .order('name');
 
     if (error) {
       console.error("পণ্য লোড করতে ব্যর্থ:", error);
-      toast({
-        title: "পণ্য লোড করতে ব্যর্থ",
-        description: error.message,
-        variant: "destructive"
-      });
     } else {
       setProducts(data || []);
+      setFilteredProducts(data || []);
     }
-  };
-
-  const filterProducts = () => {
-    let filtered = products;
-    
-    if (searchTerm) {
-      filtered = filtered.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-    
-    setFilteredProducts(filtered);
   };
 
   const fetchUsageHistory = async (promoId: string) => {
@@ -169,20 +167,8 @@ export default function AdvancedPromoCodeManagement() {
     setLoading(true);
 
     try {
-      // Calculate min_order_amount for specific products
-      let minOrderAmount = formData.min_order_amount;
-      
-      if (formData.applies_to === 'specific' && formData.product_ids.length > 0) {
-        const selectedProducts = products.filter(p => formData.product_ids.includes(p.id));
-        if (selectedProducts.length > 0) {
-          // Set min order amount to the price of the cheapest selected product
-          minOrderAmount = Math.min(...selectedProducts.map(p => p.price));
-        }
-      }
-
       const promoData = {
         ...formData,
-        min_order_amount: minOrderAmount,
         code: formData.code.toUpperCase(),
         max_uses: formData.max_uses > 0 ? formData.max_uses : null,
         expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
@@ -284,7 +270,6 @@ export default function AdvancedPromoCodeManagement() {
     });
     setEditingPromo(null);
     setSearchTerm('');
-    setSelectedCategory('all');
   };
 
   const generateRandomCode = () => {
@@ -313,20 +298,24 @@ export default function AdvancedPromoCodeManagement() {
     });
   };
 
-  const getCategories = () => {
-    const categories = new Set(products.map(p => p.category));
-    return ['all', ...Array.from(categories)];
+  const selectAllProducts = () => {
+    setFormData(prev => ({
+      ...prev,
+      product_ids: products.map(p => p.id)
+    }));
   };
 
-  const calculateMinOrderAmount = () => {
-    if (formData.applies_to !== 'specific' || formData.product_ids.length === 0) {
-      return formData.min_order_amount;
-    }
-    
-    const selectedProducts = products.filter(p => formData.product_ids.includes(p.id));
-    if (selectedProducts.length === 0) return 0;
-    
-    return Math.min(...selectedProducts.map(p => p.price));
+  const clearAllProducts = () => {
+    setFormData(prev => ({
+      ...prev,
+      product_ids: []
+    }));
+  };
+
+  const calculateSelectedProductsTotal = () => {
+    return products
+      .filter(product => formData.product_ids.includes(product.id))
+      .reduce((total, product) => total + product.price, 0);
   };
 
   return (
@@ -412,18 +401,14 @@ export default function AdvancedPromoCodeManagement() {
                   </div>
                 )}
 
-                {formData.applies_to === 'specific' && (
-                  <div>
-                    <Label htmlFor="min_order_amount">স্বয়ংক্রিয় নূন্যতম অর্ডার পরিমাণ</Label>
-                    <Input
-                      id="min_order_amount"
-                      type="number"
-                      value={calculateMinOrderAmount()}
-                      disabled
-                      className="bg-muted"
-                    />
+                {formData.applies_to === 'specific' && formData.product_ids.length > 0 && (
+                  <div className="bg-muted p-3 rounded-md">
+                    <Label>স্বয়ংক্রিয় নূন্যতম অর্ডার পরিমাণ</Label>
+                    <div className="text-lg font-bold text-green-600">
+                      ৳{calculateSelectedProductsTotal().toFixed(2)}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      নির্বাচিত পণ্যগুলোর মধ্যে সর্বনিম্ন দাম অনুযায়ী সেট করা হয়েছে
+                      নির্বাচিত পণ্যগুলোর মোট মূল্য অনুযায়ী স্বয়ংক্রিয়ভাবে সেট করা হয়েছে
                     </p>
                   </div>
                 )}
@@ -480,34 +465,40 @@ export default function AdvancedPromoCodeManagement() {
                 </div>
 
                 {formData.applies_to === 'specific' && (
-                  <div className="col-span-2">
-                    <Label>পণ্য নির্বাচন করুন ({formData.product_ids.length} নির্বাচিত)</Label>
-                    
-                    <div className="mt-2 mb-3 flex gap-2">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="পণ্য খুঁজুন..."
-                          className="pl-8"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                  <div className="col-span-2 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label>পণ্য নির্বাচন করুন</Label>
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={selectAllProducts}>
+                          সব নির্বাচন
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={clearAllProducts}>
+                          সব অপসারণ
+                        </Button>
                       </div>
-                      
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger className="w-[130px]">
-                          <SelectValue placeholder="ক্যাটাগরি" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getCategories().map(category => (
-                            <SelectItem key={category} value={category}>
-                              {category === 'all' ? 'সব ক্যাটাগরি' : category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
-                    
+
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="পণ্য খুঁজুন..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-8"
+                      />
+                      {searchTerm && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setSearchTerm('')}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+
                     <div className="border rounded-md p-3 max-h-60 overflow-y-auto">
                       {filteredProducts.length === 0 ? (
                         <div className="text-center py-4 text-muted-foreground">
@@ -516,57 +507,32 @@ export default function AdvancedPromoCodeManagement() {
                       ) : (
                         <div className="grid gap-2">
                           {filteredProducts.map(product => (
-                            <div 
-                              key={product.id} 
-                              className={`flex items-start p-2 rounded-md border cursor-pointer ${
-                                formData.product_ids?.includes(product.id) 
-                                  ? 'bg-primary/10 border-primary' 
-                                  : 'hover:bg-muted/50'
-                              }`}
-                              onClick={() => toggleProductSelection(product.id)}
-                            >
-                              <div className="flex items-center space-x-3 flex-1">
-                                {product.image_url && (
-                                  <img 
-                                    src={product.image_url} 
-                                    alt={product.name}
-                                    className="w-10 h-10 object-cover rounded"
-                                  />
-                                )}
-                                <div className="flex-1">
+                            <div key={product.id} className="flex items-center justify-between p-2 border rounded-md hover:bg-muted/50">
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="checkbox"
+                                  id={`product-${product.id}`}
+                                  checked={formData.product_ids?.includes(product.id) || false}
+                                  onChange={() => toggleProductSelection(product.id)}
+                                  className="w-4 h-4 rounded"
+                                />
+                                <Label htmlFor={`product-${product.id}`} className="flex-1 cursor-pointer">
                                   <div className="font-medium">{product.name}</div>
-                                  <div className="text-sm text-muted-foreground">{product.category}</div>
-                                </div>
-                                <div className="font-bold">৳{product.price}</div>
+                                  <div className="text-xs text-muted-foreground">{product.category}</div>
+                                </Label>
                               </div>
+                              <div className="font-semibold">৳{product.price}</div>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
-                    
+
                     {formData.product_ids.length > 0 && (
-                      <div className="mt-3">
-                        <Label>নির্বাচিত পণ্যসমূহ:</Label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {formData.product_ids.map(id => {
-                            const product = products.find(p => p.id === id);
-                            return product ? (
-                              <Badge key={id} variant="secondary" className="flex items-center gap-1">
-                                {product.name}
-                                <button 
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleProductSelection(product.id);
-                                  }}
-                                  className="ml-1 rounded-full hover:bg-muted"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </Badge>
-                            ) : null;
-                          })}
+                      <div className="bg-muted p-3 rounded-md">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">নির্বাচিত পণ্য: {formData.product_ids.length}টি</span>
+                          <span className="font-bold">মোট: ৳{calculateSelectedProductsTotal().toFixed(2)}</span>
                         </div>
                       </div>
                     )}
