@@ -8,7 +8,7 @@ import { CartProvider } from "@/hooks/useCart";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import OrderConfirmation from '@/components/order/OrderConfirmation';
+import { OrderConfirmation } from '@/components/order/OrderConfirmation'; // এখানে পরিবর্তন করুন
 
 // Pages
 import Homepage from "./pages/Homepage";
