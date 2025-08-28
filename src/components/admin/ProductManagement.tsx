@@ -1117,52 +1117,211 @@ export default function ProductManagement() {
           >
             <path
               fillRule="evenodd"
-              d="M8-- Products table
-CREATE TABLE products (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  price DECIMAL(10,2) NOT NULL,
-  sale_price DECIMAL(10,2),
-  stock_quantity INTEGER DEFAULT 0,
-  is_active BOOLEAN DEFAULT true,
-  images TEXT[],
-  rating DECIMAL(2,1) DEFAULT 0,
-  review_count INTEGER DEFAULT 0,
-  sizes TEXT[],
-  colors TEXT[],
-  tags TEXT[],
-  created_at TIMESTAMP DEFAULT NOW()
-);
+              d="M8            <path
+              fillRule="evenodd"
+              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
 
--- Categories table
-CREATE TABLE categories (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+          <TabsList>
+            <TabsTrigger value="all">সব পণ্য</TabsTrigger>
+            <TabsTrigger value="active">সক্রিয়</TabsTrigger>
+            <TabsTrigger value="inactive">নিষ্ক্রিয়</TabsTrigger>
+            <TabsTrigger value="lowStock">কম স্টক</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
--- Product-Categories relationship table
-CREATE TABLE product_categories (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
-  created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(product_id, category_id)
-);
+      {/* Products Grid */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="bg-muted rounded-full p-4 w-16 h-16 mx-auto mb-4">
+            <Package className="w-8 h-8 mx-auto text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium mb-2">কোন পণ্য পাওয়া যায়নি</h3>
+          <p className="text-muted-foreground">
+            {searchTerm ? 'আপনার অনুসন্ধানের সাথে মিলে যায় এমন কোন পণ্য নেই' : 'এখনও কোন পণ্য যোগ করা হয়নি'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <Card key={product.id} className="overflow-hidden">
+              <div className="relative">
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-muted flex items-center justify-center">
+                    <Package className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                )}
+                
+                {!product.is_active && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <Badge variant="destructive" className="text-sm">
+                      নিষ্ক্রিয়
+                    </Badge>
+                  </div>
+                )}
+                
+                {product.sale_price && product.sale_price < product.price && (
+                  <Badge variant="destructive" className="absolute top-2 left-2">
+                    {Math.round((1 - product.sale_price / product.price) * 100)}% ছাড়
+                  </Badge>
+                )}
+                
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+                    onClick={() => handleEdit(product)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+                    onClick={() => handleDelete(product.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
--- Sizes table
-CREATE TABLE sizes (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
+                  <div className="flex items-center">
+                    {renderStars(product.rating || 0)}
+                    <span className="text-sm text-muted-foreground ml-1">
+                      ({product.review_count || 0})
+                    </span>
+                  </div>
+                </div>
 
--- Colors table
-CREATE TABLE colors (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  hex_code TEXT NOT NULL DEFAULT '#000000',
-  created_at TIMESTAMP DEFAULT NOW()
-);v
+                <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                  {product.description || 'কোন বিবরণ নেই'}
+                </p>
+
+                <div className="flex items-center gap-2 mb-3">
+                  {product.sale_price && product.sale_price < product.price ? (
+                    <>
+                      <span className="text-2xl font-bold text-primary">
+                        ৳{product.sale_price.toLocaleString()}
+                      </span>
+                      <span className="text-lg text-muted-foreground line-through">
+                        ৳{product.price.toLocaleString()}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-2xl font-bold text-primary">
+                      ৳{product.price.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                    <span className={`text-sm ${
+                      product.stock_quantity === 0 
+                        ? 'text-destructive' 
+                        : product.stock_quantity <= 10 
+                        ? 'text-amber-600' 
+                        : 'text-muted-foreground'
+                    }`}>
+                      {product.stock_quantity} in stock
+                    </span>
+                  </div>
+                  
+                  {product.categories && product.categories.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      {product.categories[0].name}
+                      {product.categories.length > 1 && ` +${product.categories.length - 1}`}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Display Sizes, Colors, and Tags */}
+                <div className="space-y-2">
+                  {product.sizes && product.sizes.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Ruler className="w-3 h-3 text-muted-foreground" />
+                      <div className="flex flex-wrap gap-1">
+                        {product.sizes.slice(0, 3).map((size, index) => (
+                          <span key={index} className="text-xs bg-muted px-2 py-1 rounded">
+                            {size}
+                          </span>
+                        ))}
+                        {product.sizes.length > 3 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{product.sizes.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {product.colors && product.colors.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Palette className="w-3 h-3 text-muted-foreground" />
+                      <div className="flex flex-wrap gap-1">
+                        {product.colors.slice(0, 3).map((color, index) => (
+                          <span key={index} className="text-xs bg-muted px-2 py-1 rounded flex items-center gap-1">
+                            <div className="w-3 h-3 rounded-full border" style={{ 
+                              backgroundColor: colors.find(c => c.name === color)?.hex_code || '#ccc' 
+                            }} />
+                            {color}
+                          </span>
+                        ))}
+                        {product.colors.length > 3 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{product.colors.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {product.tags && product.tags.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Tag className="w-3 h-3 text-muted-foreground" />
+                      <div className="flex flex-wrap gap-1">
+                        {product.tags.slice(0, 3).map((tag, index) => (
+                          <span key={index} className="text-xs bg-muted px-2 py-1 rounded">
+                            #{tag}
+                          </span>
+                        ))}
+                        {product.tags.length > 3 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{product.tags.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
