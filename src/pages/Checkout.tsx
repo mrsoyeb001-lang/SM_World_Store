@@ -11,12 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle } from 'lucide-react';
+import { MapPin, CreditCard, Truck, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface ShippingRate {
   id: string;
   area_name: string;
   rate: number;
+  estimated_days?: number;
 }
 
 interface PromoCode {
@@ -42,8 +43,7 @@ export default function Checkout() {
   const [appliedPromoCode, setAppliedPromoCode] = useState<PromoCode | null>(null);
   const [discount, setDiscount] = useState(0);
   const [paymentSettings, setPaymentSettings] = useState<any>(null);
-  const [orderConfirmed, setOrderConfirmed] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -62,14 +62,14 @@ export default function Checkout() {
       return;
     }
 
-    if (items.length === 0 && !orderConfirmed) {
+    if (items.length === 0) {
       navigate('/cart');
       return;
     }
 
     fetchShippingRates();
     fetchPaymentSettings();
-  }, [user, items, navigate, orderConfirmed]);
+  }, [user, items, navigate]);
 
   const fetchShippingRates = async () => {
     const { data } = await supabase
@@ -94,10 +94,36 @@ export default function Checkout() {
     }
   };
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.fullName.trim()) errors.fullName = 'পূর্ণ নাম প্রয়োজন';
+    if (!formData.phone.trim()) errors.phone = 'ফোন নম্বর প্রয়োজন';
+    if (!formData.address.trim()) errors.address = 'ঠিকানা প্রয়োজন';
+    if (!formData.city.trim()) errors.city = 'শহর প্রয়োজন';
+    if (!selectedShipping) errors.shipping = 'শিপিং এলাকা নির্বাচন করুন';
+    
+    if (formData.paymentMethod !== 'cash_on_delivery') {
+      if (!formData.senderNumber.trim()) errors.senderNumber = 'সেন্ডার নম্বর প্রয়োজন';
+      if (!formData.transactionId.trim()) errors.transactionId = 'ট্রানজেকশন আইডি প্রয়োজন';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleShippingChange = (value: string) => {
     setSelectedShipping(value);
     const rate = shippingRates.find(r => r.id === value);
     setShippingCost(rate ? Number(rate.rate) : 0);
+    // Clear shipping error when a selection is made
+    if (formErrors.shipping) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.shipping;
+        return newErrors;
+      });
+    }
   };
 
   const applyPromoCode = async () => {
@@ -152,6 +178,15 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -203,35 +238,27 @@ export default function Checkout() {
           .eq('id', appliedPromoCode.id);
       }
 
-      // Set order details for confirmation
-      setOrderDetails({
-        id: order.id,
-        total: finalTotal,
-        items: items.map(item => ({
-          name: item.product.name,
-          quantity: item.quantity,
-          price: (item.product.sale_price || item.product.price) * item.quantity
-        })),
-        shippingAddress: {
-          fullName: formData.fullName,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city
-        },
-        paymentMethod: formData.paymentMethod
-      });
-
       // Clear cart
       await clearCart();
-
-      // Show order confirmation
-      setOrderConfirmed(true);
 
       // Enhanced order confirmation
       toast({
         title: "অর্ডার সফল! 🎉",
         description: `অর্ডার #${order.id.slice(0, 8)} সফলভাবে প্লেস হয়েছে। মোট: ৳${finalTotal.toLocaleString()}। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।`,
         duration: 6000,
+      });
+
+      navigate('/order-confirmation', { 
+        state: { 
+          orderId: order.id,
+          total: finalTotal,
+          shippingAddress: {
+            fullName: formData.fullName,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city
+          }
+        } 
       });
 
     } catch (error: any) {
@@ -245,41 +272,18 @@ export default function Checkout() {
     }
   };
 
-  // Order Confirmation Component
-  const OrderConfirmation = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="p-6 max-w-md w-full">
-        <div className="text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">অর্ডার সফল!</h2>
-          <p className="text-gray-600 mb-6">আপনার অর্ডারটি সফলভাবে প্লেস হয়েছে।</p>
-          
-          <div className="bg-gray-50 p-4 rounded-lg mb-6 text-left">
-            <h3 className="font-semibold mb-2">অর্ডার বিবরণ:</h3>
-            <p className="text-sm">অর্ডার নম্বর: #{orderDetails?.id.slice(0, 8)}</p>
-            <p className="text-sm">মোট Amount: ৳{orderDetails?.total.toLocaleString()}</p>
-            <p className="text-sm">পেমেন্ট Method: {orderDetails?.paymentMethod === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : 
-              orderDetails?.paymentMethod === 'bkash' ? 'বিকাশ' : 
-              orderDetails?.paymentMethod === 'rocket' ? 'রকেট' : 'নগদ'}</p>
-          </div>
-          
-          <Button 
-            onClick={() => {
-              setOrderConfirmed(false);
-              navigate('/dashboard');
-            }}
-            className="w-full"
-          >
-            ড্যাশবোর্ডে যান
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-
-  if (orderConfirmed) {
-    return <OrderConfirmation />;
-  }
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -291,79 +295,197 @@ export default function Checkout() {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-6">শিপিং তথ্য</h2>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="fullName">পূর্ণ নাম *</Label>
+                <Label htmlFor="fullName" className="flex items-center gap-1 mb-2">
+                  পূর্ণ নাম <span className="text-red-500">*</span>
+                  {formErrors.fullName && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
+                </Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                  onChange={(e) => handleInputChange('fullName', e.target.value)}
+                  className={formErrors.fullName ? "border-red-500" : ""}
                   required
                 />
+                {formErrors.fullName && <p className="text-red-500 text-xs mt-1">{formErrors.fullName}</p>}
               </div>
 
               <div>
-                <Label htmlFor="phone">ফোন নম্বর *</Label>
+                <Label htmlFor="phone" className="flex items-center gap-1 mb-2">
+                  ফোন নম্বর <span className="text-red-500">*</span>
+                  {formErrors.phone && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
+                </Label>
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className={formErrors.phone ? "border-red-500" : ""}
                   required
                 />
+                {formErrors.phone && <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
               </div>
 
               <div>
-                <Label htmlFor="address">ঠিকানা *</Label>
+                <Label htmlFor="address" className="flex items-center gap-1 mb-2">
+                  ঠিকানা <span className="text-red-500">*</span>
+                  {formErrors.address && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
+                </Label>
                 <Textarea
                   id="address"
                   value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  className={formErrors.address ? "border-red-500" : ""}
                   required
                 />
+                {formErrors.address && <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>}
               </div>
 
               <div>
-                <Label htmlFor="city">শহর *</Label>
+                <Label htmlFor="city" className="flex items-center gap-1 mb-2">
+                  শহর <span className="text-red-500">*</span>
+                  {formErrors.city && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
+                </Label>
                 <Input
                   id="city"
                   value={formData.city}
-                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  className={formErrors.city ? "border-red-500" : ""}
                   required
                 />
+                {formErrors.city && <p className="text-red-500 text-xs mt-1">{formErrors.city}</p>}
               </div>
 
-              <div>
-                <Label htmlFor="shipping">শিপিং এলাকা *</Label>
-                <Select value={selectedShipping} onValueChange={handleShippingChange} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="শিপিং এলাকা নির্বাচন করুন" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shippingRates.map((rate) => (
-                      <SelectItem key={rate.id} value={rate.id}>
-                        {rate.area_name} - ৳{rate.rate}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Advanced Shipping Area Section */}
+              <div className="space-y-3">
+                <Label className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  শিপিং এলাকা <span className="text-red-500">*</span>
+                  {formErrors.shipping && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
+                </Label>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {shippingRates.map((rate) => (
+                    <Card 
+                      key={rate.id}
+                      className={`p-4 cursor-pointer transition-all border-2 ${
+                        selectedShipping === rate.id 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-muted hover:border-primary/50'
+                      }`}
+                      onClick={() => handleShippingChange(rate.id)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{rate.area_name}</h3>
+                          {rate.estimated_days && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              আনুমানিক ডেলিভারি: {rate.estimated_days} দিন
+                            </p>
+                          )}
+                        </div>
+                        <div className="font-semibold">৳{rate.rate}</div>
+                      </div>
+                      {selectedShipping === rate.id && (
+                        <div className="flex items-center mt-2 text-primary">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          <span className="text-sm">নির্বাচিত</span>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+                {formErrors.shipping && <p className="text-red-500 text-xs mt-1">{formErrors.shipping}</p>}
               </div>
 
-              <div>
-                <Label htmlFor="paymentMethod">পেমেন্ট মেথড</Label>
-                <Select 
-                  value={formData.paymentMethod} 
-                  onValueChange={(value) => setFormData({...formData, paymentMethod: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash_on_delivery">ক্যাশ অন ডেলিভারি</SelectItem>
-                    <SelectItem value="bkash">বিকাশ</SelectItem>
-                    <SelectItem value="rocket">রকেট</SelectItem>
-                    <SelectItem value="nagad">নগদ</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Advanced Payment Method Section */}
+              <div className="space-y-3">
+                <Label className="flex items-center gap-1 mb-2">
+                  <CreditCard className="h-4 w-4" />
+                  পেমেন্ট মেথড
+                </Label>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <Card 
+                    className={`p-4 cursor-pointer transition-all border-2 ${
+                      formData.paymentMethod === 'cash_on_delivery' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}
+                    onClick={() => handleInputChange('paymentMethod', 'cash_on_delivery')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-5 w-5" />
+                      <span>ক্যাশ অন ডেলিভারি</span>
+                    </div>
+                    {formData.paymentMethod === 'cash_on_delivery' && (
+                      <div className="flex items-center mt-2 text-primary">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <span className="text-sm">নির্বাচিত</span>
+                      </div>
+                    )}
+                  </Card>
+                  
+                  <Card 
+                    className={`p-4 cursor-pointer transition-all border-2 ${
+                      formData.paymentMethod === 'bkash' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}
+                    onClick={() => handleInputChange('paymentMethod', 'bkash')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 bg-orange-500 rounded"></div>
+                      <span>বিকাশ</span>
+                    </div>
+                    {formData.paymentMethod === 'bkash' && (
+                      <div className="flex items-center mt-2 text-primary">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <span className="text-sm">নির্বাচিত</span>
+                      </div>
+                    )}
+                  </Card>
+                  
+                  <Card 
+                    className={`p-4 cursor-pointer transition-all border-2 ${
+                      formData.paymentMethod === 'rocket' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}
+                    onClick={() => handleInputChange('paymentMethod', 'rocket')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 bg-purple-500 rounded"></div>
+                      <span>রকেট</span>
+                    </div>
+                    {formData.paymentMethod === 'rocket' && (
+                      <div className="flex items-center mt-2 text-primary">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <span className="text-sm">নির্বাচিত</span>
+                      </div>
+                    )}
+                  </Card>
+                  
+                  <Card 
+                    className={`p-4 cursor-pointer transition-all border-2 ${
+                      formData.paymentMethod === 'nagad' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}
+                    onClick={() => handleInputChange('paymentMethod', 'nagad')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 bg-green-500 rounded"></div>
+                      <span>নগদ</span>
+                    </div>
+                    {formData.paymentMethod === 'nagad' && (
+                      <div className="flex items-center mt-2 text-primary">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <span className="text-sm">নির্বাচিত</span>
+                      </div>
+                    )}
+                  </Card>
+                </div>
               </div>
 
               {/* Payment Instructions */}
@@ -401,34 +523,44 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>যে নম্বর থেকে টাকা পাঠিয়েছেন *</Label>
+                      <Label className="flex items-center gap-1">
+                        যে নম্বর থেকে টাকা পাঠিয়েছেন <span className="text-red-500">*</span>
+                        {formErrors.senderNumber && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
+                      </Label>
                       <Input 
                         placeholder="01XXXXXXXXX"
                         value={formData.senderNumber || ''}
-                        onChange={(e) => setFormData({...formData, senderNumber: e.target.value})}
+                        onChange={(e) => handleInputChange('senderNumber', e.target.value)}
+                        className={formErrors.senderNumber ? "border-red-500" : ""}
                         required={formData.paymentMethod !== 'cash_on_delivery'}
                       />
+                      {formErrors.senderNumber && <p className="text-red-500 text-xs mt-1">{formErrors.senderNumber}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <Label>ট্রানজেকশন আইডি *</Label>
+                      <Label className="flex items-center gap-1">
+                        ট্রানজেকশন আইডি <span className="text-red-500">*</span>
+                        {formErrors.transactionId && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
+                      </Label>
                       <Input 
                         placeholder="ট্রানজেকশন আইডি লিখুন"
                         value={formData.transactionId || ''}
-                        onChange={(e) => setFormData({...formData, transactionId: e.target.value})}
+                        onChange={(e) => handleInputChange('transactionId', e.target.value)}
+                        className={formErrors.transactionId ? "border-red-500" : ""}
                         required={formData.paymentMethod !== 'cash_on_delivery'}
                       />
+                      {formErrors.transactionId && <p className="text-red-500 text-xs mt-1">{formErrors.transactionId}</p>}
                     </div>
                   </div>
                 </Card>
               )}
 
               <div>
-                <Label htmlFor="notes">অতিরিক্ত নোট</Label>
+                <Label htmlFor="notes">অতিরিক্ত নোট (ঐচ্ছিক)</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
                   placeholder="বিশেষ নির্দেশনা..."
                 />
               </div>
