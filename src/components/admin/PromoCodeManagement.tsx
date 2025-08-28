@@ -8,7 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Edit, Trash2, Plus, Percent, DollarSign } from 'lucide-react';
+import { Edit, Trash2, Plus, Percent, DollarSign, Package, Users, Calendar, Hash } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface PromoCode {
   id: string;
@@ -21,13 +24,39 @@ interface PromoCode {
   is_active: boolean;
   expires_at: string | null;
   created_at: string;
+  applies_to: 'all' | 'specific';
+  product_ids: string[] | null;
+  usage_per_user: number | null;
 }
 
-export default function PromoCodeManagement() {
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+}
+
+interface PromoCodeUsage {
+  id: string;
+  promo_code_id: string;
+  user_id: string;
+  order_id: string;
+  used_at: string;
+  users: {
+    email: string;
+  } | null;
+  orders: {
+    total_amount: number;
+  } | null;
+}
+
+export default function AdvancedPromoCodeManagement() {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [usageHistory, setUsageHistory] = useState<PromoCodeUsage[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
+  const [activeTab, setActiveTab] = useState('codes');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -37,11 +66,15 @@ export default function PromoCodeManagement() {
     min_order_amount: 0,
     max_uses: 0,
     expires_at: '',
-    is_active: true
+    is_active: true,
+    applies_to: 'all',
+    product_ids: [] as string[],
+    usage_per_user: 1
   });
 
   useEffect(() => {
     fetchPromoCodes();
+    fetchProducts();
   }, []);
 
   const fetchPromoCodes = async () => {
@@ -63,6 +96,43 @@ export default function PromoCodeManagement() {
     setLoading(false);
   };
 
+  const fetchProducts = async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, price')
+      .order('name');
+
+    if (error) {
+      console.error("পণ্য লোড করতে ব্যর্থ:", error);
+    } else {
+      setProducts(data || []);
+    }
+  };
+
+  const fetchUsageHistory = async (promoId: string) => {
+    const { data, error } = await supabase
+      .from('promo_code_usages')
+      .select(`
+        *,
+        users:user_id (email),
+        orders:order_id (total_amount)
+      `)
+      .eq('promo_code_id', promoId)
+      .order('used_at', { ascending: false });
+
+    if (error) {
+      console.error("ব্যবহারের ইতিহাস লোড করতে ব্যর্থ:", error);
+      toast({
+        title: "ব্যবহারের ইতিহাস লোড করতে ব্যর্থ",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      setUsageHistory(data || []);
+      setActiveTab('usage');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -72,7 +142,9 @@ export default function PromoCodeManagement() {
         ...formData,
         code: formData.code.toUpperCase(),
         max_uses: formData.max_uses > 0 ? formData.max_uses : null,
-        expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null
+        expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
+        product_ids: formData.applies_to === 'specific' ? formData.product_ids : null,
+        usage_per_user: formData.usage_per_user > 0 ? formData.usage_per_user : null
       };
 
       if (editingPromo) {
@@ -123,7 +195,10 @@ export default function PromoCodeManagement() {
       min_order_amount: promo.min_order_amount,
       max_uses: promo.max_uses || 0,
       expires_at: promo.expires_at ? new Date(promo.expires_at).toISOString().split('T')[0] : '',
-      is_active: promo.is_active
+      is_active: promo.is_active,
+      applies_to: promo.applies_to || 'all',
+      product_ids: promo.product_ids || [],
+      usage_per_user: promo.usage_per_user || 1
     });
     setIsDialogOpen(true);
   };
@@ -159,7 +234,10 @@ export default function PromoCodeManagement() {
       min_order_amount: 0,
       max_uses: 0,
       expires_at: '',
-      is_active: true
+      is_active: true,
+      applies_to: 'all',
+      product_ids: [],
+      usage_per_user: 1
     });
     setEditingPromo(null);
   };
@@ -173,10 +251,27 @@ export default function PromoCodeManagement() {
     setFormData({ ...formData, code: result });
   };
 
+  const toggleProductSelection = (productId: string) => {
+    setFormData(prev => {
+      const currentIds = prev.product_ids || [];
+      if (currentIds.includes(productId)) {
+        return {
+          ...prev,
+          product_ids: currentIds.filter(id => id !== productId)
+        };
+      } else {
+        return {
+          ...prev,
+          product_ids: [...currentIds, productId]
+        };
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">প্রমো কোড ব্যবস্থাপনা</h2>
+        <h2 className="text-2xl font-bold">উন্নত প্রমো কোড ব্যবস্থাপনা</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
@@ -184,7 +279,7 @@ export default function PromoCodeManagement() {
               নতুন প্রমো কোড
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingPromo ? 'প্রমো কোড সম্পাদনা' : 'নতুন প্রমো কোড'}
@@ -192,94 +287,158 @@ export default function PromoCodeManagement() {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="code">প্রমো কোড *</Label>
-                <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label htmlFor="code">প্রমো কোড *</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="code"
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                      placeholder="SAVE50"
+                      required
+                    />
+                    <Button type="button" variant="outline" onClick={generateRandomCode}>
+                      জেনারেট
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="discount_type">ছাড়ের ধরন *</Label>
+                  <Select 
+                    value={formData.discount_type} 
+                    onValueChange={(value) => setFormData({ ...formData, discount_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">শতাংশ (%)</SelectItem>
+                      <SelectItem value="fixed">নির্দিষ্ট পরিমাণ (৳)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="discount_value">
+                    {formData.discount_type === 'percentage' ? 'ছাড়ের শতকরা হার *' : 'ছাড়ের পরিমাণ *'}
+                  </Label>
                   <Input
-                    id="code"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    placeholder="SAVE50"
+                    id="discount_value"
+                    type="number"
+                    min="0"
+                    step={formData.discount_type === 'percentage' ? 1 : 0.01}
+                    value={formData.discount_value}
+                    onChange={(e) => setFormData({ ...formData, discount_value: Number(e.target.value) })}
+                    placeholder={formData.discount_type === 'percentage' ? '10' : '100'}
                     required
                   />
-                  <Button type="button" variant="outline" onClick={generateRandomCode}>
-                    জেনারেট
-                  </Button>
+                </div>
+
+                <div>
+                  <Label htmlFor="min_order_amount">নূন্যতম অর্ডার পরিমাণ (৳)</Label>
+                  <Input
+                    id="min_order_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.min_order_amount}
+                    onChange={(e) => setFormData({ ...formData, min_order_amount: Number(e.target.value) })}
+                    placeholder="500"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="max_uses">সর্বোচ্চ ব্যবহার (খালি রাখলে সীমাহীন)</Label>
+                  <Input
+                    id="max_uses"
+                    type="number"
+                    min="0"
+                    value={formData.max_uses}
+                    onChange={(e) => setFormData({ ...formData, max_uses: Number(e.target.value) })}
+                    placeholder="100"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="usage_per_user">প্রতি ব্যবহারকারীর সর্বোচ্চ ব্যবহার</Label>
+                  <Input
+                    id="usage_per_user"
+                    type="number"
+                    min="1"
+                    value={formData.usage_per_user}
+                    onChange={(e) => setFormData({ ...formData, usage_per_user: Number(e.target.value) })}
+                    placeholder="1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="expires_at">মেয়াদ শেষের তারিখ</Label>
+                  <Input
+                    id="expires_at"
+                    type="date"
+                    value={formData.expires_at}
+                    onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <Label htmlFor="applies_to">প্রযোজ্যতা</Label>
+                  <Select 
+                    value={formData.applies_to} 
+                    onValueChange={(value) => setFormData({ ...formData, applies_to: value as 'all' | 'specific' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">সব পণ্যে</SelectItem>
+                      <SelectItem value="specific">নির্দিষ্ট পণ্যে</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.applies_to === 'specific' && (
+                  <div className="col-span-2">
+                    <Label>পণ্য নির্বাচন করুন</Label>
+                    <div className="mt-2 border rounded-md p-3 max-h-40 overflow-y-auto">
+                      {products.length === 0 ? (
+                        <div className="text-center py-4 text-muted-foreground">
+                          কোন পণ্য পাওয়া যায়নি
+                        </div>
+                      ) : (
+                        products.map(product => (
+                          <div key={product.id} className="flex items-center space-x-2 py-2">
+                            <input
+                              type="checkbox"
+                              id={`product-${product.id}`}
+                              checked={formData.product_ids?.includes(product.id) || false}
+                              onChange={() => toggleProductSelection(product.id)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor={`product-${product.id}`} className="flex-1 cursor-pointer">
+                              {product.name} - ৳{product.price}
+                            </Label>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="col-span-2 flex items-center space-x-2">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                  <Label htmlFor="is_active">সক্রিয় প্রমো কোড</Label>
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="discount_type">ছাড়ের ধরন *</Label>
-                <Select 
-                  value={formData.discount_type} 
-                  onValueChange={(value) => setFormData({ ...formData, discount_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percentage">শতাংশ (%)</SelectItem>
-                    <SelectItem value="fixed">নির্দিষ্ট পরিমাণ (৳)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="discount_value">ছাড়ের পরিমাণ *</Label>
-                <Input
-                  id="discount_value"
-                  type="number"
-                  value={formData.discount_value}
-                  onChange={(e) => setFormData({ ...formData, discount_value: Number(e.target.value) })}
-                  placeholder={formData.discount_type === 'percentage' ? '10' : '100'}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="min_order_amount">নূন্যতম অর্ডার পরিমাণ (৳)</Label>
-                <Input
-                  id="min_order_amount"
-                  type="number"
-                  value={formData.min_order_amount}
-                  onChange={(e) => setFormData({ ...formData, min_order_amount: Number(e.target.value) })}
-                  placeholder="500"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="max_uses">সর্বোচ্চ ব্যবহার (খালি রাখলে সীমাহীন)</Label>
-                <Input
-                  id="max_uses"
-                  type="number"
-                  value={formData.max_uses}
-                  onChange={(e) => setFormData({ ...formData, max_uses: Number(e.target.value) })}
-                  placeholder="100"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="expires_at">মেয়াদ শেষের তারিখ</Label>
-                <Input
-                  id="expires_at"
-                  type="date"
-                  value={formData.expires_at}
-                  onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  id="is_active"
-                  type="checkbox"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <Label htmlFor="is_active">সক্রিয় প্রমো কোড</Label>
-              </div>
-
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   বাতিল
                 </Button>
@@ -292,86 +451,163 @@ export default function PromoCodeManagement() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
-        {loading ? (
-          <div className="text-center py-8">লোড হচ্ছে...</div>
-        ) : promoCodes.length === 0 ? (
-          <div className="text-center py-8">কোন প্রমো কোড পাওয়া যায়নি</div>
-        ) : (
-          promoCodes.map((promo) => (
-            <Card key={promo.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-xl font-mono">{promo.code}</h3>
-                    <Badge variant={promo.is_active ? "default" : "secondary"}>
-                      {promo.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                    </Badge>
-                    {promo.expires_at && new Date(promo.expires_at) < new Date() && (
-                      <Badge variant="destructive">মেয়াদ শেষ</Badge>
-                    )}
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      {promo.discount_type === 'percentage' ? (
-                        <Percent className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <DollarSign className="w-4 h-4 text-green-600" />
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="codes">প্রমো কোডসমূহ</TabsTrigger>
+          <TabsTrigger value="usage">ব্যবহারের ইতিহাস</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="codes">
+          <div className="grid gap-4">
+            {loading ? (
+              <div className="text-center py-8">লোড হচ্ছে...</div>
+            ) : promoCodes.length === 0 ? (
+              <div className="text-center py-8">কোন প্রমো কোড পাওয়া যায়নি</div>
+            ) : (
+              promoCodes.map((promo) => (
+                <Card key={promo.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-bold text-xl font-mono">{promo.code}</h3>
+                        <Badge variant={promo.is_active ? "default" : "secondary"}>
+                          {promo.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                        </Badge>
+                        {promo.expires_at && new Date(promo.expires_at) < new Date() && (
+                          <Badge variant="destructive">মেয়াদ শেষ</Badge>
+                        )}
+                        {promo.applies_to === 'specific' && (
+                          <Badge variant="outline">
+                            <Package className="w-3 h-3 mr-1" />
+                            নির্দিষ্ট পণ্য
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          {promo.discount_type === 'percentage' ? (
+                            <Percent className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <DollarSign className="w-4 h-4 text-green-600" />
+                          )}
+                          <span>
+                            {promo.discount_type === 'percentage' 
+                              ? `${promo.discount_value}% ছাড়`
+                              : `৳${promo.discount_value} ছাড়`
+                            }
+                          </span>
+                        </div>
+                        
+                        <div>
+                          <span className="text-muted-foreground">নূন্যতম অর্ডার:</span>
+                          <span className="ml-1">৳{promo.min_order_amount}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span>
+                            {promo.used_count}/{promo.max_uses || '∞'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span>
+                            {promo.expires_at 
+                              ? new Date(promo.expires_at).toLocaleDateString('bn-BD')
+                              : 'সীমাহীন'
+                            }
+                          </span>
+                        </div>
+                      </div>
+
+                      {promo.applies_to === 'specific' && promo.product_ids && promo.product_ids.length > 0 && (
+                        <div className="mt-3">
+                          <span className="text-sm text-muted-foreground">প্রযোজ্য পণ্য: </span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {promo.product_ids.slice(0, 3).map(id => {
+                              const product = products.find(p => p.id === id);
+                              return product ? (
+                                <Badge key={id} variant="secondary" className="text-xs">
+                                  {product.name}
+                                </Badge>
+                              ) : null;
+                            })}
+                            {promo.product_ids.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{promo.product_ids.length - 3} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       )}
-                      <span>
-                        {promo.discount_type === 'percentage' 
-                          ? `${promo.discount_value}% ছাড়`
-                          : `৳${promo.discount_value} ছাড়`
-                        }
-                      </span>
                     </div>
                     
-                    <div>
-                      <span className="text-muted-foreground">নূন্যতম অর্ডার:</span>
-                      <span className="ml-1">৳{promo.min_order_amount}</span>
-                    </div>
-                    
-                    <div>
-                      <span className="text-muted-foreground">ব্যবহার:</span>
-                      <span className="ml-1">
-                        {promo.used_count}/{promo.max_uses || '∞'}
-                      </span>
-                    </div>
-                    
-                    <div>
-                      <span className="text-muted-foreground">মেয়াদ:</span>
-                      <span className="ml-1">
-                        {promo.expires_at 
-                          ? new Date(promo.expires_at).toLocaleDateString('bn-BD')
-                          : 'সীমাহীন'
-                        }
-                      </span>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(promo)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchUsageHistory(promo.id)}
+                      >
+                        <Hash className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(promo.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(promo)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(promo.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="usage">
+          <Card className="p-4">
+            <h3 className="font-bold text-lg mb-4">প্রমো কোড ব্যবহারের ইতিহাস</h3>
+            {usageHistory.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                কোন ব্যবহারের ইতিহাস পাওয়া যায়নি
               </div>
-            </Card>
-          ))
-        )}
-      </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ব্যবহারকারী</TableHead>
+                    <TableHead>অর্ডার আইডি</TableHead>
+                    <TableHead>অর্ডার পরিমাণ</TableHead>
+                    <TableHead>ব্যবহারের সময়</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {usageHistory.map((usage) => (
+                    <TableRow key={usage.id}>
+                      <TableCell>{usage.users?.email || 'অজানা ব্যবহারকারী'}</TableCell>
+                      <TableCell>{usage.order_id}</TableCell>
+                      <TableCell>৳{usage.orders?.total_amount || 0}</TableCell>
+                      <TableCell>
+                        {new Date(usage.used_at).toLocaleString('bn-BD')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
