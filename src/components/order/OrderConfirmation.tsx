@@ -1,142 +1,69 @@
-// src/components/order/OrderConfirmation.tsx
-import { motion } from "framer-motion";
-import { CheckCircle, Package, Truck, User, Home, Clock } from "lucide-react";
+import { CheckCircle, Truck, Package, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 
-export const OrderConfirmation = () => {
+export default function OrderConfirmation() {
   const navigate = useNavigate();
 
-  // ডেমো ডেটা (পরবর্তীতে API থেকে ডায়নামিক করতে পারবেন)
-  const order = {
-    id: "ORD-20250831-1234",
-    customer: {
-      name: "Md Soyeb",
-      email: "mdsoyeb@example.com",
-    },
-    shipping: {
-      address: "123, Green Road, Dhaka, Bangladesh",
-      method: "Standard Delivery",
-      estimated: "3-5 Business Days",
-    },
-    payment: {
-      method: "Credit Card (**** 4242)",
-      total: 2599,
-      currency: "৳",
-    },
-    items: [
-      { name: "Wireless Headphones", qty: 1, price: 1599 },
-      { name: "Phone Cover", qty: 2, price: 1000 },
-    ],
-  };
-
   return (
-    <div className="container mx-auto px-4 py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-3xl mx-auto text-center"
-      >
-        {/* Success Icon */}
-        <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
-        <h1 className="text-3xl font-bold mt-4">Thank You for Your Order!</h1>
-        <p className="text-muted-foreground mt-2">
-          Your order has been placed successfully. A confirmation email has been sent to{" "}
-          <span className="font-medium">{order.customer.email}</span>.
-        </p>
-      </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+      <Card className="w-full max-w-2xl shadow-xl rounded-2xl border border-gray-200">
+        <CardHeader className="text-center">
+          <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
+          <CardTitle className="text-2xl font-bold text-gray-800 mt-4">
+            আপনার অর্ডার সফলভাবে সম্পন্ন হয়েছে 🎉
+          </CardTitle>
+          <p className="text-gray-500 mt-2">
+            ধন্যবাদ! আপনার অর্ডারটি গ্রহণ করা হয়েছে। আমরা শীঘ্রই শিপমেন্ট প্রসেস শুরু করবো।
+          </p>
+        </CardHeader>
 
-      {/* Order Details */}
-      <div className="mt-10 grid gap-6">
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
-              Order Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">Order ID:</span>
-              <span>{order.id}</span>
-            </div>
-            <Separator />
-            {order.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm">
-                <span>
-                  {item.name} × {item.qty}
-                </span>
-                <span>
-                  {order.payment.currency}
-                  {item.price}
-                </span>
+        <CardContent>
+          <div className="grid gap-6">
+            {/* Order Summary */}
+            <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-3">
+                <Package className="h-6 w-6 text-indigo-500" />
+                <div>
+                  <h3 className="font-semibold text-gray-800">অর্ডার নম্বর</h3>
+                  <p className="text-gray-500 text-sm">#ORD-20250901</p>
+                </div>
               </div>
-            ))}
-            <Separator />
-            <div className="flex justify-between font-semibold">
-              <span>Total:</span>
-              <span>
-                {order.payment.currency}
-                {order.payment.total}
-              </span>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              Customer Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>
-              <span className="font-medium">Name:</span> {order.customer.name}
-            </p>
-            <p>
-              <span className="font-medium">Email:</span> {order.customer.email}
-            </p>
-          </CardContent>
-        </Card>
+            {/* Shipping Info */}
+            <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-3">
+                <Truck className="h-6 w-6 text-indigo-500" />
+                <div>
+                  <h3 className="font-semibold text-gray-800">ডেলিভারি তথ্য</h3>
+                  <p className="text-gray-500 text-sm">
+                    আপনার পণ্যটি ৩-৫ দিনের মধ্যে আপনার ঠিকানায় পাঠানো হবে।
+                  </p>
+                </div>
+              </div>
+            </div>
 
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Truck className="h-5 w-5 text-primary" />
-              Shipping Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="flex items-start gap-2">
-              <Home className="h-4 w-4 mt-0.5" /> {order.shipping.address}
-            </p>
-            <p>
-              <span className="font-medium">Method:</span> {order.shipping.method}
-            </p>
-            <p className="flex items-center gap-2">
-              <Clock className="h-4 w-4" /> Estimated Delivery: {order.shipping.estimated}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Buttons */}
-      <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-        <Button onClick={() => navigate("/products")} className="px-6">
-          Continue Shopping
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/dashboard")}
-          className="px-6"
-        >
-          Go to Dashboard
-        </Button>
-      </div>
+            {/* Actions */}
+            <div className="flex justify-center gap-4 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/shop")}
+                className="rounded-xl px-6"
+              >
+                আরও কেনাকাটা করুন
+              </Button>
+              <Button
+                onClick={() => navigate("/orders")}
+                className="rounded-xl px-6 flex items-center gap-2"
+              >
+                আমার অর্ডার দেখুন <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}
