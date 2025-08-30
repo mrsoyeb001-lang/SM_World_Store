@@ -7,18 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, CreditCard, Truck, AlertCircle, CheckCircle, Info, X } from 'lucide-react';
+import { MapPin, CreditCard, Truck, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-
-// Assuming you have these images in your public folder
-// You can upload them there, for example:
-// public/bkash.svg
-// public/nagad.svg
-// public/rocket.svg
+import bkashLogo from '/bkash.svg';
+import nagadLogo from '/nagad.svg';
+import rocketLogo from '/rocket.svg';
 
 interface ShippingRate {
   id: string;
@@ -293,7 +289,13 @@ export default function Checkout() {
 
   const handleModalClose = () => {
     setIsConfirmationModalOpen(false);
-    navigate('/dashboard'); // Navigate to dashboard after modal is closed
+    navigate('/dashboard');
+  };
+
+  const paymentLogos = {
+    bkash: bkashLogo,
+    nagad: nagadLogo,
+    rocket: rocketLogo,
   };
 
   return (
@@ -414,7 +416,8 @@ export default function Checkout() {
                   {/* Payment Method Selection */}
                   <div className="space-y-3">
                     <h3 className="font-semibold text-base md:text-lg flex items-center gap-2">
-                      <CreditCard className="h-5 w-5 text-primary" /> পেমেন্ট মেথড
+                      <CreditCard className="h-5 w-5 text-primary" /> পেমেন্ট মেথড <span className="text-red-500">*</span>
+                      {formErrors.paymentMethod && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       {['cash_on_delivery', 'bkash', 'rocket', 'nagad'].map((method) => (
@@ -429,9 +432,9 @@ export default function Checkout() {
                         >
                           <div className="flex flex-col items-center justify-center space-y-2">
                             {method === 'cash_on_delivery' && <Truck className="h-8 w-8 text-slate-600" />}
-                            {method === 'bkash' && <img src="/bkash.svg" alt="bKash" className="h-8 w-8" />}
-                            {method === 'rocket' && <img src="/rocket.svg" alt="Rocket" className="h-8 w-8" />}
-                            {method === 'nagad' && <img src="/nagad.svg" alt="Nagad" className="h-8 w-8" />}
+                            {method !== 'cash_on_delivery' && (
+                              <img src={paymentLogos[method as keyof typeof paymentLogos]} alt={method} className="h-8 w-8" />
+                            )}
                             <span className="font-medium text-sm text-center">
                               {method === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : method.charAt(0).toUpperCase() + method.slice(1)}
                             </span>
@@ -440,6 +443,7 @@ export default function Checkout() {
                         </Card>
                       ))}
                     </div>
+                    {formErrors.paymentMethod && <p className="text-red-500 text-xs mt-1">{formErrors.paymentMethod}</p>}
                   </div>
 
                   {/* Payment Instructions & Form */}
@@ -459,9 +463,9 @@ export default function Checkout() {
                           <p className="text-sm mb-2 font-medium">পেমেন্ট করতে নিচের নম্বরে টাকা পাঠান:</p>
                           <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
                             <span className="font-mono text-base md:text-lg font-bold">
-                              {formData.paymentMethod === 'bkash' && (paymentSettings?.payment_methods?.bkash?.number || '01624712851')}
-                              {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01624712851')}
-                              {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01624712851')}
+                              {formData.paymentMethod === 'bkash' && (paymentSettings?.payment_methods?.bkash?.number || '01XXXXXXXXX')}
+                              {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01XXXXXXXXX')}
+                              {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01XXXXXXXXX')}
                             </span>
                             <Button 
                               type="button" 
@@ -471,7 +475,7 @@ export default function Checkout() {
                                 const number = formData.paymentMethod === 'bkash' ? paymentSettings?.payment_methods?.bkash?.number :
                                                formData.paymentMethod === 'rocket' ? paymentSettings?.payment_methods?.rocket?.number :
                                                paymentSettings?.payment_methods?.nagad?.number;
-                                navigator.clipboard.writeText(number || '01624712851');
+                                navigator.clipboard.writeText(number || '01XXXXXXXXX');
                                 toast({ title: "নম্বর কপি করা হয়েছে" });
                               }}
                             >
