@@ -69,7 +69,15 @@ export function OrderConfirmation() {
   // Get order data from navigation state or fetch from API
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (location.state?.orderId) {
+      // First try to get orderId from location state
+      let orderId = location.state?.orderId;
+      
+      // If not found in state, try to get from localStorage
+      if (!orderId) {
+        orderId = localStorage.getItem('lastOrderId');
+      }
+      
+      if (orderId) {
         try {
           // Fetch order details from Supabase
           const { data: order, error } = await supabase
@@ -78,10 +86,14 @@ export function OrderConfirmation() {
               *,
               order_items (
                 *,
-                product:product_id (id, name, image_url)
+                product:products (
+                  id,
+                  name,
+                  image_url
+                )
               )
             `)
-            .eq('id', location.state.orderId)
+            .eq('id', orderId)
             .single();
 
           if (error) {
@@ -92,18 +104,7 @@ export function OrderConfirmation() {
               variant: "destructive"
             });
           } else if (order) {
-            // Transform the data to match our interface
-            const transformedOrder: OrderDetails = {
-              ...order,
-              shipping_address: order.shipping_address || {
-                full_name: '',
-                phone: '',
-                address: '',
-                city: ''
-              },
-              order_items: order.order_items || []
-            };
-            setOrderDetails(transformedOrder);
+            setOrderDetails(order);
           }
         } catch (error) {
           console.error('Error:', error);
@@ -116,19 +117,14 @@ export function OrderConfirmation() {
           setLoading(false);
         }
       } else {
-        // If no orderId in state, try to get from localStorage
-        const lastOrderId = localStorage.getItem('lastOrderId');
-        if (lastOrderId) {
-          navigate(0, { state: { orderId: lastOrderId } });
-          return;
-        }
-        
-        // If no orderId in state or localStorage, redirect to orders page
+        // If no orderId found anywhere, redirect to orders page
         toast({
           title: "অর্ডার আইডি পাওয়া যায়নি",
           description: "আপনাকে অর্ডার পৃষ্ঠায় পুনর্নির্দেশিত করা হচ্ছে",
         });
-        navigate('/user-dashboard/orders');
+        setTimeout(() => {
+          navigate('/user-dashboard/orders');
+        }, 2000);
       }
     };
 
@@ -301,13 +297,13 @@ export function OrderConfirmation() {
               </div>
             </div>
 
-            {orderDetails.payment_method !== 'cash_on_delivery' && orderDetails.shipping_address.transaction_id && (
+            {orderDetails.payment_method !== 'cash_on_delivery' && orderDetails.shipping_address?.transaction_id && (
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
                 <h4 className="font-medium text-blue-800 mb-2">পেমেন্ট বিবরণ</h4>
                 <p className="text-sm text-blue-700">
                   <span className="font-medium">ট্রানজেকশন আইডি:</span> {orderDetails.shipping_address.transaction_id}
                 </p>
-                {orderDetails.shipping_address.sender_number && (
+                {orderDetails.shipping_address?.sender_number && (
                   <p className="text-sm text-blue-700 mt-1">
                     <span className="font-medium">সেন্ডার নম্বর:</span> {orderDetails.shipping_address.sender_number}
                   </p>
@@ -400,22 +396,22 @@ export function OrderConfirmation() {
                 <User className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">গ্রাহকের নাম</p>
-                  <p className="font-medium">{orderDetails.shipping_address.full_name}</p>
+                  <p className="font-medium">{orderDetails.shipping_address?.full_name || 'N/A'}</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <Phone className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">মোবাইল নম্বর</p>
-                  <p className="font-medium">{orderDetails.shipping_address.phone}</p>
+                  <p className="font-medium">{orderDetails.shipping_address?.phone || 'N/A'}</p>
                 </div>
               </div>
               <div className="md:col-span-2 flex items-start">
                 <MapPin className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">ঠিকানা</p>
-                  <p className="font-medium">{orderDetails.shipping_address.address}, {orderDetails.shipping_address.city}</p>
-                  {orderDetails.shipping_address.area && (
+                  <p className="font-medium">{orderDetails.shipping_address?.address || 'N/A'}, {orderDetails.shipping_address?.city || 'N/A'}</p>
+                  {orderDetails.shipping_address?.area && (
                     <p className="text-sm text-gray-600 mt-1">এলাকা: {orderDetails.shipping_address.area}</p>
                   )}
                 </div>
