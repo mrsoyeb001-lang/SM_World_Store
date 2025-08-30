@@ -4,49 +4,120 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { MapPin, CreditCard, ShoppingBag, Box, CheckCircle } from 'lucide-react';
+import { MapPin, CreditCard, Box, CheckCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 
-interface OrderItem {
+// Defines the structure of the order data
+interface OrderData {
   id: string;
-  quantity: number;
-  price: number;
-  product: {
-    name: string;
-    image_url: string;
-  };
-}
-
-interface OrderConfirmationState {
-  orderId: string;
-  total: number;
-  shippingCost: number;
-  discount: number;
-  items: OrderItem[];
-  shippingAddress: {
-    fullName: string;
+  total_amount: number;
+  shipping_cost: number;
+  discount_amount: number;
+  shipping_address: {
+    full_name: string;
     phone: string;
     address: string;
     city: string;
+    sender_number?: string;
+    transaction_id?: string;
   };
-  paymentMethod: string;
-  promoCode: string | null;
+  payment_method: string;
+  promo_code: string | null;
+  created_at: string;
+  order_items: {
+    quantity: number;
+    price: number;
+    product: {
+      name: string;
+      image_url: string;
+    };
+  }[];
 }
 
 export default function OrderConfirmation() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [order, setOrder] = useState<OrderData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Retrieve order data from the navigation state
-  const orderData = location.state as OrderConfirmationState;
+  // Get orderId from navigation state, if it exists
+  const orderIdFromState = location.state?.orderId;
 
-  // Handle cases where orderData is missing
-  if (!orderData) {
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      if (!orderIdFromState) {
+        setError('অর্ডারের কোনো তথ্য পাওয়া যায়নি।');
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            quantity,
+            price,
+            product:products (
+              name,
+              image_url
+            )
+          )
+        `)
+        .eq('id', orderIdFromState)
+        .maybeSingle();
+
+      if (error) {
+        setError('অর্ডার লোড করতে সমস্যা হয়েছে: ' + error.message);
+        setLoading(false);
+      } else if (data) {
+        setOrder(data as OrderData);
+        setLoading(false);
+      } else {
+        setError('অর্ডারটি খুঁজে পাওয়া যায়নি।');
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [orderIdFromState]);
+
+  // Handle loading state
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-4xl font-bold mb-4 text-destructive">দুঃখিত! 😟</h1>
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+        <p className="mt-4 text-lg text-muted-foreground">অর্ডার লোড হচ্ছে...</p>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
+        <h1 className="text-3xl font-bold mb-4">দুঃখিত! 😟</h1>
+        <p className="text-lg text-muted-foreground mb-8">{error}</p>
+        <Button onClick={() => navigate('/')}>
+          হোমপেজে ফিরে যান
+        </Button>
+      </div>
+    );
+  }
+
+  // Handle no order found after loading
+  if (!order) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-4xl font-bold mb-4 text-destructive">অর্ডার খুঁজে পাওয়া যায়নি 😥</h1>
         <p className="text-lg text-muted-foreground mb-8">
-          অর্ডারের কোনো তথ্য পাওয়া যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।
+          এই অর্ডারের কোনো তথ্য পাওয়া যায়নি। অনুগ্রহ করে আপনার অর্ডার হিস্টোরি চেক করুন।
         </p>
         <Button onClick={() => navigate('/')}>
           হোমপেজে ফিরে যান
@@ -55,7 +126,6 @@ export default function OrderConfirmation() {
     );
   }
 
-  // Map payment method keys to display names
   const paymentMethodDisplayNames: Record<string, string> = {
     cash_on_delivery: 'ক্যাশ অন ডেলিভারি',
     bkash: 'বিকাশ',
@@ -66,7 +136,6 @@ export default function OrderConfirmation() {
   return (
     <div className="bg-background min-h-screen py-12">
       <div className="container max-w-4xl mx-auto px-4">
-        {/* Main Confirmation Message */}
         <Card className="text-center p-8 bg-card shadow-lg border-primary/20">
           <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce" />
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">আপনার অর্ডার সফলভাবে সম্পন্ন হয়েছে! 🎉</h1>
@@ -83,14 +152,11 @@ export default function OrderConfirmation() {
           </div>
         </Card>
         
-        {/* A horizontal line to separate sections */}
         <div className="my-12">
           <Separator />
         </div>
 
-        {/* Order Details & Summary */}
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Order Summary Card */}
           <Card className="p-6 bg-card shadow-md">
             <CardHeader className="p-0 mb-4">
               <CardTitle className="flex items-center gap-2 text-xl font-semibold">
@@ -101,15 +167,15 @@ export default function OrderConfirmation() {
             <CardContent className="p-0 space-y-3">
               <div className="flex justify-between font-medium">
                 <span>অর্ডার নং:</span>
-                <span className="text-primary font-mono">{orderData.orderId.slice(0, 8)}</span>
+                <span className="text-primary font-mono">{order.id.slice(0, 8)}</span>
               </div>
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>তারিখ:</span>
-                <span>{format(new Date(), 'dd MMMM, yyyy')}</span>
+                <span>{format(new Date(order.created_at), 'dd MMMM, yyyy')}</span>
               </div>
               <Separator />
-              {orderData.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-4">
+              {order.order_items.map((item, index) => (
+                <div key={index} className="flex items-center gap-4">
                   <img
                     src={item.product.image_url || '/placeholder.png'}
                     alt={item.product.name}
@@ -126,27 +192,26 @@ export default function OrderConfirmation() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>সাবটোটাল</span>
-                  <span>৳{(orderData.total - orderData.shippingCost + orderData.discount).toFixed(2)}</span>
+                  <span>৳{(order.total_amount - order.shipping_cost + order.discount_amount).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>শিপিং</span>
-                  <span>৳{orderData.shippingCost.toFixed(2)}</span>
+                  <span>৳{order.shipping_cost.toFixed(2)}</span>
                 </div>
-                {orderData.discount > 0 && (
+                {order.discount_amount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>ছাড় ({orderData.promoCode || 'প্রয়োগকৃত'})</span>
-                    <span>-৳{orderData.discount.toFixed(2)}</span>
+                    <span>ছাড় ({order.promo_code || 'প্রয়োগকৃত'})</span>
+                    <span>-৳{order.discount_amount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-2">
                   <span>মোট</span>
-                  <span>৳{orderData.total.toFixed(2)}</span>
+                  <span>৳{order.total_amount.toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Shipping and Payment Info Card */}
           <Card className="p-6 bg-card shadow-md">
             <CardHeader className="p-0 mb-4">
               <CardTitle className="flex items-center gap-2 text-xl font-semibold">
@@ -155,23 +220,21 @@ export default function OrderConfirmation() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 space-y-4">
-              {/* Shipping Address */}
               <div className="space-y-2">
                 <h3 className="text-lg font-bold">শিপিং ঠিকানা</h3>
                 <div className="text-sm text-muted-foreground space-y-1">
-                  <p><strong>পূর্ণ নাম:</strong> {orderData.shippingAddress.fullName}</p>
-                  <p><strong>ফোন:</strong> {orderData.shippingAddress.phone}</p>
-                  <p><strong>ঠিকানা:</strong> {orderData.shippingAddress.address}</p>
-                  <p><strong>শহর:</strong> {orderData.shippingAddress.city}</p>
+                  <p><strong>পূর্ণ নাম:</strong> {order.shipping_address.full_name}</p>
+                  <p><strong>ফোন:</strong> {order.shipping_address.phone}</p>
+                  <p><strong>ঠিকানা:</strong> {order.shipping_address.address}</p>
+                  <p><strong>শহর:</strong> {order.shipping_address.city}</p>
                 </div>
               </div>
               <Separator />
-              {/* Payment Method */}
               <div className="space-y-2">
                 <h3 className="text-lg font-bold">পেমেন্ট মেথড</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CreditCard className="h-4 w-4" />
-                  <span className="font-medium">{paymentMethodDisplayNames[orderData.paymentMethod] || 'অন্যান্য'}</span>
+                  <span className="font-medium">{paymentMethodDisplayNames[order.payment_method] || 'অন্যান্য'}</span>
                 </div>
               </div>
             </CardContent>
