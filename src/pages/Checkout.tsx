@@ -1,84 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, CreditCard, Truck, AlertCircle, CheckCircle, Info, Volume2, Wand2 } from 'lucide-react';
+import { MapPin, CreditCard, Truck, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-
-// --- MOCK DEPENDENCIES TO MAKE THE COMPONENT RUNNABLE ---
-const MOCK_USER = { id: 'mock-user-123' };
-const MOCK_CART_ITEMS = [
-  { id: '1', product: { name: 'Product A', price: 50 }, quantity: 1 },
-  { id: '2', product: { name: 'Product B', price: 25, sale_price: 20 }, quantity: 2 },
-];
-const MOCK_CART_TOTAL = 90; // (1 * 50) + (2 * 20)
-
-const mockUseAuth = () => ({ user: MOCK_USER });
-const mockUseCart = () => {
-  const [items, setItems] = useState(MOCK_CART_ITEMS);
-  const [total, setTotal] = useState(MOCK_CART_TOTAL);
-  const clearCart = () => {
-    setItems([]);
-    setTotal(0);
-  };
-  return { items, total, clearCart };
-};
-
-const mockUseToast = () => ({
-  toast: ({ title, description, variant }) => {
-    console.log(`Toast: ${title} - ${description} (Variant: ${variant || 'default'})`);
-  }
-});
-
-const mockSupabase = {
-  from: (table) => {
-    let mockData = [];
-    if (table === 'shipping_rates') {
-      mockData = [
-        { id: 'rate1', area_name: 'ঢাকা ভিতরে', rate: 80, estimated_days: 2 },
-        { id: 'rate2', area_name: 'ঢাকা বাইরে', rate: 140, estimated_days: 4 },
-      ];
-    } else if (table === 'settings') {
-      mockData = [{ value: { payment_methods: { bkash: { number: '01712345678', instructions: 'Send money to this number.' }, nagad: { number: '01812345678', instructions: 'Cash out to this number.' }, rocket: { number: '01912345678', instructions: 'Rocket number for payment.' } } } }];
-    } else if (table === 'promo_codes') {
-      mockData = [{ id: 'promo1', code: 'DISCOUNT10', discount_type: 'percentage', discount_value: 10, min_order_amount: 50, used_count: 0 }];
-    }
-
-    const mockSingle = (data) => ({ data: data[0] });
-
-    return {
-      select: () => ({
-        eq: () => ({
-          maybeSingle: () => mockSingle(mockData),
-          single: () => mockSingle(mockData),
-        })
-      }),
-      insert: () => ({
-        select: () => ({
-          single: () => ({ data: { id: `order-${Math.random().toString(36).substr(2, 9)}`, ...mockData[0] }, error: null })
-        })
-      }),
-      update: () => ({
-        eq: () => ({ data: {}, error: null })
-      })
-    };
-  }
-};
-const mockUseNavigate = () => {
-  return (path) => {
-    console.log(`Navigating to: ${path}`);
-  };
-};
-
-const useAuth = mockUseAuth;
-const useCart = mockUseCart;
-const useToast = mockUseToast;
-const supabase = mockSupabase;
-const useNavigate = mockUseNavigate;
-// -----------------------------------------------------------------
 
 interface ShippingRate {
   id: string;
@@ -119,146 +52,11 @@ export default function Checkout() {
     phone: '',
     address: '',
     city: '',
-    paymentMethod: '',
+    paymentMethod: '', // Default to empty string to enforce selection
     notes: '',
     senderNumber: '',
     transactionId: ''
   });
-
-  // New states for Gemini API integration
-  const [generatedMessage, setGeneratedMessage] = useState<string>('');
-  const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-
-  // Helper function to convert PCM audio data to WAV format
-  const pcmToWav = (pcmData, sampleRate) => {
-    const pcm16 = new Int16Array(pcmData);
-    const dataLength = pcm16.length * 2;
-    const buffer = new ArrayBuffer(44 + dataLength);
-    const view = new DataView(buffer);
-
-    let offset = 0;
-    const writeString = (str) => {
-      for (let i = 0; i < str.length; i++) {
-        view.setUint8(offset++, str.charCodeAt(i));
-      }
-    };
-    const writeUint32 = (num) => view.setUint32(offset, num, true);
-    const writeUint16 = (num) => view.setUint16(offset, num, true);
-
-    // RIFF header
-    writeString('RIFF');
-    writeUint32(36 + dataLength);
-    writeString('WAVE');
-
-    // fmt chunk
-    writeString('fmt ');
-    writeUint32(16);
-    writeUint16(1); // Audio format (1 for PCM)
-    writeUint16(1); // Number of channels (1)
-    writeUint32(sampleRate);
-    writeUint32(sampleRate * 2); // Byte rate
-    writeUint16(2); // Block align
-    writeUint16(16); // Bits per sample
-    offset += 16;
-
-    // data chunk
-    writeString('data');
-    writeUint32(dataLength);
-    offset += 4;
-
-    for (let i = 0; i < pcm16.length; i++) {
-      view.setInt16(offset, pcm16[i], true);
-      offset += 2;
-    }
-
-    return new Blob([view], { type: 'audio/wav' });
-  };
-
-  const speakConfirmationMessage = async () => {
-    setIsSpeaking(true);
-    const confirmationText = 'অভিনন্দন! আপনার অর্ডারটি সফলভাবে সাবমিট করা হয়েছে।';
-
-    const payload = {
-      contents: [{
-        parts: [{ text: confirmationText }]
-      }],
-      generationConfig: {
-        responseModalities: ["AUDIO"],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: "Kore" }
-          }
-        }
-      },
-      model: "gemini-2.5-flash-preview-tts"
-    };
-
-    const apiKey = "";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-      const part = result?.candidates?.[0]?.content?.parts?.[0];
-      const audioData = part?.inlineData?.data;
-      const mimeType = part?.inlineData?.mimeType;
-
-      if (audioData && mimeType && mimeType.startsWith("audio/")) {
-        const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
-        const pcmData = Uint8Array.from(atob(audioData), c => c.charCodeAt(0));
-        const wavBlob = pcmToWav(pcmData, sampleRate);
-        const audioUrl = URL.createObjectURL(wavBlob);
-        const audio = new Audio(audioUrl);
-        audio.play().then(() => setIsSpeaking(false));
-      } else {
-        setIsSpeaking(false);
-      }
-    } catch (error) {
-      console.error('Error speaking message:', error);
-      setIsSpeaking(false);
-    }
-  };
-
-  const generateThankYouMessage = async () => {
-    setIsGeneratingMessage(true);
-    const orderDetails = orderSummary ? JSON.stringify(orderSummary.items) : 'an order';
-    const systemPrompt = "You are a friendly e-commerce customer service assistant. Generate a short, personalized thank-you message for a customer. The message should be warm, professional, and thank them for their order.";
-    const userQuery = `Generate a thank you message for a customer. Their order details are: ${orderDetails}.`;
-
-    const payload = {
-      contents: [{ parts: [{ text: userQuery }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      tools: [{ "google_search": {} }],
-      model: "gemini-2.5-flash-preview-05-20"
-    };
-
-    const apiKey = "";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
-      const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) {
-        setGeneratedMessage(text);
-      }
-    } catch (error) {
-      console.error('Error generating message:', error);
-      setGeneratedMessage("Could not generate a message at this time.");
-    } finally {
-      setIsGeneratingMessage(false);
-    }
-  };
 
   useEffect(() => {
     if (!user) {
@@ -273,7 +71,7 @@ export default function Checkout() {
 
     fetchShippingRates();
     fetchPaymentSettings();
-  }, [user, items]);
+  }, [user, items, navigate]);
 
   const fetchShippingRates = async () => {
     const { data } = await supabase
@@ -494,8 +292,14 @@ export default function Checkout() {
     navigate('/dashboard');
   };
 
+  const paymentLogos: { [key: string]: string } = {
+    bkash: '/bkash.svg',
+    nagad: '/nagad.svg',
+    rocket: '/rocket.svg',
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 font-['Inter', 'sans-serif']">
+    <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-extrabold text-center text-primary-dark mb-8 md:mb-12">
           আপনার অর্ডার কনফার্ম করুন 🛒
@@ -629,7 +433,7 @@ export default function Checkout() {
                           <div className="flex flex-col items-center justify-center space-y-2">
                             {method === 'cash_on_delivery' && <Truck className="h-8 w-8 text-slate-600" />}
                             {method !== 'cash_on_delivery' && (
-                              <img src={`/images/${method}.svg`} alt={method} className="h-8 w-8" />
+                              <img src={`/${method}.svg`} alt={method} className="h-8 w-8" />
                             )}
                             <span className="font-medium text-sm text-center">
                               {method === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : method.charAt(0).toUpperCase() + method.slice(1)}
@@ -671,16 +475,7 @@ export default function Checkout() {
                                 const number = formData.paymentMethod === 'bkash' ? paymentSettings?.payment_methods?.bkash?.number :
                                                formData.paymentMethod === 'rocket' ? paymentSettings?.payment_methods?.rocket?.number :
                                                paymentSettings?.payment_methods?.nagad?.number;
-                                if (navigator.clipboard) {
-                                  navigator.clipboard.writeText(number || '01XXXXXXXXX');
-                                } else {
-                                   const tempInput = document.createElement('input');
-                                   tempInput.value = number || '01XXXXXXXXX';
-                                   document.body.appendChild(tempInput);
-                                   tempInput.select();
-                                   document.execCommand('copy');
-                                   document.body.removeChild(tempInput);
-                                }
+                                navigator.clipboard.writeText(number || '01XXXXXXXXX');
                                 toast({ title: "নম্বর কপি করা হয়েছে" });
                               }}
                             >
@@ -832,12 +627,7 @@ export default function Checkout() {
         <DialogContent className="max-w-xs sm:max-w-md md:max-w-lg p-6 md:p-8">
           <DialogHeader className="text-center">
             <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 mx-auto mb-4 animate-bounce" />
-            <DialogTitle className="text-xl sm:text-3xl font-bold text-green-700 flex items-center justify-center gap-2">
-              অভিনন্দন! 🎉
-              <Button variant="ghost" size="icon" onClick={speakConfirmationMessage} disabled={isSpeaking}>
-                <Volume2 className={`h-5 w-5 ${isSpeaking ? 'text-gray-400' : 'text-blue-500'}`} />
-              </Button>
-            </DialogTitle>
+            <DialogTitle className="text-xl sm:text-3xl font-bold text-green-700">Congratulations! 🎉</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-2">
               আপনার অর্ডারটি সফলভাবে সাবমিট করা হয়েছে। আমাদের টিম আপনার অর্ডারগুলো দেখে পর্যবেক্ষণ করে সবকিছু যাচাই-বাছাই করে আপনাকে জানানো হবে। আপনি আপনার সকল অর্ডার ড্যাশবোর্ডে দেখতে পাবেন।
             </DialogDescription>
@@ -896,24 +686,6 @@ export default function Checkout() {
                   'নগদ'
                 }</span></p>
                 <p className="font-semibold">ডেলিভারি ঠিকানা: <span className="font-normal text-muted-foreground">{orderSummary.shippingAddress.address}, {orderSummary.shippingAddress.city}</span></p>
-              </div>
-
-              <div className="mt-6 flex flex-col items-stretch gap-2">
-                <Button 
-                  onClick={generateThankYouMessage}
-                  disabled={isGeneratingMessage}
-                  className="w-full"
-                >
-                  {isGeneratingMessage ? 'মেসেজ তৈরি হচ্ছে...' : 'কাস্টমারের জন্য ধন্যবাদ বার্তা তৈরি করুন ✨'}
-                </Button>
-                {generatedMessage && (
-                  <Textarea
-                    value={generatedMessage}
-                    readOnly
-                    className="mt-2 text-xs"
-                    placeholder="জেনারেট করা মেসেজ এখানে দেখা যাবে..."
-                  />
-                )}
               </div>
             </div>
           )}
