@@ -12,9 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { MapPin, CreditCard, Truck, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import bkashLogo from '/bkash.svg';
-import nagadLogo from '/nagad.svg';
-import rocketLogo from '/rocket.svg';
 
 interface ShippingRate {
   id: string;
@@ -293,12 +290,6 @@ export default function Checkout() {
     navigate('/dashboard');
   };
 
-  const paymentLogos = {
-    bkash: bkashLogo,
-    nagad: nagadLogo,
-    rocket: rocketLogo,
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
@@ -433,9 +424,9 @@ export default function Checkout() {
                         >
                           <div className="flex flex-col items-center justify-center space-y-2">
                             {method === 'cash_on_delivery' && <Truck className="h-8 w-8 text-slate-600" />}
-                            {method !== 'cash_on_delivery' && (
-                              <img src={paymentLogos[method as keyof typeof paymentLogos]} alt={method} className="h-8 w-8" />
-                            )}
+                            {method === 'bkash' && <img src="/bkash.svg" alt="bKash" className="h-8 w-8" />}
+                            {method === 'rocket' && <img src="/rocket.svg" alt="Rocket" className="h-8 w-8" />}
+                            {method === 'nagad' && <img src="/nagad.svg" alt="Nagad" className="h-8 w-8" />}
                             <span className="font-medium text-sm text-center">
                               {method === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : method.charAt(0).toUpperCase() + method.slice(1)}
                             </span>
