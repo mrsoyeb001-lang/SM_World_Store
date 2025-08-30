@@ -1,26 +1,65 @@
-import { useEffect, useState } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Package, Truck, Home, Clock, MapPin, Phone, Mail, CreditCard, FileText, Calendar, User, Gift, HeadphonesIcon, Smartphone, Laptop, Camera, Watch } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import {
+  CheckCircle2,
+  CircleCheckBig,
+  Copy,
+  CreditCard,
+  Download,
+  FileText,
+  Info,
+  MapPin,
+  MessageCircle,
+  PackageCheck,
+  Printer,
+  RefreshCcw,
+  Share2,
+  ShoppingCart,
+  Truck,
+  Wallet,
+  XCircle,
+} from "lucide-react";
+import { motion } from "framer-motion";
+
+/**
+ * Advanced Order Confirmation / Configuration Page
+ * ------------------------------------------------
+ * - Reads orderId from router `state.orderId` OR `/orders/:orderId` param
+ * - Fetches: order, order_items, product details, site/payment settings
+ * - Shows: products, qty, unit, subtotal, shipping, discount, tax, grand total
+ * - Shows: shipping area, ETA, payment method + reference, promo code
+ * - Tools: print, copy, download (HTML->print to PDF), share, reorder
+ * - Inline support contact + order activity timeline
+ * - Fully responsive, clean modern UI (shadcn + Tailwind + framer-motion)
+ */
+
+// Types (align with your DB as used in Checkout page)
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  sale_price?: number | null;
+  image?: string | null;
+  sku?: string | null;
+}
 
 interface OrderItem {
   id: string;
+  order_id: string;
   product_id: string;
   quantity: number;
-  price: number;
-  product: {
-    id: string;
-    name: string;
-    image_url?: string;
-    category?: string;
-  };
+  price: number; // unit price captured at order time
+  product?: Product | null;
 }
 
 interface ShippingAddress {
@@ -28,605 +67,417 @@ interface ShippingAddress {
   phone: string;
   address: string;
   city: string;
-  area?: string;
   sender_number?: string;
   transaction_id?: string;
 }
 
-interface OrderDetails {
+interface OrderRow {
   id: string;
-  created_at: string;
+  user_id: string;
   total_amount: number;
   shipping_cost: number;
   discount_amount: number;
-  payment_method: string;
-  status: string;
-  notes?: string;
-  promo_code?: string;
-  order_items: OrderItem[];
+  payment_method: string; // "cash_on_delivery" | "bkash" | "rocket" | "nagad" | ...
+  promo_code?: string | null;
+  status: string; // pending, confirmed, processing, shipped, delivered, cancelled
   shipping_address: ShippingAddress;
+  created_at: string;
+  shipping_rate?: {
+    area_name?: string;
+    estimated_days?: number;
+  } | null;
 }
 
-export function OrderConfirmation() {
+interface SiteSettings {
+  brand?: { name?: string; logo?: string };
+  tax?: { enabled?: boolean; rate?: number };
+  support?: { phone?: string; email?: string; facebook?: string; whatsapp?: string };
+  payment_methods?: {
+    bkash?: { number?: string };
+    rocket?: { number?: string };
+    nagad?: { number?: string };
+  };
+}
+
+function currency(n: number) {
+  return `৳${(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function statusColor(status: string) {
+  switch (status) {
+    case "pending":
+      return "bg-amber-100 text-amber-800";
+    case "confirmed":
+      return "bg-blue-100 text-blue-800";
+    case "processing":
+      return "bg-indigo-100 text-indigo-800";
+    case "shipped":
+      return "bg-cyan-100 text-cyan-800";
+    case "delivered":
+      return "bg-emerald-100 text-emerald-800";
+    case "cancelled":
+      return "bg-rose-100 text-rose-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
+
+export default function OrderConfirmation() {
   const { user } = useAuth();
-  const location = useLocation();
+  const { state } = useLocation();
+  const params = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const orderIdFromState: string | undefined = state?.orderId;
+  const orderIdFromPath: string | undefined = params.orderId as string | undefined;
+  const orderId = orderIdFromState || orderIdFromPath;
+
   const [loading, setLoading] = useState(true);
-  const [estimatedDelivery, setEstimatedDelivery] = useState<string>('');
-  const [orderProgress, setOrderProgress] = useState(30);
+  const [order, setOrder] = useState<OrderRow | null>(null);
+  const [items, setItems] = useState<OrderItem[]>([]);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [note, setNote] = useState("");
 
-  // Calculate estimated delivery date and progress
   useEffect(() => {
-    const deliveryDate = new Date();
-    deliveryDate.setDate(deliveryDate.getDate() + 3);
-    setEstimatedDelivery(deliveryDate.toLocaleDateString('bn-BD', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }));
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    if (!orderId) {
+      navigate("/orders");
+      return;
+    }
+    (async () => {
+      try {
+        setLoading(true);
+        // Settings
+        const { data: settingsRow } = await supabase
+          .from("settings")
+          .select("value")
+          .eq("key", "site_settings")
+          .maybeSingle();
+        if (settingsRow?.value) setSettings(settingsRow.value as SiteSettings);
 
-    // Simulate progress animation
-    const timer = setTimeout(() => {
-      setOrderProgress(70);
-    }, 1000);
+        // Order
+        const { data: orderRow, error: orderErr } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("id", orderId)
+          .single();
+        if (orderErr) throw orderErr;
+        setOrder(orderRow as unknown as OrderRow);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Get order data from navigation state or fetch from API
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      let orderId = location.state?.orderId || localStorage.getItem('lastOrderId');
-      
-      if (orderId) {
-        try {
-          // Save orderId to localStorage as backup
-          localStorage.setItem('lastOrderId', orderId);
-          
-          // Fetch order details from Supabase
-          const { data: order, error } = await supabase
-            .from('orders')
-            .select(`
-              *,
-              order_items (
-                *,
-                product:products (
-                  id,
-                  name,
-                  image_url,
-                  category
-                )
-              )
-            `)
-            .eq('id', orderId)
-            .single();
-
-          if (error) {
-            console.error('Error fetching order:', error);
-            toast({
-              title: "ত্রুটি",
-              description: "অর্ডার বিবরণ লোড করতে সমস্যা হয়েছে",
-              variant: "destructive"
-            });
-          } else if (order) {
-            setOrderDetails(order);
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          toast({
-            title: "ত্রুটি",
-            description: "অর্ডার বিবরণ লোড করতে সমস্যা হয়েছে",
-            variant: "destructive"
-          });
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        toast({
-          title: "অর্ডার আইডি পাওয়া যায়নি",
-          description: "আপনাকে অর্ডার পৃষ্ঠায় পুনর্নির্দেশিত করা হচ্ছে",
-        });
-        setTimeout(() => {
-          navigate('/user-dashboard/orders');
-        }, 2000);
+        // Items with product
+        const { data: orderItems, error: itemErr } = await supabase
+          .from("order_items")
+          .select("*, product:products(*)")
+          .eq("order_id", orderId);
+        if (itemErr) throw itemErr;
+        setItems((orderItems || []) as unknown as OrderItem[]);
+      } catch (e: any) {
+        toast({ title: "অর্ডার লোড করা যায়নি", description: e?.message ?? "Problem fetching order.", variant: "destructive" });
+      } finally {
+        setLoading(false);
       }
-    };
+    })();
+  }, [user, orderId, navigate, toast]);
 
-    fetchOrderDetails();
-  }, [location.state, navigate, toast]);
+  const subtotal = useMemo(() => items.reduce((sum, it) => sum + it.price * it.quantity, 0), [items]);
+  const taxRate = settings?.tax?.enabled ? (settings?.tax?.rate ?? 0) : 0; // e.g. 5 means 5%
+  const taxAmount = useMemo(() => (subtotal * taxRate) / 100, [subtotal, taxRate]);
+  const shipping = order?.shipping_cost ?? 0;
+  const discount = order?.discount_amount ?? 0;
+  const grand = useMemo(() => Math.max(0, subtotal + taxAmount + shipping - discount), [subtotal, taxAmount, shipping, discount]);
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
-          <CardHeader className="text-center pb-4">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <Package className="w-10 h-10 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl text-blue-800">অর্ডার প্রস্তুত হচ্ছে...</CardTitle>
-            <p className="text-blue-600 mt-2">আপনার অর্ডার বিবরণ লোড করা হচ্ছে</p>
-            <div className="mt-6">
-              <Progress value={orderProgress} className="h-2" />
-              <p className="text-sm text-blue-600 mt-2">{orderProgress}% সম্পূর্ণ</p>
-            </div>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
+  const copyOrderId = async () => {
+    if (!order?.id) return;
+    await navigator.clipboard.writeText(order.id);
+    toast({ title: "অর্ডার আইডি কপি হয়েছে", description: `#${order.id.slice(0, 8)}` });
+  };
 
-  if (!orderDetails) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200 shadow-lg">
-          <CardHeader className="text-center pb-4">
-            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-10 h-10 text-yellow-600" />
-            </div>
-            <CardTitle className="text-2xl text-yellow-800">অর্ডার খুঁজে পাওয়া যায়নি</CardTitle>
-            <p className="text-yellow-600 mt-2">দুঃখিত, আমরা আপনার অর্ডার তথ্য খুঁজে পাইনি</p>
-            <Button asChild className="mt-6 bg-yellow-600 hover:bg-yellow-700">
-              <Link to="/user-dashboard/orders">আমার অর্ডার দেখুন</Link>
-            </Button>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
+  const printInvoice = () => {
+    window.print();
+  };
 
-  const getPaymentMethodText = (method: string) => {
-    switch (method) {
-      case 'cash_on_delivery':
-        return 'ক্যাশ অন ডেলিভারি';
-      case 'bkash':
-        return 'বিকাশ';
-      case 'rocket':
-        return 'রকেট';
-      case 'nagad':
-        return 'নগদ';
-      default:
-        return method;
+  const shareOrder = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: settings?.brand?.name || "Order",
+          text: `আমার অর্ডার #${order?.id?.slice(0, 8)}`,
+          url: window.location.href,
+        });
+      } else {
+        await copyOrderId();
+      }
+    } catch (e) {
+      // ignore
     }
   };
 
-  const getPaymentMethodIcon = (method: string) => {
-    switch (method) {
-      case 'cash_on_delivery':
-        return <CreditCard className="w-5 h-5 mr-2 text-blue-500" />;
-      case 'bkash':
-        return <div className="w-5 h-5 bg-orange-500 rounded mr-2 flex items-center justify-center text-white text-xs">b</div>;
-      case 'rocket':
-        return <div className="w-5 h-5 bg-purple-500 rounded mr-2 flex items-center justify-center text-white text-xs">R</div>;
-      case 'nagad':
-        return <div className="w-5 h-5 bg-green-500 rounded mr-2 flex items-center justify-center text-white text-xs">N</div>;
-      default:
-        return <CreditCard className="w-5 h-5 mr-2 text-blue-500" />;
+  const updateNote = async () => {
+    if (!order) return;
+    const next = note.trim();
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ notes: next })
+        .eq("id", order.id);
+      if (error) throw error;
+      toast({ title: "নোট আপডেট হয়েছে" });
+    } catch (e: any) {
+      toast({ title: "আপডেট ব্যর্থ", description: e?.message, variant: "destructive" });
     }
   };
 
-  const getProductIcon = (category: string) => {
-    switch (category?.toLowerCase()) {
-      case 'phone':
-        return <Smartphone className="w-6 h-6 text-blue-500" />;
-      case 'laptop':
-        return <Laptop className="w-6 h-6 text-purple-500" />;
-      case 'camera':
-        return <Camera className="w-6 h-6 text-amber-500" />;
-      case 'watch':
-        return <Watch className="w-6 h-6 text-green-500" />;
-      case 'headphone':
-        return <HeadphonesIcon className="w-6 h-6 text-red-500" />;
-      default:
-        return <Package className="w-6 h-6 text-gray-500" />;
-    }
-  };
+  // Visual order timeline based on status
+  const steps = [
+    { key: "pending", label: "প্লেসড", icon: ShoppingCart },
+    { key: "confirmed", label: "কনফার্মড", icon: CircleCheckBig },
+    { key: "processing", label: "প্রসেসিং", icon: RefreshCcw },
+    { key: "shipped", label: "শিপড", icon: Truck },
+    { key: "delivered", label: "ডেলিভারড", icon: PackageCheck },
+  ];
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return { text: 'বিচারাধীন', color: 'text-yellow-600', bg: 'bg-yellow-100', border: 'border-yellow-200' };
-      case 'confirmed':
-        return { text: 'নিশ্চিতকৃত', color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-200' };
-      case 'processing':
-        return { text: 'প্রসেসিং', color: 'text-indigo-600', bg: 'bg-indigo-100', border: 'border-indigo-200' };
-      case 'shipped':
-        return { text: 'শিপ করা হয়েছে', color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-200' };
-      case 'delivered':
-        return { text: 'ডেলিভারি সম্পন্ন', color: 'text-green-600', bg: 'bg-green-100', border: 'border-green-200' };
-      default:
-        return { text: status, color: 'text-gray-600', bg: 'bg-gray-100', border: 'border-gray-200' };
-    }
-  };
-
-  const statusInfo = getStatusInfo(orderDetails.status);
+  const currentIndex = steps.findIndex((s) => s.key === order?.status);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
-        {/* Success Confetti Effect */}
-        <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-50">
-          {[...Array(100)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full opacity-70"
-              style={{
-                left: `${Math.random() * 100}%`,
-                animation: `confettiFall ${Math.random() * 3 + 2}s linear forwards`,
-                top: '-10px',
-                transform: `rotate(${Math.random() * 360}deg)`,
-                animationDelay: `${Math.random() * 2}s`
-              }}
-            />
-          ))}
-        </div>
-
-        <style>
-          {`
-            @keyframes confettiFall {
-              0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-              100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-            }
-          `}
-        </style>
-
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">অর্ডার সফল!</h1>
-          <p className="text-lg text-gray-600">আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Order Success Card */}
-            <Card className="bg-gradient-to-br from-green-50 to-teal-50 border-green-200 shadow-xl overflow-hidden">
-              <div className="absolute top-4 right-4">
-                <Badge className={`${statusInfo.bg} ${statusInfo.color} ${statusInfo.border} px-3 py-1 text-sm`}>
-                  {statusInfo.text}
-                </Badge>
+    <div className="container mx-auto px-4 py-8 print:px-0">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <div className="max-w-6xl mx-auto space-y-6" ref={printRef}>
+          {/* Header / Success Banner */}
+          <Card className="overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-8 w-8" />
+                  <div>
+                    <h1 className="text-2xl font-bold">অর্ডার কনফার্ম হয়েছে!</h1>
+                    <p className="text-emerald-100 text-sm">{settings?.brand?.name || "SM World BD"} আপনাকে ধন্যবাদ 🫶</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={`rounded-full ${statusColor(order?.status || "pending")}`}>{order?.status || "pending"}</Badge>
+                  {order?.promo_code ? (
+                    <Badge variant="secondary" className="rounded-full">Promo: {order.promo_code}</Badge>
+                  ) : null}
+                </div>
               </div>
-              <CardHeader className="text-center pb-4 pt-8">
-                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-12 h-12 text-green-600" />
-                </div>
-                <CardTitle className="text-3xl font-bold text-green-800">ধন্যবাদ!</CardTitle>
-                <p className="text-green-600 text-lg mt-2">আপনার অর্ডারটি সফলভাবে প্লেস হয়েছে</p>
-                <Badge variant="outline" className="mt-4 bg-white text-green-800 border-green-300 py-2 px-4 text-base">
-                  অর্ডার নম্বর: #{orderDetails.id.slice(0, 8).toUpperCase()}
-                </Badge>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  <div className="bg-white p-4 rounded-lg border border-green-100 shadow-sm">
-                    <div className="flex items-center">
-                      <Calendar className="w-5 h-5 text-green-600 mr-2" />
-                      <div>
-                        <p className="text-sm text-gray-500">অর্ডার তারিখ</p>
-                        <p className="font-medium">{new Date(orderDetails.created_at).toLocaleDateString('bn-BD', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border border-green-100 shadow-sm">
-                    <div className="flex items-center">
-                      {getPaymentMethodIcon(orderDetails.payment_method)}
-                      <div>
-                        <p className="text-sm text-gray-500">পেমেন্ট পদ্ধতি</p>
-                        <p className="font-medium">{getPaymentMethodText(orderDetails.payment_method)}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border border-green-100 shadow-sm">
-                    <div className="flex items-center">
-                      <Clock className="w-5 h-5 text-green-600 mr-2" />
-                      <div>
-                        <p className="text-sm text-gray-500">আনুমানিক ডেলিভারি</p>
-                        <p className="font-medium">{estimatedDelivery}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border border-green-100 shadow-sm">
-                    <div className="flex items-center">
-                      <CreditCard className="w-5 h-5 text-green-600 mr-2" />
-                      <div>
-                        <p className="text-sm text-gray-500">মোট পরিমাণ</p>
-                        <p className="font-medium text-xl text-green-600">৳{orderDetails.total_amount.toLocaleString('bn-BD')}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="mt-3 text-sm/6 opacity-90">
+                অর্ডার আইডি: <span className="font-mono">#{order?.id?.slice(0, 8) || "—"}</span> • {new Date(order?.created_at || Date.now()).toLocaleString()}
+              </div>
+            </div>
 
-            {/* Order Items */}
-            <Card className="shadow-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl flex items-center">
-                  <Package className="w-6 h-6 mr-2 text-blue-500" />
-                  অর্ডারকৃত পণ্য ({orderDetails.order_items?.length || 0}টি)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {orderDetails.order_items && orderDetails.order_items.length > 0 ? (
-                    orderDetails.order_items.map((item, index) => (
-                      <div key={index} className="flex items-center border-b pb-4 last:border-b-0 last:pb-0">
-                        <div className="w-16 h-16 overflow-hidden rounded-lg mr-4 bg-gray-100 flex items-center justify-center">
-                          {item.product?.image_url ? (
-                            <img 
-                              src={item.product.image_url} 
-                              alt={item.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            getProductIcon(item.product?.category || '')
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-800">{item.product?.name || 'Unknown Product'}</h4>
-                          <div className="flex justify-between items-center mt-1">
-                            <div className="text-gray-600 text-sm">পরিমাণ: {item.quantity} × ৳{item.price.toLocaleString('bn-BD')}</div>
-                            <div className="font-medium text-gray-800">৳{(item.price * item.quantity).toLocaleString('bn-BD')}</div>
-                          </div>
-                        </div>
+            <CardContent className="p-6">
+              {/* Quick Actions */}
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={copyOrderId} className="rounded-2xl"><Copy className="mr-2 h-4 w-4"/>কপি আইডি</Button>
+                <Button variant="outline" size="sm" onClick={printInvoice} className="rounded-2xl"><Printer className="mr-2 h-4 w-4"/>প্রিন্ট/পিডিএফ</Button>
+                <Button variant="outline" size="sm" onClick={shareOrder} className="rounded-2xl"><Share2 className="mr-2 h-4 w-4"/>শেয়ার</Button>
+                <Button variant="secondary" size="sm" className="rounded-2xl" onClick={() => navigate("/shop")}><RefreshCcw className="mr-2 h-4 w-4"/>আরেকটা কেনাকাটা</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Status timeline */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-lg">অর্ডার অগ্রগতি</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-5 gap-2">
+                {steps.map((s, i) => {
+                  const Icon = s.icon as any;
+                  const done = currentIndex === -1 ? i === 0 : i <= currentIndex;
+                  return (
+                    <div key={s.key} className="flex flex-col items-center text-center">
+                      <div className={`size-10 rounded-full flex items-center justify-center border-2 ${done ? "border-emerald-500" : "border-muted"}`}>
+                        <Icon className={`h-5 w-5 ${done ? "text-emerald-600" : "text-muted-foreground"}`} />
                       </div>
-                    ))
+                      <div className={`mt-2 text-xs ${done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Main grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left: Items & totals */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-lg">অর্ডার আইটেমসমূহ</CardTitle></CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="animate-pulse text-sm text-muted-foreground">লোড হচ্ছে...</div>
+                  ) : items.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">কোন পণ্য পাওয়া যায়নি।</div>
                   ) : (
-                    <p className="text-gray-500 text-center py-4">কোন পণ্য পাওয়া যায়নি</p>
-                  )}
-                </div>
-                
-                <Separator className="my-6" />
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">উপ-মোট:</span>
-                    <span className="font-medium">৳{(orderDetails.total_amount - orderDetails.shipping_cost + orderDetails.discount_amount).toLocaleString('bn-BD')}</span>
-                  </div>
-                  
-                  {orderDetails.discount_amount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>ছাড় {orderDetails.promo_code && `(${orderDetails.promo_code})`}:</span>
-                      <span>-৳{orderDetails.discount_amount.toLocaleString('bn-BD')}</span>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-muted-foreground">
+                            <th className="py-2">পণ্য</th>
+                            <th className="py-2">SKU</th>
+                            <th className="py-2">দাম</th>
+                            <th className="py-2">পরিমাণ</th>
+                            <th className="py-2 text-right">টোটাল</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((it) => (
+                            <tr key={it.id} className="border-t">
+                              <td className="py-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="size-12 rounded-xl bg-muted overflow-hidden">
+                                    {it.product?.image ? (
+                                      <img src={it.product.image} alt={it.product?.name || "Product"} className="size-full object-cover" />
+                                    ) : (
+                                      <div className="size-full flex items-center justify-center text-xs text-muted-foreground">IMG</div>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium line-clamp-1">{it.product?.name || "Product"}</div>
+                                    <div className="text-xs text-muted-foreground">#{it.product_id.slice(0, 6)}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 text-muted-foreground">{it.product?.sku || "—"}</td>
+                              <td className="py-3">{currency(it.price)}</td>
+                              <td className="py-3">{it.quantity}</td>
+                              <td className="py-3 text-right font-medium">{currency(it.price * it.quantity)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">ডেলিভারি চার্জ:</span>
-                    <span className="font-medium">৳{orderDetails.shipping_cost.toLocaleString('bn-BD')}</span>
-                  </div>
-                  
-                  <Separator className="my-3" />
-                  
-                  <div className="flex justify-between text-xl font-bold pt-2">
-                    <span>মোট:</span>
-                    <span className="text-green-600">৳{orderDetails.total_amount.toLocaleString('bn-BD')}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Shipping Information */}
-            <Card className="shadow-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl flex items-center">
-                  <MapPin className="w-6 h-6 mr-2 text-red-500" />
-                  ডেলিভারি তথ্য
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-start">
-                    <User className="w-5 h-5 text-gray-500 mr-3 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-gray-500">গ্রাহকের নাম</p>
-                      <p className="font-medium">{orderDetails.shipping_address?.full_name || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Phone className="w-5 h-5 text-gray-500 mr-3 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-gray-500">মোবাইল নম্বর</p>
-                      <p className="font-medium">{orderDetails.shipping_address?.phone || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="md:col-span-2 flex items-start">
-                    <MapPin className="w-5 h-5 text-gray-500 mr-3 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-gray-500">ঠিকানা</p>
-                      <p className="font-medium">{orderDetails.shipping_address?.address || 'N/A'}, {orderDetails.shipping_address?.city || 'N/A'}</p>
-                      {orderDetails.shipping_address?.area && (
-                        <p className="text-sm text-gray-600 mt-1">এলাকা: {orderDetails.shipping_address.area}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-lg">টোটাল সারাংশ</CardTitle></CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between text-sm"><span>সাবটোটাল</span><span>{currency(subtotal)}</span></div>
+                  {settings?.tax?.enabled ? (
+                    <div className="flex justify-between text-sm"><span>ট্যাক্স ({taxRate}%)</span><span>{currency(taxAmount)}</span></div>
+                  ) : null}
+                  <div className="flex justify-between text-sm"><span>শিপিং</span><span>{currency(shipping)}</span></div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-sm text-emerald-600"><span>ছাড়{order?.promo_code ? ` (${order.promo_code})` : ""}</span><span>-{currency(discount)}</span></div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between text-lg font-semibold"><span>মোট</span><span>{currency(grand)}</span></div>
+                  <p className="text-xs text-muted-foreground">মোট টাকার মধ্যে সকল প্রযোজ্য চার্জ অন্তর্ভুক্ত।</p>
+                </CardContent>
+              </Card>
+            </div>
 
-                {orderDetails.payment_method !== 'cash_on_delivery' && orderDetails.shipping_address?.transaction_id && (
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-6">
-                    <h4 className="font-medium text-blue-800 mb-2">পেমেন্ট বিবরণ</h4>
-                    <p className="text-sm text-blue-700">
-                      <span className="font-medium">ট্রানজেকশন আইডি:</span> {orderDetails.shipping_address.transaction_id}
-                    </p>
-                    {orderDetails.shipping_address?.sender_number && (
-                      <p className="text-sm text-blue-700 mt-1">
-                        <span className="font-medium">সেন্ডার নম্বর:</span> {orderDetails.shipping_address.sender_number}
-                      </p>
+            {/* Right: addresses, payment, shipping, support */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-lg">কাস্টমার ও শিপিং</CardTitle></CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 mt-0.5" />
+                    <div>
+                      <div className="font-medium">{order?.shipping_address?.full_name}</div>
+                      <div className="text-muted-foreground">{order?.shipping_address?.phone}</div>
+                      <div className="text-muted-foreground">{order?.shipping_address?.address}</div>
+                      <div className="text-muted-foreground">{order?.shipping_address?.city}</div>
+                    </div>
+                  </div>
+                  {order?.shipping_rate?.area_name ? (
+                    <div className="text-muted-foreground">এলাকা: {order.shipping_rate.area_name} {order.shipping_rate.estimated_days ? `• আনুমানিক ${order.shipping_rate.estimated_days} দিন` : ""}</div>
+                  ) : null}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-lg">পেমেন্ট তথ্য</CardTitle></CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2"><CreditCard className="h-4 w-4"/><span className="capitalize">{(order?.payment_method || "cash_on_delivery").replaceAll("_", " ")}</span></div>
+                  {order?.payment_method !== "cash_on_delivery" ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between"><span className="text-muted-foreground">সেন্ডার নম্বর</span><span className="font-medium">{order?.shipping_address?.sender_number || "—"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">ট্রানজেকশন আইডি</span><span className="font-medium">{order?.shipping_address?.transaction_id || "—"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">পেমেন্ট নম্বর</span><span className="font-medium">{order?.payment_method === "bkash" ? (settings?.payment_methods?.bkash?.number || "01624712851") : order?.payment_method === "rocket" ? (settings?.payment_methods?.rocket?.number || "01624712851") : (settings?.payment_methods?.nagad?.number || "01624712851")}</span></div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-muted-foreground"><Wallet className="h-4 w-4"/>পণ্য হাতে পেয়ে টাকা দিন (COD)</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-lg">সাপোর্ট</CardTitle></CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground"><Info className="h-4 w-4"/>যদি কোন ভুল থাকে, সাথে সাথে আমাদের জানান।</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {settings?.support?.phone && (
+                      <Button asChild variant="outline" className="rounded-2xl"><a href={`tel:${settings.support.phone}`}><PhoneIcon/> কল</a></Button>
+                    )}
+                    {settings?.support?.whatsapp && (
+                      <Button asChild variant="outline" className="rounded-2xl"><a href={`https://wa.me/${settings.support.whatsapp}`} target="_blank" rel="noreferrer"><MessageCircle className="mr-2 h-4 w-4"/>WhatsApp</a></Button>
+                    )}
+                    {settings?.support?.facebook && (
+                      <Button asChild variant="outline" className="rounded-2xl col-span-2"><a href={settings.support.facebook} target="_blank" rel="noreferrer"><MessageCircle className="mr-2 h-4 w-4"/>Facebook Message</a></Button>
                     )}
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                {orderDetails.notes && (
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-6">
-                    <h4 className="font-medium text-gray-800 mb-2">বিশেষ নির্দেশনা</h4>
-                    <p className="text-sm text-gray-700">"{orderDetails.notes}"</p>
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-lg">অতিরিক্ত নোট</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="order-note">আপনার বার্তা</Label>
+                    <Textarea id="order-note" placeholder="বিশেষ নির্দেশনা বা মন্তব্য..." value={note} onChange={(e) => setNote(e.target.value)} />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={updateNote} className="rounded-2xl"><FileText className="mr-2 h-4 w-4"/>নোট সংরক্ষণ</Button>
+                    <Button size="sm" variant="outline" onClick={() => setNote("")} className="rounded-2xl"><XCircle className="mr-2 h-4 w-4"/>ক্লিয়ার</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Order Tracking */}
-            <Card className="shadow-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl flex items-center">
-                  <Truck className="w-6 h-6 mr-2 text-blue-500" />
-                  অর্ডার ট্র্যাকিং
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-blue-500" />
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-800">অর্ডার প্লেসড</p>
-                      <p className="text-sm text-gray-500">আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-800">প্রসেসিং</p>
-                      <p className="text-sm text-gray-500">আপনার অর্ডারটি প্রসেসিং underway রয়েছে</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-800">শিপড</p>
-                      <p className="text-sm text-gray-500">আপনার অর্ডারটি শিপ করা হবে</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-800">ডেলিভার্ড</p>
-                      <p className="text-sm text-gray-500">আনুমানিক ডেলিভারি: {estimatedDelivery}</p>
-                    </div>
-                  </div>
+          {/* Invoice footer for print */}
+          <Card className="print:mt-6">
+            <CardContent className="py-6 text-xs text-muted-foreground">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-2">
+                <div>© {new Date().getFullYear()} {settings?.brand?.name || "SM World BD"}. সর্বস্বত্ব সংরক্ষিত।</div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1"><Truck className="h-3.5 w-3.5"/>ফাস্ট ডেলিভারি</div>
+                  <div className="flex items-center gap-1"><PackageCheck className="h-3.5 w-3.5"/>অরিজিনাল প্রোডাক্ট</div>
+                  <div className="flex items-center gap-1"><ShieldIcon/>সিকিউর পেমেন্ট</div>
                 </div>
-                
-                <Button asChild className="w-full mt-6 bg-blue-600 hover:bg-blue-700">
-                  <Link to="/user-dashboard/orders">
-                    <FileText className="w-4 h-4 mr-2" />
-                    অর্ডার ট্র্যাক করুন
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Support Information */}
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl flex items-center">
-                  <Phone className="w-6 h-6 mr-2 text-blue-500" />
-                  সহায়তা প্রয়োজন?
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 mb-4">
-                  আপনার অর্ডার সংক্রান্ত কোন প্রশ্ন থাকলে বা কোন সমস্যা হলে আমাদের সাথে যোগাযোগ করুন।
-                </p>
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <Phone className="w-5 h-5 text-blue-600 mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-600">হেল্পলাইন নম্বর</p>
-                      <p className="font-medium text-gray-800">+৮৮০ ১৬১১-১২৩৪৫৬</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Mail className="w-5 h-5 text-blue-600 mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-600">ইমেইল ঠিকানা</p>
-                      <p className="font-medium text-gray-800">support@shopbangla.com</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-5 h-5 text-blue-600 mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-600">কাজের সময়</p>
-                      <p className="font-medium text-gray-800">সকাল ৯টা - রাত ১০টা</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <Card className="shadow-xl">
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <Button asChild className="w-full py-3" variant="outline">
-                    <Link to="/">
-                      <Home className="w-5 h-5 mr-2" />
-                      হোমপেজ
-                    </Link>
-                  </Button>
-                  <Button asChild className="w-full py-3" variant="outline">
-                    <Link to="/products">
-                      <Package className="w-5 h-5 mr-2" />
-                      আরো পণ্য দেখুন
-                    </Link>
-                  </Button>
-                  <Button asChild className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    <Link to="/user-dashboard/orders">
-                      <FileText className="w-5 h-5 mr-2" />
-                      আমার অর্ডারসমূহ
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Thank You Note */}
-            <Card className="bg-gradient-to-br from-green-50 to-teal-50 border-green-200 shadow-xl">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <Gift className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                  <h3 className="font-semibold text-green-800 mb-2">আপনার অর্ডার করার জন্য ধন্যবাদ!</h3>
-                  <p className="text-green-700 text-sm">
-                    আমরা আপনার শপিং অভিজ্ঞতাকে আরও উন্নত করতে প্রতিশ্রুতিবদ্ধ।
-                  </p>
-                  <p className="text-green-600 text-xs mt-3">
-                    ShopBangla টিম
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          .print:hidden { display: none !important; }
+          .print:px-0 { padding-left: 0 !important; padding-right: 0 !important; }
+          button, a { display: none !important; }
+          .container { max-width: 100% !important; }
+          img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+      `}</style>
     </div>
   );
 }
+
+// Small icon wrappers (lucide doesn't export all named here)
+function PhoneIcon() { return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.09 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.81.3 1.6.54 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.72-1.06a2 2 0 0 1 2.11-.45c.76.24 1.55.42 2.36.54A2 2 0 0 1 22 16.92z"/></svg>; }
+function ShieldIcon() { return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>; }
