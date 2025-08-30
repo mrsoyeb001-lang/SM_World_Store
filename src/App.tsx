@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
 import Category from "./pages/Category";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -31,7 +32,6 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import SellerPolicy from "./pages/SellerPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
-
 
 const queryClient = new QueryClient();
 
@@ -56,6 +56,7 @@ const App = () => (
                     <Route path="/product/:id" element={<ProductDetails />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/order-confirmation" element={<OrderConfirmation />} />
                     <Route path="/category/:categoryId" element={<Category />} />
                     <Route path="/dashboard" element={<UserDashboard />} />
                     <Route path="/favorites" element={<Favorites />} />
@@ -73,7 +74,6 @@ const App = () => (
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/seller-policy" element={<SellerPolicy />} />
                     <Route path="/cookie-policy" element={<CookiePolicy />} />
-
 
                     {/* 404 Fallback */}
                     <Route path="*" element={<NotFound />} />
