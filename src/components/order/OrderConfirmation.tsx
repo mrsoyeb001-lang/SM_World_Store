@@ -78,11 +78,7 @@ export function OrderConfirmation() {
               *,
               order_items (
                 *,
-                product:products (
-                  id,
-                  name,
-                  image_url
-                )
+                product:product_id (id, name, image_url)
               )
             `)
             .eq('id', location.state.orderId)
@@ -96,15 +92,42 @@ export function OrderConfirmation() {
               variant: "destructive"
             });
           } else if (order) {
-            setOrderDetails(order);
+            // Transform the data to match our interface
+            const transformedOrder: OrderDetails = {
+              ...order,
+              shipping_address: order.shipping_address || {
+                full_name: '',
+                phone: '',
+                address: '',
+                city: ''
+              },
+              order_items: order.order_items || []
+            };
+            setOrderDetails(transformedOrder);
           }
         } catch (error) {
           console.error('Error:', error);
+          toast({
+            title: "ত্রুটি",
+            description: "অর্ডার বিবরণ লোড করতে সমস্যা হয়েছে",
+            variant: "destructive"
+          });
         } finally {
           setLoading(false);
         }
       } else {
-        // If no orderId in state, redirect to orders page
+        // If no orderId in state, try to get from localStorage
+        const lastOrderId = localStorage.getItem('lastOrderId');
+        if (lastOrderId) {
+          navigate(0, { state: { orderId: lastOrderId } });
+          return;
+        }
+        
+        // If no orderId in state or localStorage, redirect to orders page
+        toast({
+          title: "অর্ডার আইডি পাওয়া যায়নি",
+          description: "আপনাকে অর্ডার পৃষ্ঠায় পুনর্নির্দেশিত করা হচ্ছে",
+        });
         navigate('/user-dashboard/orders');
       }
     };
@@ -308,28 +331,32 @@ export function OrderConfirmation() {
             </h3>
             
             <div className="space-y-5">
-              {orderDetails.order_items.map((item, index) => (
-                <div key={index} className="flex items-center border-b pb-5 last:border-b-0 last:pb-0">
-                  <div className="w-20 h-20 overflow-hidden rounded-lg mr-4 bg-gray-100 flex items-center justify-center">
-                    {item.product.image_url ? (
-                      <img 
-                        src={item.product.image_url} 
-                        alt={item.product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      getProductIcon(item.product.name)
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-lg">{item.product.name}</h4>
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="text-gray-600">পরিমাণ: {item.quantity}</div>
-                      <div className="font-medium text-lg">৳{(item.price * item.quantity).toLocaleString('bn-BD')}</div>
+              {orderDetails.order_items && orderDetails.order_items.length > 0 ? (
+                orderDetails.order_items.map((item, index) => (
+                  <div key={index} className="flex items-center border-b pb-5 last:border-b-0 last:pb-0">
+                    <div className="w-20 h-20 overflow-hidden rounded-lg mr-4 bg-gray-100 flex items-center justify-center">
+                      {item.product?.image_url ? (
+                        <img 
+                          src={item.product.image_url} 
+                          alt={item.product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        getProductIcon(item.product?.name || '')
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-lg">{item.product?.name || 'Unknown Product'}</h4>
+                      <div className="flex justify-between items-center mt-2">
+                        <div className="text-gray-600">পরিমাণ: {item.quantity}</div>
+                        <div className="font-medium text-lg">৳{(item.price * item.quantity).toLocaleString('bn-BD')}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-4">কোন পণ্য পাওয়া যায়নি</p>
+              )}
             </div>
             
             <Separator className="my-5" />
