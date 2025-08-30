@@ -85,13 +85,15 @@ export default function Checkout() {
   };
 
   const fetchPaymentSettings = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('settings')
       .select('value')
       .eq('key', 'site_settings')
       .maybeSingle();
     
-    if (data?.value) {
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching settings:', error);
+    } else if (data && typeof data.value === 'object' && data.value !== null) {
       setPaymentSettings(data.value);
     }
   };
@@ -290,12 +292,6 @@ export default function Checkout() {
     navigate('/dashboard');
   };
 
-  const paymentLogos: { [key: string]: string } = {
-    bkash: '/bkash.svg',
-    nagad: '/nagad.svg',
-    rocket: '/rocket.svg',
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
@@ -431,7 +427,7 @@ export default function Checkout() {
                           <div className="flex flex-col items-center justify-center space-y-2">
                             {method === 'cash_on_delivery' && <Truck className="h-8 w-8 text-slate-600" />}
                             {method !== 'cash_on_delivery' && (
-                              <img src={paymentLogos[method as keyof typeof paymentLogos]} alt={method} className="h-8 w-8" />
+                              <img src={`/${method}.svg`} alt={method} className="h-8 w-8" />
                             )}
                             <span className="font-medium text-sm text-center">
                               {method === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : method.charAt(0).toUpperCase() + method.slice(1)}
@@ -480,9 +476,9 @@ export default function Checkout() {
                               কপি করুন
                             </Button>
                           </div>
-                          {paymentSettings?.payment_methods?.[formData.paymentMethod]?.note && (
+                          {paymentSettings?.payment_methods?.[formData.paymentMethod]?.instructions && (
                             <p className="text-xs text-muted-foreground mt-2">
-                              ** {paymentSettings.payment_methods[formData.paymentMethod].note}
+                              ** {paymentSettings.payment_methods[formData.paymentMethod].instructions}
                             </p>
                           )}
                         </div>
