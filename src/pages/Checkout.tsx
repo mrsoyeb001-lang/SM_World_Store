@@ -160,7 +160,7 @@ export default function Checkout() {
 
     setAppliedPromoCode(promo);
     
-    const discountAmount = promo.discount_type === 'percentage' 
+    const discountAmount = promo.discount_type === 'percentage'
       ? (total * promo.discount_value) / 100
       : promo.discount_value;
     
@@ -384,11 +384,11 @@ export default function Checkout() {
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {shippingRates.map((rate) => (
-                        <Card 
+                        <Card
                           key={rate.id}
                           className={`p-4 cursor-pointer transition-all border-2 rounded-lg ${
-                            selectedShipping === rate.id 
-                              ? 'border-primary bg-primary/5' 
+                            selectedShipping === rate.id
+                              ? 'border-primary bg-primary/5'
                               : 'border-muted hover:border-primary/50'
                           }`}
                           onClick={() => handleShippingChange(rate.id)}
@@ -421,11 +421,11 @@ export default function Checkout() {
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       {['cash_on_delivery', 'bkash', 'rocket', 'nagad'].map((method) => (
-                        <Card 
+                        <Card
                           key={method}
                           className={`p-4 cursor-pointer transition-all border-2 rounded-lg ${
-                            formData.paymentMethod === method 
-                              ? 'border-primary bg-primary/5' 
+                            formData.paymentMethod === method
+                              ? 'border-primary bg-primary/5'
                               : 'border-muted hover:border-primary/50'
                           }`}
                           onClick={() => handleInputChange('paymentMethod', method)}
@@ -467,9 +467,9 @@ export default function Checkout() {
                               {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01XXXXXXXXX')}
                               {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01XXXXXXXXX')}
                             </span>
-                            <Button 
-                              type="button" 
-                              variant="outline" 
+                            <Button
+                              type="button"
+                              variant="outline"
                               size="sm"
                               onClick={() => {
                                 const number = formData.paymentMethod === 'bkash' ? paymentSettings?.payment_methods?.bkash?.number :
@@ -495,7 +495,7 @@ export default function Checkout() {
                               যে নম্বর থেকে টাকা পাঠিয়েছেন <span className="text-red-500">*</span>
                               {formErrors.senderNumber && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
                             </Label>
-                            <Input 
+                            <Input
                               placeholder="01XXXXXXXXX"
                               value={formData.senderNumber || ''}
                               onChange={(e) => handleInputChange('senderNumber', e.target.value)}
@@ -509,7 +509,7 @@ export default function Checkout() {
                               ট্রানজেকশন আইডি <span className="text-red-500">*</span>
                               {formErrors.transactionId && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
                             </Label>
-                            <Input 
+                            <Input
                               placeholder="ট্রানজেকশন আইডি লিখুন"
                               value={formData.transactionId || ''}
                               onChange={(e) => handleInputChange('transactionId', e.target.value)}
@@ -609,7 +609,7 @@ export default function Checkout() {
                 )}
               </div>
               
-              <Button 
+              <Button
                 onClick={handleSubmit}
                 disabled={loading || !selectedShipping || !formData.paymentMethod}
                 className="w-full mt-6 py-4 text-lg font-semibold transition-transform duration-200 active:scale-95"
