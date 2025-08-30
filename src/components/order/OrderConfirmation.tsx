@@ -1,27 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+// src/components/order/OrderConfirmation.tsx
+
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { 
-  CheckCircle, 
-  Truck, 
-  MapPin, 
-  Calendar, 
-  CreditCard, 
-  Package,
-  Home,
-  ShoppingBag,
-  Phone,
-  Mail,
-  ArrowLeft
-} from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { MapPin, CreditCard, ShoppingBag, Box, CheckCircle } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface OrderItem {
   id: string;
-  product_id: string;
   quantity: number;
   price: number;
   product: {
@@ -30,347 +17,165 @@ interface OrderItem {
   };
 }
 
-interface OrderDetails {
-  id: string;
-  created_at: string;
-  total_amount: number;
-  shipping_cost: number;
-  discount_amount: number;
-  payment_method: string;
-  shipping_address: {
-    full_name: string;
+interface OrderConfirmationState {
+  orderId: string;
+  total: number;
+  shippingCost: number;
+  discount: number;
+  items: OrderItem[];
+  shippingAddress: {
+    fullName: string;
     phone: string;
     address: string;
     city: string;
   };
-  status: string;
-  promo_code: string | null;
-  order_items: OrderItem[];
+  paymentMethod: string;
+  promoCode: string | null;
 }
 
 export default function OrderConfirmation() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  const [order, setOrder] = useState<OrderDetails | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  // If coming from checkout, use passed data
-  const orderId = location.state?.orderId;
+  // Retrieve order data from the navigation state
+  const orderData = location.state as OrderConfirmationState;
 
-  useEffect(() => {
-    if (orderId) {
-      fetchOrderDetails();
-    }
-  }, [orderId]);
-
-  const fetchOrderDetails = async () => {
-    try {
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-
-      if (orderError) throw orderError;
-
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select(`
-          id,
-          quantity,
-          price,
-          product:product_id (
-            name,
-            image_url
-          )
-        `)
-        .eq('order_id', orderId);
-
-      if (itemsError) throw itemsError;
-
-      setOrder({
-        ...orderData,
-        order_items: itemsData as OrderItem[]
-      });
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  // Handle cases where orderData is missing
+  if (!orderData) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>অর্ডার তথ্য লোড হচ্ছে...</p>
-        </div>
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-4xl font-bold mb-4 text-destructive">দুঃখিত! 😟</h1>
+        <p className="text-lg text-muted-foreground mb-8">
+          অর্ডারের কোনো তথ্য পাওয়া যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।
+        </p>
+        <Button onClick={() => navigate('/')}>
+          হোমপেজে ফিরে যান
+        </Button>
       </div>
     );
   }
 
-  if (!order) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">অর্ডার খুঁজে পাওয়া যায়নি</h1>
-          <p className="mb-6">দুঃখিত, আপনার অর্ডারটি লোড করতে সমস্যা হয়েছে।</p>
-          <Button asChild>
-            <Link to="/">হোমপেজে ফিরে যান</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const orderDate = new Date(order.created_at).toLocaleDateString('bn-BD', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  const paymentMethodLabels: Record<string, string> = {
-    'cash_on_delivery': 'ক্যাশ অন ডেলিভারি',
-    'bkash': 'বিকাশ',
-    'rocket': 'রকেট',
-    'nagad': 'নগদ'
+  // Map payment method keys to display names
+  const paymentMethodDisplayNames: Record<string, string> = {
+    cash_on_delivery: 'ক্যাশ অন ডেলিভারি',
+    bkash: 'বিকাশ',
+    rocket: 'রকেট',
+    nagad: 'নগদ',
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-green-100 p-3 rounded-full">
-              <CheckCircle className="h-12 w-12 text-green-600" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold mb-2">অর্ডার সফল হয়েছে!</h1>
-          <p className="text-muted-foreground">
-            আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে। অর্ডার নম্বর: <span className="font-medium">{order.id.slice(0, 8)}</span>
+    <div className="bg-background min-h-screen py-12">
+      <div className="container max-w-4xl mx-auto px-4">
+        {/* Main Confirmation Message */}
+        <Card className="text-center p-8 bg-card shadow-lg border-primary/20">
+          <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce" />
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">আপনার অর্ডার সফলভাবে সম্পন্ন হয়েছে! 🎉</h1>
+          <p className="text-lg text-muted-foreground">
+            আপনার অর্ডারটি সফলভাবে প্লেস হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।
           </p>
+          <div className="mt-6 space-x-4">
+            <Button size="lg" onClick={() => navigate('/')}>
+              হোমপেজে ফিরে যান
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => navigate('/my-orders')}>
+              অর্ডার ট্র্যাক করুন
+            </Button>
+          </div>
+        </Card>
+        
+        {/* A horizontal line to separate sections */}
+        <div className="my-12">
+          <Separator />
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Order Summary */}
-          <div className="md:col-span-2 space-y-6">
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5" />
+        {/* Order Details & Summary */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Order Summary Card */}
+          <Card className="p-6 bg-card shadow-md">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                <Box className="h-5 w-5 text-primary" />
                 অর্ডার সামারি
-              </h2>
-              
-              <div className="space-y-4">
-                {order.order_items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-start py-2">
-                    <div className="flex items-start gap-3">
-                      <div className="h-16 w-16 bg-muted rounded-md overflow-hidden flex items-center justify-center">
-                        {item.product.image_url ? (
-                          <img 
-                            src={item.product.image_url} 
-                            alt={item.product.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <Package className="h-8 w-8 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{item.product.name}</h3>
-                        <p className="text-sm text-muted-foreground">পরিমাণ: {item.quantity}</p>
-                      </div>
-                    </div>
-                    <span className="font-medium">৳{(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 space-y-3">
+              <div className="flex justify-between font-medium">
+                <span>অর্ডার নং:</span>
+                <span className="text-primary font-mono">{orderData.orderId.slice(0, 8)}</span>
               </div>
-
-              <Separator className="my-4" />
-
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>সাবটোটাল</span>
-                  <span>৳{(order.total_amount + order.discount_amount - order.shipping_cost).toFixed(2)}</span>
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>তারিখ:</span>
+                <span>{format(new Date(), 'dd MMMM, yyyy')}</span>
+              </div>
+              <Separator />
+              {orderData.items.map((item) => (
+                <div key={item.id} className="flex items-center gap-4">
+                  <img
+                    src={item.product.image_url || '/placeholder.png'}
+                    alt={item.product.name}
+                    className="h-12 w-12 object-cover rounded-md border"
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{item.product.name}</p>
+                    <p className="text-xs text-muted-foreground">পরিমাণ: {item.quantity}</p>
+                  </div>
+                  <span className="font-semibold text-sm">৳{item.price * item.quantity}</span>
                 </div>
-                
-                {order.discount_amount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>ছাড় {order.promo_code && `(${order.promo_code})`}</span>
-                    <span>-৳{order.discount_amount.toFixed(2)}</span>
+              ))}
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>সাবটোটাল</span>
+                  <span>৳{(orderData.total - orderData.shippingCost + orderData.discount).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>শিপিং</span>
+                  <span>৳{orderData.shippingCost.toFixed(2)}</span>
+                </div>
+                {orderData.discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>ছাড় ({orderData.promoCode || 'প্রয়োগকৃত'})</span>
+                    <span>-৳{orderData.discount.toFixed(2)}</span>
                   </div>
                 )}
-                
-                <div className="flex justify-between">
-                  <span>শিপিং খরচ</span>
-                  <span>৳{order.shipping_cost.toFixed(2)}</span>
-                </div>
-                
-                <Separator className="my-2" />
-                
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between text-lg font-bold pt-2">
                   <span>মোট</span>
-                  <span>৳{order.total_amount.toFixed(2)}</span>
+                  <span>৳{orderData.total.toFixed(2)}</span>
                 </div>
               </div>
-            </Card>
+            </CardContent>
+          </Card>
 
-            {/* Shipping Information */}
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                শিপিং তথ্য
-              </h2>
-              
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="bg-primary/10 p-2 rounded-full mt-1">
-                    <Home className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">ঠিকানা</p>
-                    <p className="text-muted-foreground">
-                      {order.shipping_address.address}, {order.shipping_address.city}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-primary/10 p-2 rounded-full mt-1">
-                    <Phone className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">ফোন নম্বর</p>
-                    <p className="text-muted-foreground">{order.shipping_address.phone}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-primary/10 p-2 rounded-full mt-1">
-                    <Truck className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">শিপিং মেথড</p>
-                    <p className="text-muted-foreground">সাধারণ ডেলিভারি</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-primary/10 p-2 rounded-full mt-1">
-                    <Calendar className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">অর্ডার তারিখ</p>
-                    <p className="text-muted-foreground">{orderDate}</p>
-                  </div>
+          {/* Shipping and Payment Info Card */}
+          <Card className="p-6 bg-card shadow-md">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                <MapPin className="h-5 w-5 text-primary" />
+                শিপিং এবং পেমেন্ট
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 space-y-4">
+              {/* Shipping Address */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold">শিপিং ঠিকানা</h3>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p><strong>পূর্ণ নাম:</strong> {orderData.shippingAddress.fullName}</p>
+                  <p><strong>ফোন:</strong> {orderData.shippingAddress.phone}</p>
+                  <p><strong>ঠিকানা:</strong> {orderData.shippingAddress.address}</p>
+                  <p><strong>শহর:</strong> {orderData.shippingAddress.city}</p>
                 </div>
               </div>
-            </Card>
-          </div>
-
-          {/* Order Status & Actions */}
-          <div className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">অর্ডার স্ট্যাটাস</h2>
-              
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${order.status === 'pending' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
-                    <CheckCircle className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">অর্ডার নিশ্চিত</p>
-                    <p className="text-sm text-muted-foreground">আপনার অর্ডারটি গ্রহণ করা হয়েছে</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 opacity-50">
-                  <div className="p-2 rounded-full bg-gray-100 text-gray-400">
-                    <Package className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">প্রসেসিং</p>
-                    <p className="text-sm text-muted-foreground">আপনার অর্ডারটি প্রস্তুত করা হচ্ছে</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 opacity-50">
-                  <div className="p-2 rounded-full bg-gray-100 text-gray-400">
-                    <Truck className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">শিপড</p>
-                    <p className="text-sm text-muted-foreground">আপনার অর্ডারটি পাঠানো হয়েছে</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 opacity-50">
-                  <div className="p-2 rounded-full bg-gray-100 text-gray-400">
-                    <Home className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">ডেলিভার্ড</p>
-                    <p className="text-sm text-muted-foreground">আপনার অর্ডারটি ডেলিভার করা হয়েছে</p>
-                  </div>
+              <Separator />
+              {/* Payment Method */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold">পেমেন্ট মেথড</h3>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="font-medium">{paymentMethodDisplayNames[orderData.paymentMethod] || 'অন্যান্য'}</span>
                 </div>
               </div>
-            </Card>
-
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                পেমেন্ট তথ্য
-              </h2>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>পেমেন্ট মেথড</span>
-                  <span className="font-medium">{paymentMethodLabels[order.payment_method] || order.payment_method}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span>স্ট্যাটাস</span>
-                  <span className="font-medium text-green-600">পেমেন্ট সফল</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span>মোট পরিশোধিত</span>
-                  <span className="font-medium">৳{order.total_amount.toFixed(2)}</span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 bg-primary/5 border-primary/20">
-              <h3 className="font-semibold mb-3">সহায়তা প্রয়োজন?</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                আপনার অর্ডার সম্পর্কে কোন প্রশ্ন থাকলে আমাদের সাথে যোগাযোগ করতে নির্দ্বিধায় কল করুন।
-              </p>
-              
-              <div className="flex items-center gap-2 text-sm mb-2">
-                <Phone className="h-4 w-4" />
-                <span>+880 1624 712851</span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4" />
-                <span>support@example.com</span>
-              </div>
-            </Card>
-
-            <div className="flex flex-col gap-3">
-              <Button asChild className="w-full">
-                <Link to="/">শপিং চালিয়ে যান</Link>
-              </Button>
-              
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/orders">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  আমার অর্ডার দেখুন
-                </Link>
-              </Button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
