@@ -31,7 +31,7 @@ interface OrderData {
     price: number;
     product: {
       name: string;
-      image: string; // Corrected column name to 'image' as a placeholder
+      image_url: string; // Ensure this matches your actual column name
     };
   }[];
 }
@@ -53,6 +53,8 @@ export default function OrderConfirmation() {
         return;
       }
 
+      // **Important:** Double-check your actual column name in the `products` table.
+      // If your image column is named something else (e.g., 'image'), replace 'image_url' below.
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -62,7 +64,7 @@ export default function OrderConfirmation() {
             price,
             product:products (
               name,
-              image // Replace 'image' with your actual column name (e.g., 'image_url', 'product_image')
+              image_url // <--- Correct this column name if necessary
             )
           )
         `)
@@ -84,6 +86,7 @@ export default function OrderConfirmation() {
     fetchOrderDetails();
   }, [orderIdFromState]);
 
+  // Loading and Error Handling UI
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -132,6 +135,7 @@ export default function OrderConfirmation() {
   return (
     <div className="bg-background min-h-screen py-12">
       <div className="container max-w-4xl mx-auto px-4">
+        {/* Main Confirmation Message */}
         <Card className="text-center p-8 bg-card shadow-lg border-primary/20">
           <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce" />
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">আপনার অর্ডার সফলভাবে সম্পন্ন হয়েছে! 🎉</h1>
@@ -152,7 +156,9 @@ export default function OrderConfirmation() {
           <Separator />
         </div>
 
+        {/* Order Details & Summary */}
         <div className="grid md:grid-cols-2 gap-8">
+          {/* Order Summary Card */}
           <Card className="p-6 bg-card shadow-md">
             <CardHeader className="p-0 mb-4">
               <CardTitle className="flex items-center gap-2 text-xl font-semibold">
@@ -173,7 +179,7 @@ export default function OrderConfirmation() {
               {order.order_items.map((item, index) => (
                 <div key={index} className="flex items-center gap-4">
                   <img
-                    src={item.product.image || '/placeholder.png'}
+                    src={item.product.image_url || '/placeholder.png'}
                     alt={item.product.name}
                     className="h-12 w-12 object-cover rounded-md border"
                   />
@@ -208,6 +214,7 @@ export default function OrderConfirmation() {
             </CardContent>
           </Card>
 
+          {/* Shipping and Payment Info Card */}
           <Card className="p-6 bg-card shadow-md">
             <CardHeader className="p-0 mb-4">
               <CardTitle className="flex items-center gap-2 text-xl font-semibold">
@@ -216,6 +223,7 @@ export default function OrderConfirmation() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 space-y-4">
+              {/* Shipping Address */}
               <div className="space-y-2">
                 <h3 className="text-lg font-bold">শিপিং ঠিকানা</h3>
                 <div className="text-sm text-muted-foreground space-y-1">
@@ -226,6 +234,7 @@ export default function OrderConfirmation() {
                 </div>
               </div>
               <Separator />
+              {/* Payment Method */}
               <div className="space-y-2">
                 <h3 className="text-lg font-bold">পেমেন্ট মেথড</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
