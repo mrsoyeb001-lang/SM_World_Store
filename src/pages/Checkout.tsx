@@ -192,9 +192,11 @@ export default function Checkout() {
     }
     
     setLoading(true);
+    console.log('Order submission started.'); // New: Added for debugging
 
     try {
       // Create order
+      console.log('Attempting to create order...'); // New: Added for debugging
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -219,8 +221,10 @@ export default function Checkout() {
         .single();
 
       if (orderError) throw orderError;
+      console.log('Order created successfully:', order); // New: Added for debugging
 
       // Create order items
+      console.log('Attempting to create order items...'); // New: Added for debugging
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
@@ -233,6 +237,7 @@ export default function Checkout() {
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
+      console.log('Order items created successfully.'); // New: Added for debugging
 
       // Update promo code usage
       if (appliedPromoCode) {
@@ -241,9 +246,11 @@ export default function Checkout() {
           .update({ used_count: (appliedPromoCode.used_count || 0) + 1 })
           .eq('id', appliedPromoCode.id);
       }
+      console.log('Promo code usage updated.'); // New: Added for debugging
 
       // Clear cart
       await clearCart();
+      console.log('Cart cleared.'); // New: Added for debugging
 
       // Set order summary for modal
       setOrderSummary({
@@ -263,8 +270,10 @@ export default function Checkout() {
 
       // Open confirmation modal
       setIsConfirmationModalOpen(true);
+      console.log('Confirmation modal should now be open.'); // New: Added for debugging
 
     } catch (error: any) {
+      console.error('An error occurred during order submission:', error); // New: Added for debugging
       toast({
         title: "অর্ডার ব্যর্থ",
         description: error.message || "অর্ডার প্লেস করতে সমস্যা হয়েছে।",
