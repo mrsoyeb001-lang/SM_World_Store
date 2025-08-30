@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { MapPin, CreditCard, Box, CheckCircle, AlertCircle } from 'lucide-react';
+import { MapPin, CreditCard, Box, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
@@ -31,7 +31,7 @@ interface OrderData {
     price: number;
     product: {
       name: string;
-      image_url: string;
+      image: string; // Corrected column name to 'image' as a placeholder
     };
   }[];
 }
@@ -43,7 +43,6 @@ export default function OrderConfirmation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get orderId from navigation state, if it exists
   const orderIdFromState = location.state?.orderId;
 
   useEffect(() => {
@@ -63,7 +62,7 @@ export default function OrderConfirmation() {
             price,
             product:products (
               name,
-              image_url
+              image // Replace 'image' with your actual column name (e.g., 'image_url', 'product_image')
             )
           )
         `)
@@ -85,7 +84,6 @@ export default function OrderConfirmation() {
     fetchOrderDetails();
   }, [orderIdFromState]);
 
-  // Handle loading state
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -97,7 +95,6 @@ export default function OrderConfirmation() {
     );
   }
 
-  // Handle error state
   if (error) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -111,7 +108,6 @@ export default function OrderConfirmation() {
     );
   }
 
-  // Handle no order found after loading
   if (!order) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -177,7 +173,7 @@ export default function OrderConfirmation() {
               {order.order_items.map((item, index) => (
                 <div key={index} className="flex items-center gap-4">
                   <img
-                    src={item.product.image_url || '/placeholder.png'}
+                    src={item.product.image || '/placeholder.png'}
                     alt={item.product.name}
                     className="h-12 w-12 object-cover rounded-md border"
                   />
