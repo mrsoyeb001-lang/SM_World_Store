@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { MapPin, CreditCard, Box, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
+import { MapPin, CreditCard, Box, CheckCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
@@ -31,7 +31,7 @@ interface OrderData {
     price: number;
     product: {
       name: string;
-      image_url: string; // Ensure this matches your actual column name
+      image_url: string | null;
     };
   }[];
 }
@@ -53,8 +53,8 @@ export default function OrderConfirmation() {
         return;
       }
 
-      // **Important:** Double-check your actual column name in the `products` table.
-      // If your image column is named something else (e.g., 'image'), replace 'image_url' below.
+      // **Important:** Make sure 'image_url' is the correct column name in your 'products' table.
+      // If it's different, you must change it here. For example: `image` or `product_image`.
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -64,7 +64,7 @@ export default function OrderConfirmation() {
             price,
             product:products (
               name,
-              image_url // <--- Correct this column name if necessary
+              image_url
             )
           )
         `)
@@ -72,7 +72,7 @@ export default function OrderConfirmation() {
         .maybeSingle();
 
       if (error) {
-        setError('অর্ডার লোড করতে সমস্যা হয়েছে: ' + error.message);
+        setError(error.message);
         setLoading(false);
       } else if (data) {
         setOrder(data as OrderData);
@@ -86,7 +86,6 @@ export default function OrderConfirmation() {
     fetchOrderDetails();
   }, [orderIdFromState]);
 
-  // Loading and Error Handling UI
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -103,7 +102,9 @@ export default function OrderConfirmation() {
       <div className="container mx-auto px-4 py-16 text-center">
         <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
         <h1 className="text-3xl font-bold mb-4">দুঃখিত! 😟</h1>
-        <p className="text-lg text-muted-foreground mb-8">{error}</p>
+        <p className="text-lg text-muted-foreground mb-8">
+          অর্ডার লোড করতে সমস্যা হয়েছে: {error}
+        </p>
         <Button onClick={() => navigate('/')}>
           হোমপেজে ফিরে যান
         </Button>
