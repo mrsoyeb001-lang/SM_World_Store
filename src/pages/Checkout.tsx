@@ -14,6 +14,12 @@ import { Separator } from '@/components/ui/separator';
 import { MapPin, CreditCard, Truck, AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
+// Assuming you have these images in your public folder
+// You can upload them there, for example:
+// public/bkash.svg
+// public/nagad.svg
+// public/rocket.svg
+
 interface ShippingRate {
   id: string;
   area_name: string;
@@ -293,23 +299,23 @@ export default function Checkout() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-center text-primary-dark mb-12">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-center text-primary-dark mb-8 md:mb-12">
           আপনার অর্ডার কনফার্ম করুন 🛒
         </h1>
         
-        <div className="grid md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10">
           {/* Shipping and Payment Form */}
-          <div className="md:col-span-2">
-            <Card className="p-8 shadow-lg border-2 border-border/60">
+          <div className="lg:col-span-2">
+            <Card className="p-4 md:p-8 shadow-lg border-2 border-border/60">
               <CardHeader className="p-0 mb-6">
-                <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                  <MapPin className="h-6 w-6 text-primary" /> শিপিং এবং পেমেন্ট তথ্য
+                <CardTitle className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                  <MapPin className="h-5 w-5 md:h-6 md:w-6 text-primary" /> শিপিং এবং পেমেন্ট তথ্য
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
                   {/* Shipping Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div>
                       <Label htmlFor="fullName" className="flex items-center gap-1 mb-2 font-medium text-sm">
                         পূর্ণ নাম <span className="text-red-500">*</span>
@@ -369,39 +375,34 @@ export default function Checkout() {
                   </div>
 
                   {/* Shipping Area Selection */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-base md:text-lg flex items-center gap-2">
                       <Truck className="h-5 w-5 text-primary" /> শিপিং এলাকা নির্বাচন করুন <span className="text-red-500">*</span>
                       {formErrors.shipping && <AlertCircle className="h-4 w-4 text-red-500 ml-1" />}
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {shippingRates.map((rate) => (
                         <Card 
                           key={rate.id}
-                          className={`p-5 cursor-pointer transition-all border-2 rounded-lg shadow-sm ${
+                          className={`p-4 cursor-pointer transition-all border-2 rounded-lg ${
                             selectedShipping === rate.id 
-                              ? 'border-primary bg-primary/5 shadow-md' 
+                              ? 'border-primary bg-primary/5' 
                               : 'border-muted hover:border-primary/50'
                           }`}
                           onClick={() => handleShippingChange(rate.id)}
                         >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h4 className="font-bold text-base">{rate.area_name}</h4>
-                              {rate.estimated_days && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  আনুমানিক ডেলিভারি: {rate.estimated_days} দিন
-                                </p>
-                              )}
+                          <div className="flex flex-col items-start space-y-1">
+                            <h4 className="font-bold text-sm">{rate.area_name}</h4>
+                            <div className="flex justify-between items-center w-full">
+                              <span className="font-semibold text-lg text-primary">৳{rate.rate}</span>
+                              {selectedShipping === rate.id && <CheckCircle className="h-5 w-5 text-primary" />}
                             </div>
-                            <div className="font-bold text-lg text-primary">৳{rate.rate}</div>
+                            {rate.estimated_days && (
+                              <p className="text-xs text-muted-foreground">
+                                আনুমানিক: {rate.estimated_days} দিন
+                              </p>
+                            )}
                           </div>
-                          {selectedShipping === rate.id && (
-                            <div className="flex items-center mt-2 text-primary">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">নির্বাচিত</span>
-                            </div>
-                          )}
                         </Card>
                       ))}
                     </div>
@@ -411,17 +412,17 @@ export default function Checkout() {
                   <Separator />
 
                   {/* Payment Method Selection */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-base md:text-lg flex items-center gap-2">
                       <CreditCard className="h-5 w-5 text-primary" /> পেমেন্ট মেথড
                     </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       {['cash_on_delivery', 'bkash', 'rocket', 'nagad'].map((method) => (
                         <Card 
                           key={method}
-                          className={`p-5 cursor-pointer transition-all border-2 rounded-lg shadow-sm ${
+                          className={`p-4 cursor-pointer transition-all border-2 rounded-lg ${
                             formData.paymentMethod === method 
-                              ? 'border-primary bg-primary/5 shadow-md' 
+                              ? 'border-primary bg-primary/5' 
                               : 'border-muted hover:border-primary/50'
                           }`}
                           onClick={() => handleInputChange('paymentMethod', method)}
@@ -431,19 +432,11 @@ export default function Checkout() {
                             {method === 'bkash' && <img src="/bkash.svg" alt="bKash" className="h-8 w-8" />}
                             {method === 'rocket' && <img src="/rocket.svg" alt="Rocket" className="h-8 w-8" />}
                             {method === 'nagad' && <img src="/nagad.svg" alt="Nagad" className="h-8 w-8" />}
-                            <span className="font-medium text-sm text-center mt-2">
-                              {method === 'cash_on_delivery' && 'ক্যাশ অন ডেলিভারি'}
-                              {method === 'bkash' && 'বিকাশ'}
-                              {method === 'rocket' && 'রকেট'}
-                              {method === 'nagad' && 'নগদ'}
+                            <span className="font-medium text-sm text-center">
+                              {method === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : method.charAt(0).toUpperCase() + method.slice(1)}
                             </span>
+                            {formData.paymentMethod === method && <CheckCircle className="h-4 w-4 text-primary" />}
                           </div>
-                          {formData.paymentMethod === method && (
-                            <div className="flex items-center mt-2 text-primary justify-center">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              <span className="text-sm">নির্বাচিত</span>
-                            </div>
-                          )}
                         </Card>
                       ))}
                     </div>
@@ -451,21 +444,21 @@ export default function Checkout() {
 
                   {/* Payment Instructions & Form */}
                   {formData.paymentMethod !== 'cash_on_delivery' && (
-                    <Card className="p-6 bg-blue-50 border-blue-200">
+                    <Card className="p-4 bg-blue-50 border-blue-200">
                       <div className="space-y-4">
                         <div className="flex items-center text-blue-800">
                           <Info className="h-5 w-5 mr-2 flex-shrink-0" />
-                          <h3 className="font-semibold text-lg">
+                          <h3 className="font-semibold text-base md:text-lg">
                             {formData.paymentMethod === 'bkash' && 'বিকাশ পেমেন্ট'}
                             {formData.paymentMethod === 'rocket' && 'রকেট পেমেন্ট'}
                             {formData.paymentMethod === 'nagad' && 'নগদ পেমেন্ট'}
                           </h3>
                         </div>
                         
-                        <div className="bg-white p-4 rounded border border-gray-200 shadow-sm">
+                        <div className="bg-white p-3 rounded border border-gray-200">
                           <p className="text-sm mb-2 font-medium">পেমেন্ট করতে নিচের নম্বরে টাকা পাঠান:</p>
-                          <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
-                            <span className="font-mono text-lg font-bold">
+                          <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+                            <span className="font-mono text-base md:text-lg font-bold">
                               {formData.paymentMethod === 'bkash' && (paymentSettings?.payment_methods?.bkash?.number || '01624712851')}
                               {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01624712851')}
                               {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01624712851')}
@@ -485,6 +478,11 @@ export default function Checkout() {
                               কপি করুন
                             </Button>
                           </div>
+                          {paymentSettings?.payment_methods?.[formData.paymentMethod]?.note && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              ** {paymentSettings.payment_methods[formData.paymentMethod].note}
+                            </p>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -536,14 +534,14 @@ export default function Checkout() {
           </div>
 
           {/* Order Summary */}
-          <Card className="p-8 h-fit shadow-lg border-2 border-border/60 sticky top-8">
+          <Card className="p-4 md:p-8 h-fit shadow-lg border-2 border-border/60 lg:sticky lg:top-8">
             <CardHeader className="p-0 mb-6">
-              <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                <Info className="h-6 w-6 text-primary" /> অর্ডার সামারি
+              <CardTitle className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                <Info className="h-5 w-5 md:h-6 md:w-6 text-primary" /> অর্ডার সামারি
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0 space-y-6">
-              <div className="space-y-4 text-sm">
+            <CardContent className="p-0 space-y-4">
+              <div className="space-y-3 text-sm">
                 {items.map((item) => (
                   <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
                     <div className="flex-1">
@@ -557,7 +555,7 @@ export default function Checkout() {
               
               <Separator />
               
-              <div className="space-y-3 font-medium">
+              <div className="space-y-3 font-medium text-sm">
                 <div className="flex justify-between">
                   <span>সাবটোটাল</span>
                   <span>৳{total.toFixed(2)}</span>
@@ -577,16 +575,16 @@ export default function Checkout() {
               
               <Separator />
               
-              <div className="flex justify-between font-bold text-xl text-primary-dark">
+              <div className="flex justify-between font-bold text-lg text-primary-dark">
                 <span>মোট</span>
                 <span>৳{finalTotal.toFixed(2)}</span>
               </div>
               
               {/* Promo Code Section */}
-              <div className="mt-6 space-y-3">
-                <Label className="font-medium">প্রমো কোড</Label>
+              <div className="mt-6 space-y-2">
+                <Label className="font-medium text-sm">প্রমো কোড</Label>
                 {appliedPromoCode ? (
-                  <div className="flex items-center justify-between bg-green-50 text-green-700 p-3 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between bg-green-50 text-green-700 p-2 rounded-lg border border-green-200">
                     <span>{appliedPromoCode.code} প্রয়োগ হয়েছে</span>
                     <Button variant="ghost" size="sm" onClick={removePromoCode} className="text-red-500 hover:text-red-700">
                       মুছুন
@@ -598,9 +596,9 @@ export default function Checkout() {
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                       placeholder="প্রমো কোড লিখুন"
-                      className="flex-1"
+                      className="flex-1 h-10"
                     />
-                    <Button type="button" variant="outline" onClick={applyPromoCode}>
+                    <Button type="button" variant="outline" onClick={applyPromoCode} className="h-10">
                       প্রয়োগ
                     </Button>
                   </div>
@@ -610,7 +608,7 @@ export default function Checkout() {
               <Button 
                 onClick={handleSubmit}
                 disabled={loading || !selectedShipping}
-                className="w-full mt-6 py-6 text-lg font-semibold transition-transform duration-200 active:scale-95"
+                className="w-full mt-6 py-4 text-lg font-semibold transition-transform duration-200 active:scale-95"
                 size="lg"
               >
                 {loading ? "অর্ডার করা হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
@@ -622,20 +620,20 @@ export default function Checkout() {
 
       {/* Order Confirmation Modal */}
       <Dialog open={isConfirmationModalOpen} onOpenChange={setIsConfirmationModalOpen}>
-        <DialogContent className="max-w-lg p-8">
+        <DialogContent className="max-w-xs sm:max-w-md md:max-w-lg p-6 md:p-8">
           <DialogHeader className="text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4 animate-bounce" />
-            <DialogTitle className="text-3xl font-bold text-green-700">অর্ডার সফল! 🎉</DialogTitle>
+            <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 mx-auto mb-4 animate-bounce" />
+            <DialogTitle className="text-xl sm:text-3xl font-bold text-green-700">Congratulations! 🎉</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-2">
-              আপনার অর্ডারটি সফলভাবে সাবমিট করা হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।
+              আপনার অর্ডারটি সফলভাবে সাবমিট করা হয়েছে। আমাদের টিম আপনার অর্ডারগুলো দেখে পর্যবেক্ষণ করে সবকিছু যাচাই-বাছাই করে আপনাকে জানানো হবে। আপনি আপনার সকল অর্ডার ড্যাশবোর্ডে দেখতে পাবেন।
             </DialogDescription>
           </DialogHeader>
           
           {orderSummary && (
-            <div className="mt-6 space-y-4 p-4 border rounded-lg bg-gray-50">
-              <div className="flex justify-between items-center text-sm font-medium">
+            <div className="mt-4 space-y-4 p-4 border rounded-lg bg-gray-50 text-xs sm:text-sm">
+              <div className="flex justify-between items-center font-medium">
                 <span>অর্ডার আইডি:</span>
-                <span className="font-mono text-primary">{orderSummary.orderId}</span>
+                <span className="font-mono text-primary font-bold">{orderSummary.orderId}</span>
               </div>
               
               <Separator />
@@ -643,7 +641,7 @@ export default function Checkout() {
               <div className="space-y-2">
                 <h4 className="font-semibold text-base mb-1">প্রোডাক্টের বিবরণ</h4>
                 {orderSummary.items.map((item: any, index: number) => (
-                  <div key={index} className="flex justify-between text-sm">
+                  <div key={index} className="flex justify-between text-xs sm:text-sm">
                     <span>{item.name} x {item.quantity}</span>
                     <span>৳{item.price.toFixed(2)}</span>
                   </div>
@@ -652,17 +650,17 @@ export default function Checkout() {
               
               <Separator />
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
+              <div className="space-y-2 font-medium">
+                <div className="flex justify-between">
                   <span>সাবটোটাল:</span>
                   <span>৳{(orderSummary.total - orderSummary.shippingCost + orderSummary.discount).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between">
                   <span>শিপিং খরচ:</span>
                   <span>৳{orderSummary.shippingCost.toFixed(2)}</span>
                 </div>
                 {orderSummary.promoCode && (
-                  <div className="flex justify-between text-sm text-green-600">
+                  <div className="flex justify-between text-green-600">
                     <span>প্রমো কোড ছাড় ({orderSummary.promoCode}):</span>
                     <span>-৳{orderSummary.discount.toFixed(2)}</span>
                   </div>
@@ -671,12 +669,12 @@ export default function Checkout() {
 
               <Separator />
 
-              <div className="flex justify-between font-bold text-lg text-primary-dark">
+              <div className="flex justify-between font-bold text-base sm:text-lg text-primary-dark">
                 <span>মোট পেমেন্ট:</span>
                 <span>৳{orderSummary.total.toFixed(2)}</span>
               </div>
               
-              <div className="mt-4 text-sm space-y-1">
+              <div className="mt-4 text-xs sm:text-sm space-y-1">
                 <p className="font-semibold">পেমেন্ট মেথড: <span className="font-normal text-muted-foreground">{
                   orderSummary.paymentMethod === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' :
                   orderSummary.paymentMethod === 'bkash' ? 'বিকাশ' :
@@ -689,7 +687,7 @@ export default function Checkout() {
           )}
           
           <DialogFooter className="mt-6">
-            <Button onClick={handleModalClose} className="w-full">
+            <Button onClick={handleModalClose} className="w-full py-4 text-lg">
               ওকে, ড্যাশবোর্ডে যান
             </Button>
           </DialogFooter>
