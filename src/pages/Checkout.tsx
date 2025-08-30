@@ -292,6 +292,12 @@ export default function Checkout() {
     navigate('/dashboard');
   };
 
+  const paymentLogos: { [key: string]: string } = {
+    bkash: '/bkash.svg',
+    nagad: '/nagad.svg',
+    rocket: '/rocket.svg',
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
@@ -441,7 +447,7 @@ export default function Checkout() {
                   </div>
 
                   {/* Payment Instructions & Form */}
-                  {formData.paymentMethod !== 'cash_on_delivery' && (
+                  {formData.paymentMethod !== '' && formData.paymentMethod !== 'cash_on_delivery' && (
                     <Card className="p-4 bg-blue-50 border-blue-200">
                       <div className="space-y-4">
                         <div className="flex items-center text-blue-800">
