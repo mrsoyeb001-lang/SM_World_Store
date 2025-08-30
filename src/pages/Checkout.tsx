@@ -55,7 +55,7 @@ export default function Checkout() {
     phone: '',
     address: '',
     city: '',
-    paymentMethod: 'cash_on_delivery',
+    paymentMethod: '', // Default to empty string to enforce selection
     notes: '',
     senderNumber: '',
     transactionId: ''
@@ -107,6 +107,7 @@ export default function Checkout() {
     if (!formData.address.trim()) errors.address = 'ঠিকানা প্রয়োজন';
     if (!formData.city.trim()) errors.city = 'শহর প্রয়োজন';
     if (!selectedShipping) errors.shipping = 'শিপিং এলাকা নির্বাচন করুন';
+    if (!formData.paymentMethod) errors.paymentMethod = 'পেমেন্ট মেথড নির্বাচন করুন';
     
     if (formData.paymentMethod !== 'cash_on_delivery') {
       if (!formData.senderNumber.trim()) errors.senderNumber = 'সেন্ডার নম্বর প্রয়োজন';
