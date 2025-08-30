@@ -290,6 +290,12 @@ export default function Checkout() {
     navigate('/dashboard');
   };
 
+  const paymentLogos: { [key: string]: string } = {
+    bkash: '/bkash.svg',
+    nagad: '/nagad.svg',
+    rocket: '/rocket.svg',
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
@@ -424,9 +430,9 @@ export default function Checkout() {
                         >
                           <div className="flex flex-col items-center justify-center space-y-2">
                             {method === 'cash_on_delivery' && <Truck className="h-8 w-8 text-slate-600" />}
-                            {method === 'bkash' && <img src="/bkash.svg" alt="bKash" className="h-8 w-8" />}
-                            {method === 'rocket' && <img src="/rocket.svg" alt="Rocket" className="h-8 w-8" />}
-                            {method === 'nagad' && <img src="/nagad.svg" alt="Nagad" className="h-8 w-8" />}
+                            {method !== 'cash_on_delivery' && (
+                              <img src={paymentLogos[method as keyof typeof paymentLogos]} alt={method} className="h-8 w-8" />
+                            )}
                             <span className="font-medium text-sm text-center">
                               {method === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : method.charAt(0).toUpperCase() + method.slice(1)}
                             </span>
@@ -521,7 +527,7 @@ export default function Checkout() {
                       id="notes"
                       value={formData.notes}
                       onChange={(e) => handleInputChange('notes', e.target.value)}
-                      placeholder="বিশেষ নির্দেশনা..."
+                      placeholder="যেমন: প্রোডাক্টের কালার, সাইজ, বা অন্য কোনো বিশেষ নির্দেশনা।"
                     />
                   </div>
                 </form>
@@ -603,7 +609,7 @@ export default function Checkout() {
               
               <Button 
                 onClick={handleSubmit}
-                disabled={loading || !selectedShipping}
+                disabled={loading || !selectedShipping || !formData.paymentMethod}
                 className="w-full mt-6 py-4 text-lg font-semibold transition-transform duration-200 active:scale-95"
                 size="lg"
               >
