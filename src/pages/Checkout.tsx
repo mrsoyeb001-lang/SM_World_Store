@@ -431,9 +431,24 @@ export default function Checkout() {
                           onClick={() => handleInputChange('paymentMethod', method)}
                         >
                           <div className="flex flex-col items-center justify-center space-y-2">
-                            {method === 'cash_on_delivery' && <Truck className="h-8 w-8 text-slate-600" />}
-                            {method !== 'cash_on_delivery' && (
-                              <img src={`/${method}.svg`} alt={method} className="h-8 w-8" />
+                            {method === 'cash_on_delivery' ? (
+                              <Truck className="h-8 w-8 text-slate-600" />
+                            ) : (
+                              <img
+                                src={`/${method}.svg`}
+                                alt={method}
+                                className="h-8 w-8"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'; // Hide broken image
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent) {
+                                    const fallbackDiv = document.createElement('div');
+                                    fallbackDiv.className = 'flex items-center justify-center w-8 h-8';
+                                    fallbackDiv.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-credit-card"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>`;
+                                    parent.insertBefore(fallbackDiv, e.currentTarget);
+                                  }
+                                }}
+                              />
                             )}
                             <span className="font-medium text-sm text-center">
                               {method === 'cash_on_delivery' ? 'ক্যাশ অন ডেলিভারি' : method.charAt(0).toUpperCase() + method.slice(1)}
@@ -463,19 +478,20 @@ export default function Checkout() {
                           <p className="text-sm mb-2 font-medium">পেমেন্ট করতে নিচের নম্বরে টাকা পাঠান:</p>
                           <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
                             <span className="font-mono text-base md:text-lg font-bold">
-                              {formData.paymentMethod === 'bkash' && (paymentSettings?.payment_methods?.bkash?.number || '01XXXXXXXXX')}
-                              {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01XXXXXXXXX')}
-                              {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01XXXXXXXXX')}
+                              {/* New hardcoded number with a clear comment to explain to the user */}
+                              {formData.paymentMethod === 'bkash' && (paymentSettings?.payment_methods?.bkash?.number || '01624712851')}
+                              {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01624712851')}
+                              {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01624712851')}
                             </span>
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                const number = formData.paymentMethod === 'bkash' ? paymentSettings?.payment_methods?.bkash?.number :
-                                               formData.paymentMethod === 'rocket' ? paymentSettings?.payment_methods?.rocket?.number :
-                                               paymentSettings?.payment_methods?.nagad?.number;
-                                navigator.clipboard.writeText(number || '01XXXXXXXXX');
+                                const number = formData.paymentMethod === 'bkash' ? paymentSettings?.payment_methods?.bkash?.number || '01624712851' :
+                                               formData.paymentMethod === 'rocket' ? paymentSettings?.payment_methods?.rocket?.number || '01624712851' :
+                                               paymentSettings?.payment_methods?.nagad?.number || '01624712851';
+                                navigator.clipboard.writeText(number);
                                 toast({ title: "নম্বর কপি করা হয়েছে" });
                               }}
                             >
