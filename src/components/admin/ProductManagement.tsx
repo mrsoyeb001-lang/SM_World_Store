@@ -24,13 +24,12 @@ interface Product {
   images: string[];
   rating: number;
   review_count: number;
-  variants?: { // Added the new variants property
+  variants?: {
     colors?: string[];
     sizes?: string[];
   };
-  category?: {
-    name: string;
-  };
+  // `product_full` view থেকে ক্যাটাগরির ডেটা আসবে।
+  categories: { name: string }[];
 }
 
 interface Category {
@@ -49,7 +48,7 @@ export default function ProductManagement() {
   const [imageUrl, setImageUrl] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [variants, setVariants] = useState<{ colors: string[], sizes: string[] }>({ colors: [], sizes: [] }); // Added new state for variants
+  const [variants, setVariants] = useState<{ colors: string[], sizes: string[] }>({ colors: [], sizes: [] });
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -75,12 +74,11 @@ export default function ProductManagement() {
 
   const fetchProducts = async () => {
     setLoading(true);
+    // `product_full` view ব্যবহার করে ডেটা লোড করা হচ্ছে
     const { data, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        category:categories(name)
-      `); // Fixed select query
+      .from('product_full')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
       toast({
@@ -89,7 +87,7 @@ export default function ProductManagement() {
         variant: "destructive"
       });
     } else {
-      setProducts(data as Product[] || []); // Cast data to Product[]
+      setProducts(data as Product[] || []);
     }
     setLoading(false);
   };
@@ -122,7 +120,7 @@ export default function ProductManagement() {
       filtered = filtered.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (product.categories && product.categories[0]?.name.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -228,7 +226,7 @@ export default function ProductManagement() {
         images: images,
         rating: formData.rating || 0,
         review_count: formData.review_count || 0,
-        variants: variants, // Added variants to the product data
+        variants: variants,
       };
 
       if (editingProduct) {
@@ -284,7 +282,7 @@ export default function ProductManagement() {
       review_count: product.review_count || 0
     });
     setImages(product.images || []);
-    setVariants(product.variants || { colors: [], sizes: [] }); // Set variants for editing
+    setVariants(product.variants || { colors: [], sizes: [] });
     setIsDialogOpen(true);
   };
 
@@ -326,7 +324,7 @@ export default function ProductManagement() {
     setEditingProduct(null);
     setImages([]);
     setImageUrl('');
-    setVariants({ colors: [], sizes: [] }); // Reset variants state
+    setVariants({ colors: [], sizes: [] });
   };
 
   const renderStars = (rating: number) => {
@@ -713,7 +711,7 @@ export default function ProductManagement() {
                     <span className={product.stock_quantity <= 10 ? "text-amber-600 font-medium" : ""}>
                       স্টক: {product.stock_quantity}
                     </span>
-                    <span>ক্যাটাগরি: {product.category?.name || 'N/A'}</span>
+                    <span>ক্যাটাগরি: {product.categories?.[0]?.name || 'N/A'}</span>
                     
                     {product.rating > 0 && (
                       <div className="flex items-center">
