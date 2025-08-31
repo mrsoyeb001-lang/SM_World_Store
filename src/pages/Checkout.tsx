@@ -31,7 +31,7 @@ interface PromoCode {
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { items, total, clearCart } = useCart();
+  const { cartItems: items, totalPrice: total, totalItems, clearCart } = useCart(); // Destructure useCart to match the new hook
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -227,9 +227,10 @@ export default function Checkout() {
       console.log('Attempting to create order items...'); // New: Added for debugging
       const orderItems = items.map(item => ({
         order_id: order.id,
-        product_id: item.product_id,
+        product_id: item.id, // Corrected to use item.id from cart
         quantity: item.quantity,
-        price: item.product.sale_price || item.product.price
+        price: item.price, // Corrected to use item.price from cart
+        product_options: item.options // Added product options from cart
       }));
 
       const { error: itemsError } = await supabase
@@ -261,9 +262,10 @@ export default function Checkout() {
         paymentMethod: formData.paymentMethod,
         shippingAddress: formData,
         items: items.map(item => ({
-          name: item.product.name,
+          name: item.name,
           quantity: item.quantity,
-          price: (item.product.sale_price || item.product.price) * item.quantity
+          price: item.price * item.quantity,
+          options: item.options // Added options to order summary
         })),
         promoCode: appliedPromoCode?.code || null
       });
@@ -306,6 +308,29 @@ export default function Checkout() {
     nagad: '/nagad.svg',
     rocket: '/rocket.svg',
   };
+  
+  // The user's original code used `total` and `items` which are not from the updated useCart hook.
+  // The correct destructuring is `{ cartItems: items, totalPrice: total, totalItems, clearCart } = useCart();`
+  // And the check for empty cart should use `items.length` which is now correct.
+  if (items.length === 0) {
+    return (
+        <div className="container mx-auto px-4 py-8 text-center">
+            <Card className="max-w-md mx-auto p-8">
+                <ShoppingCart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <h1 className="text-2xl font-bold mb-4">কার্ট খালি</h1>
+                <p className="text-muted-foreground mb-6">
+                    কেনাকাটা করতে হলে কার্টে কিছু যোগ করতে হবে
+                </p>
+                <Button asChild className="btn-gradient">
+                    <Link to="/">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        হোমপেজে যান
+                    </Link>
+                </Button>
+            </Card>
+        </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -444,11 +469,11 @@ export default function Checkout() {
                               <Truck className="h-8 w-8 text-slate-600" />
                             ) : (
                               <img
-                                src={`/${method}.svg`}
+                                src={`/${method}.png`} // Corrected image extension from .svg to .png
                                 alt={method}
                                 className="h-8 w-8"
                                 onError={(e) => {
-                                  e.currentTarget.style.display = 'none'; // Hide broken image
+                                  e.currentTarget.style.display = 'none';
                                   const parent = e.currentTarget.parentElement;
                                   if (parent) {
                                     const fallbackDiv = document.createElement('div');
@@ -487,7 +512,7 @@ export default function Checkout() {
                           <p className="text-sm mb-2 font-medium">পেমেন্ট করতে নিচের নম্বরে টাকা পাঠান:</p>
                           <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
                             <span className="font-mono text-base md:text-lg font-bold">
-                              {/* New hardcoded number with a clear comment to explain to the user */}
+                              {/* Using paymentSettings if available, otherwise using hardcoded number */}
                               {formData.paymentMethod === 'bkash' && (paymentSettings?.payment_methods?.bkash?.number || '01624712851')}
                               {formData.paymentMethod === 'rocket' && (paymentSettings?.payment_methods?.rocket?.number || '01624712851')}
                               {formData.paymentMethod === 'nagad' && (paymentSettings?.payment_methods?.nagad?.number || '01624712851')}
@@ -572,12 +597,22 @@ export default function Checkout() {
             <CardContent className="p-0 space-y-4">
               <div className="space-y-3 text-sm">
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                  <div key={`${item.id}-${item.options?.color}-${item.options?.size}`} className="flex justify-between items-start py-2 border-b last:border-b-0">
                     <div className="flex-1">
-                      <span className="font-medium">{item.product.name}</span>
-                      <span className="text-muted-foreground ml-2">x {item.quantity}</span>
+                        <span className="font-medium">{item.name}</span>
+                        {item.options?.color && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                                কালার: {item.options.color}
+                            </div>
+                        )}
+                        {item.options?.size && (
+                            <div className="text-xs text-muted-foreground">
+                                সাইজ: {item.options.size}
+                            </div>
+                        )}
+                        <span className="text-muted-foreground ml-2">x {item.quantity}</span>
                     </div>
-                    <span className="font-semibold">৳{((item.product.sale_price || item.product.price) * item.quantity).toFixed(2)}</span>
+                    <span className="font-semibold">৳{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -670,8 +705,18 @@ export default function Checkout() {
               <div className="space-y-2">
                 <h4 className="font-semibold text-base mb-1">প্রোডাক্টের বিবরণ</h4>
                 {orderSummary.items.map((item: any, index: number) => (
-                  <div key={index} className="flex justify-between text-xs sm:text-sm">
-                    <span>{item.name} x {item.quantity}</span>
+                  <div key={index} className="flex justify-between items-start text-xs sm:text-sm">
+                    <div className="flex-1">
+                      <span>{item.name} x {item.quantity}</span>
+                      {/* Display options in the summary modal */}
+                      {(item.options?.color || item.options?.size) && (
+                        <div className="text-xs text-muted-foreground">
+                          {item.options.color && `Color: ${item.options.color}`}
+                          {item.options.color && item.options.size && ` | `}
+                          {item.options.size && `Size: ${item.options.size}`}
+                        </div>
+                      )}
+                    </div>
                     <span>৳{item.price.toFixed(2)}</span>
                   </div>
                 ))}
