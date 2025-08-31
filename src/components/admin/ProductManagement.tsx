@@ -24,6 +24,10 @@ interface Product {
   images: string[];
   rating: number;
   review_count: number;
+  variants?: { // Added the new variants property
+    colors?: string[];
+    sizes?: string[];
+  };
   category?: {
     name: string;
   };
@@ -45,6 +49,7 @@ export default function ProductManagement() {
   const [imageUrl, setImageUrl] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [variants, setVariants] = useState<{ colors: string[], sizes: string[] }>({ colors: [], sizes: [] }); // Added new state for variants
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -110,7 +115,7 @@ export default function ProductManagement() {
     } else if (activeTab === 'inactive') {
       filtered = filtered.filter(product => !product.is_active);
     } else if (activeTab === 'lowStock') {
-      filtered = filtered.filter(product => product.stock_quantity <= 10);
+      filtered = filtered.filter(product => (product.stock_quantity || 0) <= 10);
     }
 
     // Search filtering
@@ -129,7 +134,6 @@ export default function ProductManagement() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // Check if adding new files would exceed the limit
     if (images.length + files.length > 5) {
       toast({
         title: "সর্বোচ্চ সীমা অতিক্রম",
@@ -170,7 +174,6 @@ export default function ProductManagement() {
     }
     
     setImages(newImages);
-    // Clear the input
     e.target.value = '';
   };
 
@@ -193,7 +196,6 @@ export default function ProductManagement() {
       return;
     }
 
-    // Simple URL validation
     try {
       new URL(imageUrl);
       setImages([...images, imageUrl]);
@@ -226,7 +228,8 @@ export default function ProductManagement() {
         sale_price: formData.sale_price > 0 ? formData.sale_price : null,
         images: images,
         rating: formData.rating || 0,
-        review_count: formData.review_count || 0
+        review_count: formData.review_count || 0,
+        variants: variants, // Added variants to the product data
       };
 
       if (editingProduct) {
@@ -282,6 +285,7 @@ export default function ProductManagement() {
       review_count: product.review_count || 0
     });
     setImages(product.images || []);
+    setVariants(product.variants || { colors: [], sizes: [] }); // Set variants for editing
     setIsDialogOpen(true);
   };
 
@@ -323,6 +327,7 @@ export default function ProductManagement() {
     setEditingProduct(null);
     setImages([]);
     setImageUrl('');
+    setVariants({ colors: [], sizes: [] }); // Reset variants state
   };
 
   const renderStars = (rating: number) => {
@@ -479,11 +484,31 @@ export default function ProductManagement() {
                 </div>
               </div>
 
+              {/* Variants Section - New addition */}
+              <h3 className="text-xl font-semibold mt-8 mb-4">Product Variations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="colors">Colors (e.g. red, blue, green)</Label>
+                  <Input
+                    id="colors"
+                    value={variants.colors.join(', ')}
+                    onChange={(e) => setVariants({ ...variants, colors: e.target.value.split(',').map(c => c.trim()) })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="sizes">Sizes (e.g. S, M, L, XL)</Label>
+                  <Input
+                    id="sizes"
+                    value={variants.sizes.join(', ')}
+                    onChange={(e) => setVariants({ ...variants, sizes: e.target.value.split(',').map(s => s.trim()) })}
+                  />
+                </div>
+              </div>
+
               {/* Image Management Section */}
               <div className="space-y-4">
                 <Label>পণ্যের ছবি (সর্বোচ্চ ৫টি)</Label>
                 
-                {/* File Upload */}
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                   <div className="text-center">
                     <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
@@ -512,7 +537,6 @@ export default function ProductManagement() {
                   </div>
                 </div>
 
-                {/* Image URL Input */}
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <div className="flex">
@@ -538,7 +562,6 @@ export default function ProductManagement() {
                   </Button>
                 </div>
 
-                {/* Image Preview */}
                 {images.length > 0 && (
                   <div>
                     <Label className="text-sm font-medium">পূর্বরূপ ({images.length}/৫)</Label>
@@ -599,7 +622,6 @@ export default function ProductManagement() {
         </Dialog>
       </div>
 
-      {/* Search and Filter Section */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-1/3">
           <Input
@@ -632,7 +654,6 @@ export default function ProductManagement() {
         </Tabs>
       </div>
 
-      {/* Products Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4 bg-blue-50 border-blue-200">
           <div className="flex items-center justify-between">
@@ -661,7 +682,7 @@ export default function ProductManagement() {
             <div>
               <h3 className="text-sm font-medium text-amber-800">কম স্টক</h3>
               <p className="text-2xl font-bold text-amber-900">
-                {products.filter(p => p.stock_quantity <= 10).length}
+                {products.filter(p => (p.stock_quantity || 0) <= 10).length}
               </p>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
@@ -685,7 +706,6 @@ export default function ProductManagement() {
         </Card>
       </div>
 
-      {/* Products List */}
       <div className="grid gap-4">
         {loading ? (
           <div className="text-center py-8">
