@@ -7,29 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { ProductGrid } from '@/components/product/ProductGrid';
-import { 
-  ShoppingCart, 
-  Heart, 
-  Star, 
-  Minus, 
+import {
+  ShoppingCart,
+  Heart,
+  Star,
+  Minus,
   Plus,
   ArrowLeft
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
-import { toast } from '@/hooks/use-toast';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  sale_price?: number;
-  images: string[];
-  rating: number;
-  review_count: number;
-  stock_quantity: number;
-  category_id: string;
-}
+import { useToast } from '@/hooks/use-toast';
+import { Product } from '@/integrations/supabase/types'; // Import the new Product type
 
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
@@ -38,8 +26,11 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null); // New state for selected color
+  const [selectedSize, setSelectedSize] = useState<string | null>(null); // New state for selected size
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (id) fetchProduct();
@@ -75,9 +66,19 @@ export default function ProductDetails() {
       navigate("/auth");
       return;
     }
-    for (let i = 0; i < quantity; i++) {
-      await addToCart(product.id);
+
+    const options: { color?: string, size?: string } = {};
+    if (product.variants?.colors && selectedColor) {
+        options.color = selectedColor;
     }
+    if (product.variants?.sizes && selectedSize) {
+        options.size = selectedSize;
+    }
+
+    for (let i = 0; i < quantity; i++) {
+        await addToCart(product.id, options);
+    }
+
     toast({
       title: "কার্টে যোগ হয়েছে 🛒",
       description: `${product.name} (${quantity}টি) কার্টে যোগ হয়েছে।`
@@ -149,7 +150,7 @@ export default function ProductDetails() {
     );
   }
 
-  const discountPercentage = product.sale_price 
+  const discountPercentage = product.sale_price
     ? Math.round(((product.price - product.sale_price) / product.price) * 100)
     : 0;
 
@@ -168,9 +169,9 @@ export default function ProductDetails() {
         {/* Product Images */}
         <div className="space-y-4">
           <div className="aspect-square overflow-hidden rounded-lg border">
-            <img src={product.images[selectedImage] || '/placeholder.svg'} alt={product.name} className="h-full w-full object-cover" />
+            <img src={product.images?.[selectedImage] || '/placeholder.svg'} alt={product.name} className="h-full w-full object-cover" />
           </div>
-          {product.images.length > 1 && (
+          {product.images && product.images.length > 1 && (
             <div className="flex gap-2">
               {product.images.map((image, index) => (
                 <button key={index} onClick={() => setSelectedImage(index)}
@@ -188,9 +189,9 @@ export default function ProductDetails() {
           {/* Rating */}
           <div className="flex items-center gap-2 mb-4">
             {[1,2,3,4,5].map((star) => (
-              <Star key={star} className={`h-4 w-4 ${star <= product.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+              <Star key={star} className={`h-4 w-4 ${star <= (product.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
             ))}
-            <span className="text-sm text-muted-foreground">({product.review_count} রিভিউ)</span>
+            <span className="text-sm text-muted-foreground">({product.review_count || 0} রিভিউ)</span>
           </div>
 
           {/* Price */}
@@ -204,11 +205,38 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* Stock */}
-          {product.stock_quantity > 0 ? (
-            <Badge variant="outline" className="text-green-600 border-green-600">স্টকে আছে ({product.stock_quantity} টি)</Badge>
-          ) : (
-            <Badge variant="destructive">স্টক শেষ</Badge>
+          {/* Variants Section - New addition */}
+          {product.variants?.colors && product.variants.colors.length > 0 && (
+              <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-900">Color</h4>
+                  <div className="mt-1 flex items-center space-x-2">
+                      {product.variants.colors.map((color) => (
+                          <button
+                              key={color}
+                              onClick={() => setSelectedColor(color)}
+                              className={`w-8 h-8 rounded-full border-2 ${selectedColor === color ? 'ring-2 ring-indigo-500' : 'ring-1'}`}
+                              style={{ backgroundColor: color }}
+                          ></button>
+                      ))}
+                  </div>
+              </div>
+          )}
+
+          {product.variants?.sizes && product.variants.sizes.length > 0 && (
+              <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-900">Size</h4>
+                  <div className="mt-1 flex items-center space-x-2">
+                      {product.variants.sizes.map((size) => (
+                          <button
+                              key={size}
+                              onClick={() => setSelectedSize(size)}
+                              className={`border rounded-md px-3 py-1 ${selectedSize === size ? 'bg-gray-200' : 'bg-white'}`}
+                          >
+                              {size}
+                          </button>
+                      ))}
+                  </div>
+              </div>
           )}
 
           <Separator />
@@ -219,10 +247,17 @@ export default function ProductDetails() {
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus className="h-4 w-4" /></Button>
               <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-20 text-center" min="1" max={product.stock_quantity} />
-              <Button variant="outline" size="sm" onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
+                className="w-20 text-center" min="1" max={product.stock_quantity || Infinity} />
+              <Button variant="outline" size="sm" onClick={() => setQuantity(Math.min(product.stock_quantity || Infinity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
             </div>
           </div>
+          
+          {/* Stock */}
+          {product.stock_quantity > 0 ? (
+            <Badge variant="outline" className="text-green-600 border-green-600">স্টকে আছে ({product.stock_quantity} টি)</Badge>
+          ) : (
+            <Badge variant="destructive">স্টক শেষ</Badge>
+          )}
 
           {/* Actions */}
           <div className="space-y-3">
