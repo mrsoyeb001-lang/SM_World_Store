@@ -79,10 +79,8 @@ export default function ProductManagement() {
       .from('products')
       .select(`
         *,
-        categories:category_id (name),
-        variants // Fetch the variants column
-      `)
-      .order('created_at', { ascending: false });
+        category:categories(name)
+      `); // Fixed select query
 
     if (error) {
       toast({
@@ -91,7 +89,7 @@ export default function ProductManagement() {
         variant: "destructive"
       });
     } else {
-      setProducts(data || []);
+      setProducts(data as Product[] || []); // Cast data to Product[]
     }
     setLoading(false);
   };
@@ -476,6 +474,7 @@ export default function ProductManagement() {
               <div className="space-y-4">
                 <Label>পণ্যের ছবি (সর্বোচ্চ ৫টি)</Label>
                 
+                {/* File Upload */}
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                   <div className="text-center">
                     <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
@@ -504,6 +503,7 @@ export default function ProductManagement() {
                   </div>
                 </div>
 
+                {/* Image URL Input */}
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <div className="flex">
@@ -529,6 +529,7 @@ export default function ProductManagement() {
                   </Button>
                 </div>
 
+                {/* Image Preview */}
                 {images.length > 0 && (
                   <div>
                     <Label className="text-sm font-medium">পূর্বরূপ ({images.length}/৫)</Label>
@@ -589,7 +590,6 @@ export default function ProductManagement() {
         </Dialog>
       </div>
 
-      {/* Search and Filter Section */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-1/3">
           <Input
@@ -622,7 +622,6 @@ export default function ProductManagement() {
         </Tabs>
       </div>
 
-      {/* Products Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4 bg-blue-50 border-blue-200">
           <div className="flex items-center justify-between">
@@ -675,7 +674,6 @@ export default function ProductManagement() {
         </Card>
       </div>
 
-      {/* Products List */}
       <div className="grid gap-4">
         {loading ? (
           <div className="text-center py-8">
