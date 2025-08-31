@@ -450,40 +450,6 @@ export default function ProductManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="rating">রেটিং (0-5)</Label>
-                  <Input
-                    id="rating"
-                    type="number"
-                    min="0"
-                    max="5"
-                    step="0.1"
-                    value={formData.rating}
-                    onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
-                  />
-                  {formData.rating > 0 && (
-                    <div className="flex items-center mt-2">
-                      {renderStars(formData.rating)}
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        ({formData.rating.toFixed(1)})
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="review_count">রিভিউ সংখ্যা</Label>
-                  <Input
-                    id="review_count"
-                    type="number"
-                    min="0"
-                    value={formData.review_count}
-                    onChange={(e) => setFormData({ ...formData, review_count: Number(e.target.value) })}
-                  />
-                </div>
-              </div>
-
               {/* Variants Section - New addition */}
               <h3 className="text-xl font-semibold mt-8 mb-4">Product Variations</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
