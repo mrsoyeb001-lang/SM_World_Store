@@ -70,7 +70,7 @@ export default function ProductManagement() {
   }, []);
 
   useEffect(() => {
-    filterProducts();
+    filterAndSortProducts();
   }, [products, searchTerm, activeTab]);
 
   const fetchProducts = async () => {
@@ -79,7 +79,8 @@ export default function ProductManagement() {
       .from('products')
       .select(`
         *,
-        categories:category_id (name)
+        categories:category_id (name),
+        variants // Fetch the variants column
       `)
       .order('created_at', { ascending: false });
 
@@ -106,7 +107,7 @@ export default function ProductManagement() {
     }
   };
 
-  const filterProducts = () => {
+  const filterAndSortProducts = () => {
     let filtered = products;
 
     // Tab-based filtering
@@ -588,6 +589,7 @@ export default function ProductManagement() {
         </Dialog>
       </div>
 
+      {/* Search and Filter Section */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-1/3">
           <Input
@@ -620,6 +622,7 @@ export default function ProductManagement() {
         </Tabs>
       </div>
 
+      {/* Products Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4 bg-blue-50 border-blue-200">
           <div className="flex items-center justify-between">
@@ -672,6 +675,7 @@ export default function ProductManagement() {
         </Card>
       </div>
 
+      {/* Products List */}
       <div className="grid gap-4">
         {loading ? (
           <div className="text-center py-8">
