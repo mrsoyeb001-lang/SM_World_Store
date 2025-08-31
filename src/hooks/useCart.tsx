@@ -10,7 +10,7 @@ interface CartItem {
   price: number;
   quantity: number;
   images: string[];
-  options?: { // নতুন যোগ করা হয়েছে
+  options?: {
     color?: string;
     size?: string;
   };
@@ -31,25 +31,27 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Initial loading state set to true
   const { user } = useAuth();
 
-  // Load cart from local storage on initial render
   useEffect(() => {
+    // Load cart from local storage on initial render
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       setCartItems(JSON.parse(savedCart));
     }
+    setLoading(false); // Set loading to false after checking local storage
   }, []);
 
   // Save cart to local storage whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (!loading) {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, loading]);
 
   const addToCart = (product: Product, quantity: number, options?: { color?: string, size?: string }) => {
     setCartItems((prevItems) => {
-      // Find item in cart based on both product ID and options
       const existingItem = prevItems.find(
         (item) => item.id === product.id &&
         (item.options?.color === options?.color) &&
@@ -70,8 +72,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             name: product.name,
             price: product.sale_price || product.price,
             quantity,
-            images: product.images,
-            options: options,
+            images: product.images || [],
+            options,
           },
         ];
       }
@@ -80,7 +82,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeFromCart = (itemId: string, options?: { color?: string, size?: string }) => {
-    setCartItems((prevItems) => 
+    setCartItems((prevItems) =>
       prevItems.filter(
         (item) => !(item.id === itemId &&
           (item.options?.color === options?.color) &&
